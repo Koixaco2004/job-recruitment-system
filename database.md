@@ -1,0 +1,218 @@
+1. BẢNG USERS (Người dùng)
+- user_id (PK)
+- email
+- password_hash
+- phone
+- full_name
+- avatar_url
+- user_type (enum: 'candidate', 'employer', 'admin')
+- status (enum: 'active', 'locked', 'pending')
+- email_verified
+- created_at
+- updated_at
+- last_login
+2. BẢNG CANDIDATES (Ứng viên)
+- candidate_id (PK)
+- user_id (FK -> users)
+- date_of_birth
+- gender
+- address
+- city_id (FK -> cities)
+- education_level
+- years_of_experience
+- current_job_title
+- desired_job_title
+- desired_salary_min
+- desired_salary_max
+- desired_job_type (enum: 'fulltime', 'parttime', 'remote', 'freelance')
+- desired_locations (JSON - array of city_ids)
+- skills (JSON - array of skill names)
+- cv_file_url
+- created_at
+- updated_at
+3. BẢNG EMPLOYERS (Nhà tuyển dụng)
+- employer_id (PK)
+- user_id (FK -> users)
+- company_name
+- tax_code
+- logo_url
+- cover_image_url
+- industry_id (FK -> industries)
+- company_size (enum: '1-50', '51-200', '201-500', '501-1000', '1000+')
+- website
+- email
+- phone
+- address
+- city_id (FK -> cities)
+- description
+- benefits (TEXT)
+- founded_year
+- position (vị trí người đại diện)
+- is_verified
+- verification_document_url
+- verified_at
+- verified_by (FK -> users - admin)
+- status (enum: 'active', 'inactive', 'locked')
+- created_at
+- updated_at
+4.BẢNG JOB_POSTS (Tin tuyển dụng)
+- job_post_id (PK)
+- employer_id (FK -> employers)  
+- title
+- slug
+- description
+- requirements
+- benefits
+- job_type (enum: 'fulltime', 'parttime', 'remote', 'freelance')
+- job_level (enum: 'intern', 'fresher', 'junior', 'middle', 'senior', 'leader', 'manager')
+- industry_id (FK -> industries)
+- salary_min
+- salary_max
+- salary_type (enum: 'VND', 'USD', 'negotiable')
+- number_of_positions
+- gender_requirement (enum: 'male', 'female', 'any')
+- experience_required (int - số năm)
+- education_required
+- city_id (FK -> cities)  
+- address
+- deadline
+- status (enum: 'pending', 'approved', 'rejected', 'closed', 'expired')
+- rejection_reason
+- is_priority (boolean - từ gói priority)
+- view_count
+- application_count
+- approved_at
+- approved_by (FK -> users - admin)
+- created_at
+- updated_at
+5. BẢNG APPLICATIONS (Đơn ứng tuyển)
+- application_id (PK)
+- job_post_id (FK -> job_posts)
+- candidate_id (FK -> candidates)
+- cv_file_url
+- cover_letter
+- status (enum: 'submitted', 'viewed', 'interview_scheduled', 'rejected', 'hired')
+- applied_at
+- viewed_at
+- updated_at
+- notes (ghi chú của nhà tuyển dụng)
+6. BẢNG INTERVIEWS (Lịch phỏng vấn)
+- interview_id (PK)
+- application_id (FK -> applications)
+- interview_date
+- interview_time
+- location
+- interview_type (enum: 'online', 'offline')
+- meeting_link
+- notes
+- status (enum: 'scheduled', 'completed', 'cancelled')
+- created_at
+- updated_at
+7. BẢNG CANDIDATE_REVIEWS (Đánh giá ứng viên)
+- review_id (PK)
+- application_id (FK -> applications)
+- employer_id (FK -> employers)
+- rating (1-5)
+- technical_skills_rating
+- soft_skills_rating
+- culture_fit_rating
+- comment
+- is_hired (boolean)
+- hire_date
+- created_at
+- updated_at
+8. BẢNG SERVICE_PACKAGES (Gói dịch vụ)
+- package_id (PK)
+- package_name
+- package_type (enum: 'normal', 'priority')
+- price
+- duration_days
+- number_of_posts
+- description
+- features (JSON - các tính năng)
+- status (enum: 'active', 'inactive')
+- created_at
+- updated_at
+9. BẢNG EMPLOYER_PACKAGES (Gói dịch vụ của nhà tuyển dụng)
+- employer_package_id (PK)
+- employer_id (FK -> employers)
+- package_id (FK -> service_packages)
+- payment_id (FK -> payments)
+- start_date
+- end_date
+- remaining_posts
+- status (enum: 'active', 'expired', 'cancelled')
+- created_at
+- updated_at
+10. BẢNG PAYMENTS (Thanh toán)
+- payment_id (PK)
+- employer_id (FK -> employers)
+- package_id (FK -> service_packages)
+- amount
+- payment_method (enum: 'bank_transfer', 'momo', 'zalopay', 'vnpay', 'credit_card')
+- transaction_id
+- status (enum: 'pending', 'completed', 'failed', 'refunded')
+- payment_date
+- created_at
+- updated_at
+11. BẢNG SAVED_JOBS (Việc làm đã lưu)
+- saved_job_id (PK)
+- candidate_id (FK -> candidates)
+- job_post_id (FK -> job_posts)
+- created_at
+12. BẢNG JOB_RECOMMENDATIONS (Gợi ý việc làm)
+- recommendation_id (PK)
+- candidate_id (FK -> candidates)
+- job_post_id (FK -> job_posts)
+- matching_score (float - điểm phù hợp)
+- created_at
+13. BẢNG NOTIFICATIONS (Thông báo)
+- notification_id (PK)
+- user_id (FK -> users)
+- title
+- message
+- type (enum: 'application_status', 'interview_schedule', 'job_approved', 'system')
+- reference_id (ID của đơn ứng tuyển, tin tuyển dụng...)
+- reference_type (enum: 'application', 'job_post', 'interview')
+- is_read
+- is_push_sent (đã gửi push notification chưa)
+- created_at
+- read_at
+14. BẢNG INDUSTRIES (Ngành nghề)
+- industry_id (PK)
+- industry_name
+- slug
+- icon_url
+- description
+- status (enum: 'active', 'inactive')
+- created_at
+- updated_at
+15. BẢNG CITIES (Tỉnh/Thành phố)
+- city_id (PK)
+- city_name
+- slug
+- region (enum: 'north', 'central', 'south')
+- status (enum: 'active', 'inactive')
+16. BẢNG SEARCH_HISTORY (Lịch sử tìm kiếm)
+- search_id (PK)
+- user_id (FK -> users)
+- search_keyword
+- filters (JSON - các bộ lọc)
+- result_count
+- created_at
+17. BẢNG ADMIN_LOGS (Nhật ký hoạt động Admin)
+- log_id (PK)
+- admin_id (FK -> users)
+- action (enum: 'approve_job', 'reject_job', 'lock_user', 'unlock_user', 'verify_employer', 'update_package')
+- target_type (enum: 'user', 'job_post', 'employer', 'package')
+- target_id
+- description
+- ip_address
+- created_at
+18. BẢNG REPORTS (Báo cáo thống kê - cache)
+- report_id (PK)
+- report_type (enum: 'revenue_daily', 'revenue_monthly', 'hire_success_rate', 'new_users')
+- report_date
+- data (JSON - dữ liệu thống kê)
+- created_at
+- updated_at
