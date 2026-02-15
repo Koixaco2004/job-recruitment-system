@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../domain/entities/job_post_entity.dart';
+import '../providers/my_jobs_provider.dart';
 
 /// Widget hiển thị thông tin job dưới dạng card
 class JobCard extends StatelessWidget {
@@ -73,7 +76,7 @@ class JobCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Company logo + name
+              // Header: Company logo + name + heart button
               Row(
                 children: [
                   // Company logo
@@ -155,6 +158,56 @@ class JobCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                  // Heart button
+                  Consumer<MyJobsProvider>(
+                    builder: (context, myJobsProvider, child) {
+                      final isSaved = myJobsProvider.isJobSaved(job.jobPostId);
+                      return IconButton(
+                        icon: Icon(
+                          isSaved ? Icons.favorite : Icons.favorite_border,
+                          color: isSaved ? Colors.red : Colors.grey,
+                        ),
+                        onPressed: () async {
+                          final profileProvider = context
+                              .read<ProfileProvider>();
+                          final candidateId =
+                              profileProvider.profile?.candidateId ?? 1;
+
+                          if (isSaved) {
+                            // Unsave
+                            final success = await myJobsProvider
+                                .unsaveJobByJobPostId(
+                                  candidateId: candidateId,
+                                  jobPostId: job.jobPostId,
+                                );
+                            if (context.mounted && success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Đã bỏ lưu việc làm'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          } else {
+                            // Save
+                            final success = await myJobsProvider.saveJob(
+                              candidateId: candidateId,
+                              jobPostId: job.jobPostId,
+                            );
+                            if (context.mounted && success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Đã lưu việc làm'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        tooltip: isSaved ? 'Bỏ lưu' : 'Lưu việc làm',
+                      );
+                    },
                   ),
                 ],
               ),

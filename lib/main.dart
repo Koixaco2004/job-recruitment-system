@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/jobs/presentation/providers/job_provider.dart';
+import 'features/jobs/presentation/providers/my_jobs_provider.dart';
 import 'features/profile/presentation/providers/profile_provider.dart';
 import 'injection_container.dart' as di;
 
@@ -27,6 +28,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<AuthProvider>()),
         // Job Provider
         ChangeNotifierProvider(create: (_) => di.sl<JobProvider>()),
+        // My Jobs Provider
+        ChangeNotifierProvider(create: (_) => di.sl<MyJobsProvider>()),
         // Profile Provider
         ChangeNotifierProvider(create: (_) => di.sl<ProfileProvider>()),
       ],

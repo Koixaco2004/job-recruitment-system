@@ -12,8 +12,14 @@ import 'features/jobs/data/datasources/job_remote_datasource.dart';
 import 'features/jobs/data/repositories/job_repository_impl.dart';
 import 'features/jobs/domain/repositories/job_repository.dart';
 import 'features/jobs/domain/usecases/get_jobs_usecase.dart';
+import 'features/jobs/domain/usecases/get_my_applications_usecase.dart';
+import 'features/jobs/domain/usecases/get_saved_jobs_usecase.dart';
+import 'features/jobs/domain/usecases/save_job_usecase.dart';
 import 'features/jobs/domain/usecases/submit_application_usecase.dart';
+import 'features/jobs/domain/usecases/unsave_job_usecase.dart';
+import 'features/jobs/domain/usecases/unsave_job_by_post_id_usecase.dart';
 import 'features/jobs/presentation/providers/job_provider.dart';
+import 'features/jobs/presentation/providers/my_jobs_provider.dart';
 import 'features/profile/data/datasources/profile_remote_datasource.dart';
 import 'features/profile/data/repositories/profile_repository_impl.dart';
 import 'features/profile/domain/repositories/profile_repository.dart';
@@ -58,9 +64,24 @@ Future<void> init() async {
     () => JobProvider(getJobsUseCase: sl(), submitApplicationUseCase: sl()),
   );
 
+  sl.registerFactory(
+    () => MyJobsProvider(
+      getSavedJobsUseCase: sl(),
+      saveJobUseCase: sl(),
+      unsaveJobUseCase: sl(),
+      unsaveJobByPostIdUseCase: sl(),
+      getMyApplicationsUseCase: sl(),
+    ),
+  );
+
   // Use cases
   sl.registerLazySingleton(() => GetJobsUseCase(sl()));
   sl.registerLazySingleton(() => SubmitApplicationUseCase(sl()));
+  sl.registerLazySingleton(() => GetSavedJobsUseCase(sl()));
+  sl.registerLazySingleton(() => SaveJobUseCase(sl()));
+  sl.registerLazySingleton(() => UnsaveJobUseCase(sl()));
+  sl.registerLazySingleton(() => UnsaveJobByPostIdUseCase(sl()));
+  sl.registerLazySingleton(() => GetMyApplicationsUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<JobRepository>(

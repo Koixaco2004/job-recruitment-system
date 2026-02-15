@@ -1,6 +1,7 @@
 import '../../../../core/error/exceptions.dart';
 import '../models/application_model.dart';
 import '../models/job_post_model.dart';
+import '../models/saved_job_model.dart';
 
 /// Abstract interface cho Remote Data Source
 abstract class JobRemoteDataSource {
@@ -17,6 +18,30 @@ abstract class JobRemoteDataSource {
     String? cvFileUrl,
     String? coverLetter,
   });
+
+  /// Lấy danh sách việc đã lưu
+  Future<List<SavedJobModel>> getSavedJobs(int candidateId);
+
+  /// Lưu việc làm
+  Future<SavedJobModel> saveJob({
+    required int candidateId,
+    required int jobPostId,
+  });
+
+  /// Bỏ lưu việc làm
+  Future<void> unsaveJob(int savedJobId);
+
+  /// Bỏ lưu việc làm theo jobPostId
+  Future<void> unsaveJobByJobPostId({
+    required int candidateId,
+    required int jobPostId,
+  });
+
+  /// Lấy danh sách đơn ứng tuyển
+  Future<List<ApplicationModel>> getMyApplications(int candidateId);
+
+  /// Kiểm tra job đã được lưu chưa
+  Future<bool> isJobSaved({required int candidateId, required int jobPostId});
 }
 
 /// Implementation với Mock Data
@@ -315,7 +340,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
     await Future.delayed(const Duration(seconds: 1));
 
     // Mock: tạo application thành công
-    return ApplicationModel(
+    final application = ApplicationModel(
       applicationId: DateTime.now().millisecondsSinceEpoch,
       jobPostId: jobPostId,
       candidateId: candidateId,
@@ -323,6 +348,155 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       coverLetter: coverLetter,
       status: 'submitted',
       appliedAt: DateTime.now(),
+    );
+
+    // Lưu vào mock storage
+    _mockApplications.add(application);
+
+    return application;
+  }
+
+  // === Mock storage cho saved jobs và applications ===
+  final List<SavedJobModel> _mockSavedJobs = [];
+  final List<ApplicationModel> _mockApplications = [];
+
+  @override
+  Future<List<SavedJobModel>> getSavedJobs(int candidateId) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Lọc saved jobs của candidate này
+    final savedJobs = _mockSavedJobs
+        .where((s) => s.candidateId == candidateId)
+        .toList();
+
+    // Enrich với thông tin job
+    final jobs = await getJobs();
+    final enrichedSavedJobs = <SavedJobModel>[];
+
+    for (final saved in savedJobs) {
+      try {
+        final job = jobs.firstWhere((j) => j.jobPostId == saved.jobPostId);
+        enrichedSavedJobs.add(
+          SavedJobModel(
+            savedJobId: saved.savedJobId,
+            candidateId: saved.candidateId,
+            jobPostId: saved.jobPostId,
+            createdAt: saved.createdAt,
+            jobTitle: job.title,
+            companyName: job.companyName,
+            companyLogo: job.companyLogo,
+            cityName: job.cityName,
+            salaryMin: job.salaryMin,
+            salaryMax: job.salaryMax,
+            salaryType: job.salaryType,
+            jobType: job.jobType,
+            jobLevel: job.jobLevel,
+            deadline: job.deadline,
+          ),
+        );
+      } catch (e) {
+        // Job không tồn tại, bỏ qua
+      }
+    }
+
+    return enrichedSavedJobs;
+  }
+
+  @override
+  Future<SavedJobModel> saveJob({
+    required int candidateId,
+    required int jobPostId,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Kiểm tra đã lưu chưa
+    final exists = _mockSavedJobs.any(
+      (s) => s.candidateId == candidateId && s.jobPostId == jobPostId,
+    );
+
+    if (exists) {
+      throw const ServerException('Việc làm đã được lưu');
+    }
+
+    final savedJob = SavedJobModel(
+      savedJobId: DateTime.now().millisecondsSinceEpoch,
+      candidateId: candidateId,
+      jobPostId: jobPostId,
+      createdAt: DateTime.now(),
+    );
+
+    _mockSavedJobs.add(savedJob);
+    return savedJob;
+  }
+
+  @override
+  Future<void> unsaveJob(int savedJobId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    _mockSavedJobs.removeWhere((s) => s.savedJobId == savedJobId);
+  }
+
+  @override
+  Future<void> unsaveJobByJobPostId({
+    required int candidateId,
+    required int jobPostId,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    _mockSavedJobs.removeWhere(
+      (s) => s.candidateId == candidateId && s.jobPostId == jobPostId,
+    );
+  }
+
+  @override
+  Future<List<ApplicationModel>> getMyApplications(int candidateId) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Lọc applications của candidate
+    final applications = _mockApplications
+        .where((a) => a.candidateId == candidateId)
+        .toList();
+
+    // Enrich với thông tin job
+    final jobs = await getJobs();
+    final enrichedApplications = <ApplicationModel>[];
+
+    for (final app in applications) {
+      try {
+        final job = jobs.firstWhere((j) => j.jobPostId == app.jobPostId);
+        enrichedApplications.add(
+          ApplicationModel(
+            applicationId: app.applicationId,
+            jobPostId: app.jobPostId,
+            candidateId: app.candidateId,
+            cvFileUrl: app.cvFileUrl,
+            coverLetter: app.coverLetter,
+            status: app.status,
+            appliedAt: app.appliedAt,
+            viewedAt: app.viewedAt,
+            updatedAt: app.updatedAt,
+            jobTitle: job.title,
+            companyName: job.companyName,
+          ),
+        );
+      } catch (e) {
+        // Job không tồn tại, vẫn giữ application
+        enrichedApplications.add(app);
+      }
+    }
+
+    return enrichedApplications;
+  }
+
+  @override
+  Future<bool> isJobSaved({
+    required int candidateId,
+    required int jobPostId,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+
+    return _mockSavedJobs.any(
+      (s) => s.candidateId == candidateId && s.jobPostId == jobPostId,
     );
   }
 }

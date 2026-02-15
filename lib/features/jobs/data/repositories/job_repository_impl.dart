@@ -3,6 +3,7 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/application_entity.dart';
 import '../../domain/entities/job_post_entity.dart';
+import '../../domain/entities/saved_job_entity.dart';
 import '../../domain/repositories/job_repository.dart';
 import '../datasources/job_remote_datasource.dart';
 
@@ -77,6 +78,108 @@ class JobRepositoryImpl implements JobRepository {
     } catch (e) {
       return Left(
         ServerFailure('Không thể gửi đơn ứng tuyển: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<SavedJobEntity>>> getSavedJobs(
+    int candidateId,
+  ) async {
+    try {
+      final savedJobs = await remoteDataSource.getSavedJobs(candidateId);
+      return Right(savedJobs);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(
+        ServerFailure('Không thể lấy danh sách việc đã lưu: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, SavedJobEntity>> saveJob({
+    required int candidateId,
+    required int jobPostId,
+  }) async {
+    try {
+      final savedJob = await remoteDataSource.saveJob(
+        candidateId: candidateId,
+        jobPostId: jobPostId,
+      );
+      return Right(savedJob);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Không thể lưu việc làm: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> unsaveJob(int savedJobId) async {
+    try {
+      await remoteDataSource.unsaveJob(savedJobId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Không thể bỏ lưu việc làm: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> unsaveJobByJobPostId({
+    required int candidateId,
+    required int jobPostId,
+  }) async {
+    try {
+      await remoteDataSource.unsaveJobByJobPostId(
+        candidateId: candidateId,
+        jobPostId: jobPostId,
+      );
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Không thể bỏ lưu việc làm: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ApplicationEntity>>> getMyApplications(
+    int candidateId,
+  ) async {
+    try {
+      final applications = await remoteDataSource.getMyApplications(
+        candidateId,
+      );
+      return Right(applications);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(
+        ServerFailure('Không thể lấy danh sách đơn ứng tuyển: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> isJobSaved({
+    required int candidateId,
+    required int jobPostId,
+  }) async {
+    try {
+      final isSaved = await remoteDataSource.isJobSaved(
+        candidateId: candidateId,
+        jobPostId: jobPostId,
+      );
+      return Right(isSaved);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(
+        ServerFailure('Không thể kiểm tra trạng thái lưu: ${e.toString()}'),
       );
     }
   }

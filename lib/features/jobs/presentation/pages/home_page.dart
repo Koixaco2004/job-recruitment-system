@@ -4,6 +4,7 @@ import '../../../profile/presentation/pages/profile_page.dart';
 import '../providers/job_provider.dart';
 import '../widgets/job_card.dart';
 import 'job_detail_page.dart';
+import 'my_jobs_page.dart';
 import 'search_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -44,6 +45,16 @@ class _HomePageState extends State<HomePage> {
                 MaterialPageRoute(builder: (context) => const SearchPage()),
               );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.bookmark),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MyJobsPage()),
+              );
+            },
+            tooltip: 'Việc của tôi',
           ),
           IconButton(
             icon: const Icon(Icons.person),
