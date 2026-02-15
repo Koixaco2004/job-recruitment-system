@@ -9,7 +9,7 @@ class CloudinaryService {
   static const String _cloudName = 'dzgk9oo8u';
   static const String _uploadPreset = 'cv_upload';
   static const String _uploadUrl =
-      'https://api.cloudinary.com/v1_1/$_cloudName/raw/upload';
+      'https://api.cloudinary.com/v1_1/$_cloudName/image/upload';
 
   CloudinaryService({Dio? dio}) : _dio = dio ?? Dio();
 
@@ -18,7 +18,7 @@ class CloudinaryService {
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(bytes, filename: fileName),
       'upload_preset': _uploadPreset,
-      'resource_type': 'raw',
+      'resource_type': 'image',
     });
 
     try {

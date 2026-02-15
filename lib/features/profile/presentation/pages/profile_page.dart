@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
 import '../providers/profile_provider.dart';
 import 'edit_profile_page.dart';
@@ -57,6 +58,27 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       );
       provider.clearMessages();
+    }
+  }
+
+  Future<void> _openPdfUrl(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không thể mở file PDF')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: ${e.toString()}')));
+      }
     }
   }
 
@@ -713,14 +735,36 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              profile.cvFileUrl!,
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).primaryColor,
+            InkWell(
+              onTap: () => _openPdfUrl(profile.cvFileUrl!),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.link, size: 16, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        profile.cvFileUrl!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.open_in_new, size: 16, color: Colors.blue),
+                  ],
+                ),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 12),
           ] else
