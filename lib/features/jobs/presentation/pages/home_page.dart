@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../companies/presentation/pages/companies_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../providers/job_provider.dart';
 import '../widgets/job_card.dart';
@@ -45,6 +46,16 @@ class _HomePageState extends State<HomePage> {
                 MaterialPageRoute(builder: (context) => const SearchPage()),
               );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.business),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CompaniesPage()),
+              );
+            },
+            tooltip: 'Công ty',
           ),
           IconButton(
             icon: const Icon(Icons.bookmark),

@@ -8,6 +8,14 @@ import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
+import 'features/companies/data/datasources/company_remote_datasource.dart';
+import 'features/companies/data/repositories/company_repository_impl.dart';
+import 'features/companies/domain/repositories/company_repository.dart';
+import 'features/companies/domain/usecases/get_companies_usecase.dart';
+import 'features/companies/domain/usecases/get_company_by_id_usecase.dart';
+import 'features/companies/domain/usecases/get_company_jobs_usecase.dart';
+import 'features/companies/domain/usecases/search_companies_usecase.dart';
+import 'features/companies/presentation/providers/company_provider.dart';
 import 'features/jobs/data/datasources/job_remote_datasource.dart';
 import 'features/jobs/data/repositories/job_repository_impl.dart';
 import 'features/jobs/domain/repositories/job_repository.dart';
@@ -91,6 +99,36 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<JobRemoteDataSource>(
     () => JobRemoteDataSourceImpl(),
+  );
+
+  // ========================
+  // Features - Companies
+  // ========================
+
+  // Providers
+  sl.registerFactory(
+    () => CompanyProvider(
+      getCompaniesUseCase: sl(),
+      getCompanyByIdUseCase: sl(),
+      searchCompaniesUseCase: sl(),
+      getCompanyJobsUseCase: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetCompaniesUseCase(sl()));
+  sl.registerLazySingleton(() => GetCompanyByIdUseCase(sl()));
+  sl.registerLazySingleton(() => SearchCompaniesUseCase(sl()));
+  sl.registerLazySingleton(() => GetCompanyJobsUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<CompanyRepository>(
+    () => CompanyRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<CompanyRemoteDataSource>(
+    () => CompanyRemoteDataSourceImpl(jobRemoteDataSource: sl()),
   );
 
   // ========================
