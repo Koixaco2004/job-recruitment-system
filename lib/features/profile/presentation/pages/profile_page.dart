@@ -94,6 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
+        automaticallyImplyLeading: false,
         actions: [
           Consumer<ProfileProvider>(
             builder: (context, provider, _) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
-import '../../../jobs/presentation/pages/home_page.dart';
+import '../../../../core/pages/main_page.dart';
 import '../providers/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
         // Navigate to home page
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(builder: (context) => const MainPage()),
         );
       } else {
         // Login thất bại - Show error

@@ -35,6 +35,7 @@ class _CompaniesPageState extends State<CompaniesPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Danh sách Công ty'),
+        automaticallyImplyLeading: false,
         actions: [
           // Toggle Grid/List view
           Consumer<CompanyProvider>(

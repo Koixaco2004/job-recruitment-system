@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../companies/presentation/pages/companies_page.dart';
-import '../../../profile/presentation/pages/profile_page.dart';
 import '../providers/job_provider.dart';
 import '../widgets/job_card.dart';
 import 'job_detail_page.dart';
-import 'my_jobs_page.dart';
 import 'search_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -31,7 +28,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
-          'Việc làm',
+          'Khám phá',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Theme.of(context).primaryColor,
@@ -44,35 +41,6 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const SearchPage()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.business),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CompaniesPage()),
-              );
-            },
-            tooltip: 'Công ty',
-          ),
-          IconButton(
-            icon: const Icon(Icons.bookmark),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MyJobsPage()),
-              );
-            },
-            tooltip: 'Việc của tôi',
-          ),
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
               );
             },
           ),

@@ -339,6 +339,13 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
     // Giả lập delay network
     await Future.delayed(const Duration(seconds: 1));
 
+    // Lấy thông tin job để enrich
+    final jobs = await getJobs();
+    JobPostModel? job;
+    try {
+      job = jobs.firstWhere((j) => j.jobPostId == jobPostId);
+    } catch (_) {}
+
     // Mock: tạo application thành công
     final application = ApplicationModel(
       applicationId: DateTime.now().millisecondsSinceEpoch,
@@ -348,6 +355,8 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       coverLetter: coverLetter,
       status: 'submitted',
       appliedAt: DateTime.now(),
+      jobTitle: job?.title,
+      companyName: job?.companyName,
     );
 
     // Lưu vào mock storage
@@ -418,11 +427,28 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       throw const ServerException('Việc làm đã được lưu');
     }
 
+    // Lấy thông tin job để enrich
+    final jobs = await getJobs();
+    JobPostModel? job;
+    try {
+      job = jobs.firstWhere((j) => j.jobPostId == jobPostId);
+    } catch (_) {}
+
     final savedJob = SavedJobModel(
       savedJobId: DateTime.now().millisecondsSinceEpoch,
       candidateId: candidateId,
       jobPostId: jobPostId,
       createdAt: DateTime.now(),
+      jobTitle: job?.title,
+      companyName: job?.companyName,
+      companyLogo: job?.companyLogo,
+      cityName: job?.cityName,
+      salaryMin: job?.salaryMin,
+      salaryMax: job?.salaryMax,
+      salaryType: job?.salaryType,
+      jobType: job?.jobType,
+      jobLevel: job?.jobLevel,
+      deadline: job?.deadline,
     );
 
     _mockSavedJobs.add(savedJob);

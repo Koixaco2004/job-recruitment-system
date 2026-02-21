@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/pages/main_page.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 import '../providers/my_jobs_provider.dart';
 import '../widgets/saved_job_card.dart';
@@ -51,6 +52,7 @@ class _MyJobsPageState extends State<MyJobsPage>
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
+        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -212,8 +214,8 @@ class _MyJobsPageState extends State<MyJobsPage>
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
-                // Navigate to home
-                Navigator.of(context).popUntil((route) => route.isFirst);
+                // Chuyển về tab Khám phá (index 0)
+                MainPage.switchTab(context, 0);
               },
               icon: const Icon(Icons.search),
               label: const Text('Khám phá việc làm ngay'),
