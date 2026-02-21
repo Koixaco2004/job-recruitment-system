@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/widgets/pdf_viewer_page.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
 import '../providers/profile_provider.dart';
 import 'edit_profile_page.dart';
@@ -62,24 +62,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _openPdfUrl(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Không thể mở file PDF')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: ${e.toString()}')));
-      }
-    }
+    await PdfViewerPage.open(context, url, title: 'Xem CV');
   }
 
   @override
