@@ -6,11 +6,13 @@ import '../../domain/entities/saved_job_entity.dart';
 class SavedJobCard extends StatelessWidget {
   final SavedJobEntity savedJob;
   final VoidCallback onUnsave;
+  final VoidCallback? onTap;
 
   const SavedJobCard({
     super.key,
     required this.savedJob,
     required this.onUnsave,
+    this.onTap,
   });
 
   String _formatSalary() {
@@ -67,16 +69,7 @@ class SavedJobCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
-        onTap: () {
-          // Navigate to job detail - cần tạo JobPostEntity từ SavedJobEntity
-          // Tạm thời comment, sẽ implement sau khi có full data
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Xem chi tiết: ${savedJob.jobTitle}'),
-              duration: const Duration(seconds: 1),
-            ),
-          );
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),

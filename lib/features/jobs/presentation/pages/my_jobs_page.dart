@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/pages/main_page.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
+import '../providers/job_provider.dart';
 import '../providers/my_jobs_provider.dart';
 import '../widgets/saved_job_card.dart';
 import '../widgets/applied_job_card.dart';
+import '../pages/job_detail_page.dart';
 
 /// Màn hình "Việc của tôi" với 2 tabs: Đã lưu & Đã ứng tuyển
 class MyJobsPage extends StatefulWidget {
@@ -120,6 +122,27 @@ class _MyJobsPageState extends State<MyJobsPage>
                       const SnackBar(
                         content: Text('Đã bỏ lưu việc làm'),
                         duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+                onTap: () {
+                  // Tìm JobPostEntity từ danh sách jobs đã load
+                  final jobProvider = context.read<JobProvider>();
+                  try {
+                    final job = jobProvider.allJobs.firstWhere(
+                      (j) => j.jobPostId == savedJob.jobPostId,
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => JobDetailPage(job: job),
+                      ),
+                    );
+                  } catch (_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Không tìm thấy thông tin việc làm'),
                       ),
                     );
                   }
