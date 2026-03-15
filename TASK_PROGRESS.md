@@ -1,6 +1,6 @@
 # 📊 TASK PROGRESS — Job Recruitment System
 
-> **Last Updated:** 2026-03-07
+> **Last Updated:** 2026-03-15
 
 ---
 
@@ -62,11 +62,14 @@
 ### 👤 8. Profile (Hồ sơ ứng viên)
 - [x] ProfilePage: hiển thị đầy đủ thông tin cá nhân
 - [x] Sections: Thông tin cá nhân, Kỹ năng, Kinh nghiệm, Học vấn, Chứng chỉ, Ngôn ngữ, CV
-- [x] EditProfilePage: form chỉnh sửa profile (~1000 lines)
+- [x] EditProfilePage: form chỉnh sửa profile (~1100 lines)
 - [x] Upload CV (PDF) từ profile page
 - [x] Xem CV: mobile → WebView (Google Docs Viewer), web → url_launcher
 - [x] Toggle `isSearchable` (công khai/riêng tư)
 - [x] Industry field
+- [x] **Upload ảnh đại diện (avatar)** — CircleAvatar + camera icon overlay, upload lên Cloudinary
+- [x] **Upload ảnh chứng chỉ** — Pick ảnh từ file browser, upload lên Cloudinary, lưu vào `credentialUrl`
+- [x] **Hiển thị ảnh chứng chỉ** — `CachedNetworkImage` trên ProfilePage (160px preview)
 - **Files:** `profile_page.dart`, `edit_profile_page.dart`, `profile_provider.dart`, `pdf_viewer_page.dart`
 
 ### 🧭 9. Navigation (Bottom Nav)
@@ -146,6 +149,24 @@
 - **Fix:** Sửa `pickAndUploadCV()` để dùng `result.files.single.bytes` trực tiếp, hỗ trợ cả web + mobile
 - **File:** `profile_provider.dart`
 
+### Bug 8: Chọn ảnh trên emulator không thấy file nào
+- **Triệu chứng:** Nhấn upload ảnh đại diện/chứng chỉ → Photo Picker mở ra nhưng trống
+- **Nguyên nhân:** `FileType.image` mở Android Photo Gallery picker, emulator mới không có ảnh trong gallery
+- **Fix:** Đổi sang `FileType.custom` với `allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']` → mở File Browser thay vì Gallery
+- **File:** `profile_provider.dart` → `pickAndUploadImage()`
+
+### Bug 9: Crash khi mở dialog chứng chỉ có ảnh
+- **Triệu chứng:** `'width.isFinite': is not true` → app crash, dialog hiển thị trắng
+- **Nguyên nhân:** `width: double.infinity` bên trong `AlertDialog` content — dialog không có bounded width constraint
+- **Fix:** Bỏ tất cả `width: double.infinity` khỏi Container, `CachedNetworkImage`, SizedBox trong certificate dialog
+- **File:** `edit_profile_page.dart` → `_showCertificateDialog()`
+
+### Bug 10: Ảnh chứng chỉ upload thành công nhưng không hiển thị trên trang Hồ sơ
+- **Triệu chứng:** Upload ảnh chứng chỉ OK nhưng profile page chỉ hiện text
+- **Nguyên nhân:** `_buildCertificateSection()` trong `profile_page.dart` không render `credentialUrl` thành ảnh
+- **Fix:** Thêm `CachedNetworkImage` vào certificate section khi `credentialUrl` có giá trị
+- **File:** `profile_page.dart` → `_buildCertificateSection()`
+
 ---
 
 ## 📝 Ghi Chú Quan Trọng Cho Phiên Tiếp Theo
@@ -155,3 +176,5 @@
 3. **Tham khảo API spec:** Đã tạo file `api_specification.md` trong artifact directory với đầy đủ 16 endpoints
 4. **76 files Dart** — Dự án đã khá lớn, mọi thay đổi nên chạy `flutter analyze` sau khi sửa
 5. **Mock data nằm tại:** `job_remote_datasource.dart` (~530 lines), `profile_remote_datasource.dart`, `company_remote_datasource.dart`, `auth_remote_datasource.dart`
+6. **Upload ảnh dùng chung:** `ProfileProvider.pickAndUploadImage()` — FileType.custom + Cloudinary, trả về URL. Có thể tái sử dụng cho bất kỳ feature nào cần upload ảnh
+7. **`credentialUrl` trong `CertificateEntity`** giờ lưu URL ảnh chứng chỉ (Cloudinary) thay vì URL xác minh text

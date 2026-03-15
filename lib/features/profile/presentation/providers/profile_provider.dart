@@ -156,6 +156,60 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
+  // Upload image state
+  bool _isUploadingImage = false;
+  bool get isUploadingImage => _isUploadingImage;
+
+  /// Pick ảnh từ gallery và upload lên Cloudinary (dùng chung cho avatar, chứng chỉ, v.v.)
+  /// Trả về URL ảnh đã upload, hoặc null nếu thất bại
+  Future<String?> pickAndUploadImage() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) return null;
+
+      final file = result.files.single;
+      final bytes = file.bytes;
+      final fileName = file.name;
+
+      if (bytes == null) {
+        _uploadError = 'Không thể đọc ảnh. Vui lòng thử lại.';
+        notifyListeners();
+        return null;
+      }
+
+      _isUploadingImage = true;
+      _uploadError = null;
+      notifyListeners();
+
+      final uploadResult = await profileRepository.uploadCV(bytes, fileName);
+      String? uploadedUrl;
+
+      uploadResult.fold(
+        (failure) {
+          _uploadError = failure.message;
+        },
+        (url) {
+          uploadedUrl = url;
+          _successMessage = 'Upload ảnh thành công!';
+        },
+      );
+
+      _isUploadingImage = false;
+      notifyListeners();
+      return uploadedUrl;
+    } catch (e) {
+      _isUploadingImage = false;
+      _uploadError = 'Lỗi chọn ảnh: $e';
+      notifyListeners();
+      return null;
+    }
+  }
+
   /// Bật/Tắt trạng thái tìm việc
   Future<void> toggleSearchable() async {
     if (_profile == null) return;

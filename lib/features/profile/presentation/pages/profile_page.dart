@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/widgets/pdf_viewer_page.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
 import '../providers/profile_provider.dart';
@@ -635,6 +636,33 @@ class _ProfilePageState extends State<ProfilePage> {
                           fontSize: 13,
                         ),
                       ),
+                      // === Ảnh chứng chỉ ===
+                      if (cert.credentialUrl != null &&
+                          cert.credentialUrl!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: cert.credentialUrl!,
+                            height: 160,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => const SizedBox(
+                              height: 160,
+                              child:
+                                  Center(child: CircularProgressIndicator()),
+                            ),
+                            errorWidget: (_, __, ___) => Container(
+                              height: 160,
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: Icon(Icons.broken_image,
+                                    size: 40, color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                       if (profile.certificates.last != cert)
                         const Divider(height: 20),
                     ],

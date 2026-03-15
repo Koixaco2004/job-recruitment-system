@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
 import '../../domain/entities/work_experience_entity.dart';
 import '../../domain/entities/education_entity.dart';
@@ -34,6 +35,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? _selectedJobType;
   String? _selectedIndustry;
   DateTime? _dateOfBirth;
+  String? _avatarUrl; // URL ảnh đại diện (cập nhật khi upload)
 
   // Dynamic lists
   List<WorkExperienceEntity> _workExperiences = [];
@@ -88,6 +90,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _selectedJobType = profile.desiredJobType;
     _selectedIndustry = profile.industry;
     _dateOfBirth = profile.dateOfBirth;
+    _avatarUrl = profile.avatarUrl;
 
     _workExperiences = List.from(profile.workExperiences);
     _educations = List.from(profile.educations);
@@ -234,6 +237,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       title: 'Thông tin chung',
       icon: Icons.person,
       children: [
+        // === Avatar Upload ===
+        _buildAvatarUpload(),
+        const SizedBox(height: 16),
         _buildTextField('Họ và tên *', _fullNameCtrl, required: true),
         _buildTextField(
           'Số điện thoại',
@@ -300,6 +306,75 @@ class _EditProfilePageState extends State<EditProfilePage> {
           (v) => setState(() => _selectedIndustry = v),
         ),
       ],
+    );
+  }
+
+  /// Widget upload ảnh đại diện
+  Widget _buildAvatarUpload() {
+    return Center(
+      child: Consumer<ProfileProvider>(
+        builder: (context, provider, _) {
+          return Column(
+            children: [
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey[200],
+                    backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
+                        ? CachedNetworkImageProvider(_avatarUrl!)
+                        : null,
+                    child: _avatarUrl == null || _avatarUrl!.isEmpty
+                        ? Icon(Icons.person, size: 50, color: Colors.grey[400])
+                        : null,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: provider.isUploadingImage
+                          ? const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              icon: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              onPressed: () async {
+                                final url = await provider.pickAndUploadImage();
+                                if (url != null) {
+                                  setState(() => _avatarUrl = url);
+                                }
+                              },
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Nhấn biểu tượng máy ảnh để đổi avatar',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -827,9 +902,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final orgCtrl = TextEditingController(
       text: cert?.issuingOrganization ?? '',
     );
-    final urlCtrl = TextEditingController(text: cert?.credentialUrl ?? '');
     DateTime issueDate = cert?.issueDate ?? DateTime.now();
     DateTime? expirationDate = cert?.expirationDate;
+    String? certImageUrl = cert?.credentialUrl;
+    bool isUploadingCertImage = false;
 
     showDialog(
       context: context,
@@ -851,10 +927,67 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   controller: orgCtrl,
                   decoration: const InputDecoration(labelText: 'Tổ chức cấp *'),
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: urlCtrl,
-                  decoration: const InputDecoration(labelText: 'URL xác minh'),
+                const SizedBox(height: 12),
+                // === Ảnh chứng chỉ ===
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: Column(
+                    children: [
+                      if (certImageUrl != null && certImageUrl!.isNotEmpty) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: certImageUrl!,
+                            height: 120,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => const SizedBox(
+                              height: 120,
+                              child: Center(child: CircularProgressIndicator()),
+                            ),
+                            errorWidget: (_, __, ___) => const SizedBox(
+                              height: 120,
+                              child: Center(child: Icon(Icons.broken_image, size: 40)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      OutlinedButton.icon(
+                          onPressed: isUploadingCertImage
+                              ? null
+                              : () async {
+                                  final provider = context.read<ProfileProvider>();
+                                  setDialogState(() => isUploadingCertImage = true);
+                                  final url = await provider.pickAndUploadImage();
+                                  setDialogState(() {
+                                    isUploadingCertImage = false;
+                                    if (url != null) certImageUrl = url;
+                                  });
+                                },
+                          icon: isUploadingCertImage
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Icon(
+                                  certImageUrl != null ? Icons.refresh : Icons.add_photo_alternate,
+                                ),
+                          label: Text(
+                            isUploadingCertImage
+                                ? 'Đang upload...'
+                                : certImageUrl != null
+                                    ? 'Đổi ảnh chứng chỉ'
+                                    : 'Tải ảnh chứng chỉ lên',
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 8),
                 ListTile(
@@ -908,7 +1041,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   issuingOrganization: orgCtrl.text,
                   issueDate: issueDate,
                   expirationDate: expirationDate,
-                  credentialUrl: urlCtrl.text.isEmpty ? null : urlCtrl.text,
+                  credentialUrl: certImageUrl,
                 );
                 setState(() {
                   if (isEdit) {
@@ -1012,7 +1145,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       email: profile.email,
       phone: _phoneCtrl.text.isEmpty ? null : _phoneCtrl.text,
       fullName: _fullNameCtrl.text,
-      avatarUrl: profile.avatarUrl,
+      avatarUrl: _avatarUrl ?? profile.avatarUrl,
       candidateId: profile.candidateId,
       dateOfBirth: _dateOfBirth,
       gender: _selectedGender,
