@@ -6,8 +6,15 @@ import '../entities/user_entity.dart';
 /// Domain layer chỉ định nghĩa interface, không quan tâm implementation
 abstract class AuthRepository {
   /// Login với email và password
-  /// Trả về Either&lt;Failure, UserEntity&gt;
+  /// Trả về Either<Failure, UserEntity>
   Future<Either<Failure, UserEntity>> login({
+    required String email,
+    required String password,
+  });
+
+  /// Đăng ký tài khoản ứng viên mới
+  Future<Either<Failure, UserEntity>> register({
+    required String fullName,
     required String email,
     required String password,
   });

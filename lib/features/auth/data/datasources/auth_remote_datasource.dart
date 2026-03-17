@@ -5,6 +5,13 @@ import '../models/user_model.dart';
 abstract class AuthRemoteDataSource {
   /// Login qua API
   Future<UserModel> login({required String email, required String password});
+
+  /// Đăng ký tài khoản ứng viên mới
+  Future<UserModel> register({
+    required String fullName,
+    required String email,
+    required String password,
+  });
 }
 
 /// Implementation với Mock Data
@@ -52,5 +59,36 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       // Giả lập lỗi authentication
       throw const AuthenticationException('Email hoặc mật khẩu không đúng');
     }
+  }
+
+  @override
+  Future<UserModel> register({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    // Giả lập delay 2 giây như gọi API thật
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Giả lập check email trùng
+    if (email == 'candidate@test.com' || email == 'employer@test.com') {
+      throw const AuthenticationException('Email này đã được sử dụng');
+    }
+
+    // Trả về mock data cho user mới đăng ký thành công
+    return UserModel.fromJson({
+      'user_id': DateTime.now().millisecondsSinceEpoch % 10000, // Random ID
+      'email': email,
+      'phone': null,
+      'full_name': fullName,
+      'avatar_url': null,
+      'user_type': 'candidate', // Luôn đăng ký ứng viên
+      'status': 'active',
+      'email_verified': false,
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+      'last_login': DateTime.now().toIso8601String(),
+      'token': 'mock_jwt_token_new_user_${DateTime.now().millisecondsSinceEpoch}',
+    });
   }
 }

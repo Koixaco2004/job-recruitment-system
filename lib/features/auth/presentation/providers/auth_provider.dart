@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/register_usecase.dart';
 
 /// Provider quản lý state cho Authentication
 class AuthProvider extends ChangeNotifier {
   final LoginUseCase loginUseCase;
+  final RegisterUseCase registerUseCase;
 
-  AuthProvider({required this.loginUseCase});
+  AuthProvider({
+    required this.loginUseCase,
+    required this.registerUseCase,
+  });
 
   // State
   bool _isLoading = false;
@@ -37,6 +42,41 @@ class AuthProvider extends ChangeNotifier {
       },
       (user) {
         // Login thành công
+        _isLoading = false;
+        _user = user;
+        _errorMessage = null;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  /// Register method
+  Future<bool> register({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await registerUseCase(
+      fullName: fullName,
+      email: email,
+      password: password,
+    );
+
+    return result.fold(
+      (failure) {
+        // Đăng ký thất bại
+        _isLoading = false;
+        _errorMessage = failure.message;
+        notifyListeners();
+        return false;
+      },
+      (user) {
+        // Đăng ký thành công
         _isLoading = false;
         _user = user;
         _errorMessage = null;

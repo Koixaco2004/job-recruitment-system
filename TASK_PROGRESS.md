@@ -1,18 +1,21 @@
 # 📊 TASK PROGRESS — Job Recruitment System
 
-> **Last Updated:** 2026-03-15
+> **Last Updated:** 2026-03-17
 
 ---
 
 ## ✅ Tính Năng Đã Hoàn Thành
 
-### 🔐 1. Authentication (Đăng nhập)
+### 🔐 1. Authentication (Đăng nhập / Đăng ký)
 - [x] Login page UI (email + password form)
 - [x] Mock login với 2 tài khoản test (`candidate@test.com`, `employer@test.com`)
 - [x] JWT token lưu vào `FlutterSecureStorage`
 - [x] Login → navigate to `MainPage`
 - [x] Error handling (email sai, loading state)
-- **Files:** `login_page.dart`, `auth_provider.dart`, `auth_remote_datasource.dart`
+- [x] **RegisterPage UI cho ứng viên** kèm form validation đầy đủ (Họ tên, Email, Passwords)
+- [x] Mock register flow (trả về user mới, lưu token, tự động login và vào `MainPage`)
+- [x] Refactor Auth Layer theo Clean Architecture (`RegisterUseCase`, `AuthRepository`)
+- **Files:** `login_page.dart`, `register_page.dart`, `auth_provider.dart`, `auth_remote_datasource.dart`
 
 ### 💼 2. Job Listing (Danh sách việc làm)
 - [x] Homepage hiển thị danh sách jobs (RefreshIndicator)
@@ -92,7 +95,7 @@
 5. **Tích hợp các API còn lại** — Save, Apply, Unsave, Applications
 
 ### Ưu tiên trung bình (Features)
-6. **Đăng ký tài khoản** — Chưa có (hiện chỉ có login)
+6. **Đăng ký cho NTD** — Cần luồng riêng (chọn loại TK hoặc trang riêng) kèm thông tin định danh Cty
 7. **Quên mật khẩu** — Chưa có
 8. **Logout** — Có thể cần xóa token + navigate về login
 9. **Notification** — Thông báo khi ứng tuyển thành công / có phản hồi
