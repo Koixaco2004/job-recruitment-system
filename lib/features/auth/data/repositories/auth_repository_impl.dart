@@ -45,16 +45,22 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, UserEntity>> register({
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
+    required String phone,
+    required int provinceId,
   }) async {
     try {
       // Gọi API register
       final user = await remoteDataSource.register(
-        fullName: fullName,
+        firstName: firstName,
+        lastName: lastName,
         email: email,
         password: password,
+        phone: phone,
+        provinceId: provinceId,
       );
 
       // Đăng ký xong tự động đăng nhập luôn (Cache token và user)

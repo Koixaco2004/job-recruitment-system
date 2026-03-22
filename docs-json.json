@@ -1,0 +1,1562 @@
+{
+    "openapi": "3.0.0",
+    "paths": {
+        "/api": {
+            "get": {
+                "operationId": "AppController_getHello",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "App"
+                ]
+            }
+        },
+        "/api/auth/register": {
+            "post": {
+                "operationId": "AuthController_register",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Đăng ký thành công"
+                    },
+                    "409": {
+                        "description": "Email đã được sử dụng"
+                    }
+                },
+                "summary": "Đăng ký tài khoản mới",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "operationId": "AuthController_login",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Đăng nhập thành công, trả về access_token"
+                    },
+                    "401": {
+                        "description": "Email hoặc mật khẩu không đúng"
+                    }
+                },
+                "summary": "Đăng nhập",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/api/auth/status": {
+            "get": {
+                "operationId": "AuthController_getStatus",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Trả về thông tin user hiện tại"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Kiểm tra trạng thái đăng nhập",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/api/candidates/profile": {
+            "get": {
+                "operationId": "CandidatesController_getProfile",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Toàn bộ hồ sơ"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy hồ sơ ứng viên"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy toàn bộ hồ sơ ứng viên",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Profile"
+                ]
+            },
+            "put": {
+                "operationId": "CandidatesController_updateProfile",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProfileDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật hồ sơ thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy hồ sơ ứng viên"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật hồ sơ ứng viên",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Profile"
+                ]
+            }
+        },
+        "/api/candidates/cv": {
+            "post": {
+                "operationId": "CandidatesController_uploadCv",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "File CV dạng PDF"
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Upload CV thành công"
+                    },
+                    "201": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "File không hợp lệ"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Upload CV (PDF) Ứng viên",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Profile"
+                ]
+            }
+        },
+        "/api/candidates/work-experiences": {
+            "get": {
+                "operationId": "CandidatesController_getWorkExperiences",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách kinh nghiệm làm việc"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách kinh nghiệm làm việc",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Work Experiences"
+                ]
+            },
+            "post": {
+                "operationId": "CandidatesController_createWorkExperience",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateWorkExperienceDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tạo thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy hồ sơ ứng viên"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thêm kinh nghiệm làm việc mới",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Work Experiences"
+                ]
+            }
+        },
+        "/api/candidates/work-experiences/{id}": {
+            "put": {
+                "operationId": "CandidatesController_updateWorkExperience",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID kinh nghiệm làm việc",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateWorkExperienceDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền sửa"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy kinh nghiệm"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật kinh nghiệm làm việc",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Work Experiences"
+                ]
+            },
+            "delete": {
+                "operationId": "CandidatesController_deleteWorkExperience",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID kinh nghiệm làm việc",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền xóa"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy kinh nghiệm"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa kinh nghiệm làm việc",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Work Experiences"
+                ]
+            }
+        },
+        "/api/candidates/educations": {
+            "get": {
+                "operationId": "CandidatesController_getEducations",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách học vấn"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách học vấn",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Educations"
+                ]
+            },
+            "post": {
+                "operationId": "CandidatesController_createEducation",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateEducationDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tạo thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy hồ sơ ứng viên"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thêm học vấn mới",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Educations"
+                ]
+            }
+        },
+        "/api/candidates/educations/{id}": {
+            "put": {
+                "operationId": "CandidatesController_updateEducation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID học vấn",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateEducationDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền sửa"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy học vấn"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật học vấn",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Educations"
+                ]
+            },
+            "delete": {
+                "operationId": "CandidatesController_deleteEducation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID học vấn",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền xóa"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy học vấn"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa học vấn",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Educations"
+                ]
+            }
+        },
+        "/api/candidates/projects": {
+            "get": {
+                "operationId": "CandidatesController_getProjects",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách dự án"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách dự án",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Projects"
+                ]
+            },
+            "post": {
+                "operationId": "CandidatesController_createProject",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateProjectDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tạo thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy hồ sơ ứng viên"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thêm dự án mới",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Projects"
+                ]
+            }
+        },
+        "/api/candidates/projects/{id}": {
+            "put": {
+                "operationId": "CandidatesController_updateProject",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID dự án",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProjectDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền sửa"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy dự án"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật dự án",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Projects"
+                ]
+            },
+            "delete": {
+                "operationId": "CandidatesController_deleteProject",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID dự án",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền xóa"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy dự án"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa dự án",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Projects"
+                ]
+            }
+        },
+        "/api/candidates/certificates": {
+            "get": {
+                "operationId": "CandidatesController_getCertificates",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách chứng chỉ"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách chứng chỉ",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Certificates"
+                ]
+            },
+            "post": {
+                "operationId": "CandidatesController_createCertificate",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Ảnh chứng chỉ (jpeg, png)"
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tạo thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy hồ sơ ứng viên"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thêm chứng chỉ mới (có thể upload ảnh)",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Certificates"
+                ]
+            }
+        },
+        "/api/candidates/certificates/{id}": {
+            "put": {
+                "operationId": "CandidatesController_updateCertificate",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID chứng chỉ",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Ảnh chứng chỉ (jpeg, png)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền sửa"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy chứng chỉ"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật chứng chỉ (có thể upload lại ảnh)",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Certificates"
+                ]
+            },
+            "delete": {
+                "operationId": "CandidatesController_deleteCertificate",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID chứng chỉ",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền xóa"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy chứng chỉ"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa chứng chỉ",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Certificates"
+                ]
+            }
+        },
+        "/api/candidates/skills": {
+            "get": {
+                "operationId": "CandidatesController_getSkills",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách skills"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách skills của mình",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Skills"
+                ]
+            },
+            "post": {
+                "operationId": "CandidatesController_addSkills",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddSkillsDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Thêm thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy hồ sơ ứng viên"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thêm skills (hỗn hợp ID + string, AI format cho string)",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Skills"
+                ]
+            }
+        },
+        "/api/candidates/skills/{id}": {
+            "delete": {
+                "operationId": "CandidatesController_deleteSkill",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID của candidate_skill_tag",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền xóa"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy skill"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa 1 skill",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Skills"
+                ]
+            }
+        },
+        "/api/candidates/job-categories": {
+            "get": {
+                "operationId": "CandidatesController_getJobCategories",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách ngành nghề"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách các ngành nghề ứng viên đã chọn",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Job Categories"
+                ]
+            },
+            "post": {
+                "operationId": "CandidatesController_addJobCategories",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateJobCategoriesDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Thêm thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thêm ngành nghề cho ứng viên",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Job Categories"
+                ]
+            }
+        },
+        "/api/candidates/job-categories/{id}": {
+            "delete": {
+                "operationId": "CandidatesController_deleteJobCategory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa 1 ngành nghề (truyền ID của bảng candidate_job_category)",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Job Categories"
+                ]
+            }
+        },
+        "/api/candidates/job-types": {
+            "get": {
+                "operationId": "CandidatesController_getJobTypes",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách hình thức làm việc"
+                    }
+                },
+                "summary": "Lấy filter hình thức làm việc",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Job Types"
+                ]
+            }
+        },
+        "/api/metadata/skills/search": {
+            "get": {
+                "operationId": "SkillsMetadataController_search",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "required": true,
+                        "in": "query",
+                        "description": "Từ khóa tìm kiếm",
+                        "schema": {
+                            "example": "java",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số kết quả tối đa",
+                        "schema": {
+                            "example": 10,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách skills gợi ý"
+                    }
+                },
+                "summary": "Tìm kiếm / gợi ý skills (autocomplete)",
+                "tags": [
+                    "Metadata - Skills"
+                ]
+            }
+        },
+        "/api/metadata/provinces": {
+            "get": {
+                "operationId": "ProvincesController_findAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách các tỉnh thành"
+                    }
+                },
+                "summary": "Lấy danh sách tất cả tỉnh / thành phố",
+                "tags": [
+                    "Metadata - Provinces"
+                ]
+            }
+        },
+        "/api/metadata/provinces/search": {
+            "get": {
+                "operationId": "ProvincesController_search",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "required": false,
+                        "in": "query",
+                        "description": "Từ khóa tìm kiếm",
+                        "schema": {
+                            "example": "hà nội",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách tỉnh thành phù hợp"
+                    }
+                },
+                "summary": "Tìm kiếm tỉnh / thành phố",
+                "tags": [
+                    "Metadata - Provinces"
+                ]
+            }
+        }
+    },
+    "info": {
+        "title": "NestJS ATS API",
+        "description": "API documentation for the Applicant Tracking System",
+        "version": "1.0",
+        "contact": {}
+    },
+    "tags": [],
+    "servers": [],
+    "components": {
+        "securitySchemes": {
+            "bearer": {
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "type": "http"
+            }
+        },
+        "schemas": {
+            "RegisterDto": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "minLength": 1,
+                        "format": "email",
+                        "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                        "description": "Email đăng ký",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 6,
+                        "description": "Mật khẩu (tối thiểu 6 ký tự)",
+                        "example": "password123"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Tên",
+                        "example": "Văn A"
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Họ",
+                        "example": "Nguyễn"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "minLength": 10,
+                        "description": "Số điện thoại (tối thiểu 10 số)",
+                        "example": "0901234567"
+                    },
+                    "provinceId": {
+                        "type": "number",
+                        "description": "ID tỉnh/thành phố",
+                        "example": 1
+                    }
+                },
+                "required": [
+                    "email",
+                    "password",
+                    "firstName",
+                    "lastName",
+                    "phone",
+                    "provinceId"
+                ]
+            },
+            "LoginDto": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "minLength": 1,
+                        "format": "email",
+                        "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                        "description": "Email đăng nhập",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 6,
+                        "description": "Mật khẩu (tối thiểu 6 ký tự)",
+                        "example": "password123"
+                    }
+                },
+                "required": [
+                    "email",
+                    "password"
+                ]
+            },
+            "UpdateProfileDto": {
+                "type": "object",
+                "properties": {
+                    "fullName": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "Họ và tên",
+                        "example": "Nguyễn Văn A"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "enum": [
+                            "male",
+                            "female",
+                            "other"
+                        ],
+                        "description": "Giới tính",
+                        "example": "male"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "description": "Số điện thoại",
+                        "example": "0901234567"
+                    },
+                    "avatarUrl": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "URL ảnh đại diện",
+                        "example": "https://example.com/avatar.jpg"
+                    },
+                    "cvUrl": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "URL file CV",
+                        "example": "https://example.com/cv.pdf"
+                    },
+                    "bio": {
+                        "type": "string",
+                        "description": "Giới thiệu bản thân",
+                        "example": "Tôi là lập trình viên..."
+                    },
+                    "provinceId": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "ID tỉnh/thành phố",
+                        "example": 1
+                    },
+                    "position": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "Vị trí ứng tuyển",
+                        "example": "Backend Developer"
+                    },
+                    "salaryMin": {
+                        "type": "number",
+                        "description": "Mức lương tối thiểu mong muốn (triệu VNĐ)",
+                        "example": 10
+                    },
+                    "salaryMax": {
+                        "type": "number",
+                        "description": "Mức lương tối đa mong muốn (triệu VNĐ)",
+                        "example": 20
+                    },
+                    "jobTypeId": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "ID loại công việc",
+                        "example": 1
+                    },
+                    "yearWorkingExperience": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Số năm kinh nghiệm làm việc",
+                        "example": 2
+                    }
+                }
+            },
+            "CreateWorkExperienceDto": {
+                "type": "object",
+                "properties": {
+                    "companyName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Tên công ty",
+                        "example": "FPT Software"
+                    },
+                    "position": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Vị trí / chức danh",
+                        "example": "Backend Developer"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "description": "Ngày bắt đầu (YYYY-MM-DD)",
+                        "example": "2023-01-15"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "description": "Ngày kết thúc (YYYY-MM-DD)",
+                        "example": "2024-06-30"
+                    },
+                    "isWorkingHere": {
+                        "type": "boolean",
+                        "description": "Hiện tại vẫn đang làm ở đây?",
+                        "example": false
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Mô tả công việc đã thực hiện",
+                        "example": "Phát triển REST API cho hệ thống quản lý nhân sự"
+                    }
+                },
+                "required": [
+                    "companyName",
+                    "position"
+                ]
+            },
+            "UpdateWorkExperienceDto": {
+                "type": "object",
+                "properties": {
+                    "companyName": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "Tên công ty",
+                        "example": "FPT Software"
+                    },
+                    "position": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "Vị trí / chức danh",
+                        "example": "Backend Developer"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "description": "Ngày bắt đầu (YYYY-MM-DD)",
+                        "example": "2023-01-15"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "description": "Ngày kết thúc (YYYY-MM-DD)",
+                        "example": "2024-06-30"
+                    },
+                    "isWorkingHere": {
+                        "type": "boolean",
+                        "description": "Hiện tại vẫn đang làm ở đây?",
+                        "example": false
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Mô tả công việc đã thực hiện",
+                        "example": "Phát triển REST API cho hệ thống quản lý nhân sự"
+                    }
+                }
+            },
+            "CreateEducationDto": {
+                "type": "object",
+                "properties": {
+                    "schoolName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Tên trường học / đại học",
+                        "example": "Đại học Bách Khoa TP.HCM"
+                    },
+                    "major": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "Chuyên ngành",
+                        "example": "Khoa học Máy tính"
+                    },
+                    "degree": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "description": "Bằng cấp",
+                        "example": "Cử nhân"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "description": "Ngày bắt đầu (YYYY-MM-DD)",
+                        "example": "2019-09-01"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "description": "Ngày kết thúc (YYYY-MM-DD)",
+                        "example": "2023-06-30"
+                    },
+                    "isStillStudying": {
+                        "type": "boolean",
+                        "description": "Vẫn đang theo học?",
+                        "example": false
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Thông tin thêm về quá trình học tập",
+                        "example": "Tốt nghiệp loại giỏi, GPA 3.5/4.0"
+                    }
+                },
+                "required": [
+                    "schoolName"
+                ]
+            },
+            "UpdateEducationDto": {
+                "type": "object",
+                "properties": {
+                    "schoolName": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "Tên trường học / đại học",
+                        "example": "Đại học Bách Khoa TP.HCM"
+                    },
+                    "major": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "Chuyên ngành",
+                        "example": "Khoa học Máy tính"
+                    },
+                    "degree": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "description": "Bằng cấp",
+                        "example": "Cử nhân"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "description": "Ngày bắt đầu (YYYY-MM-DD)",
+                        "example": "2019-09-01"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "description": "Ngày kết thúc (YYYY-MM-DD)",
+                        "example": "2023-06-30"
+                    },
+                    "isStillStudying": {
+                        "type": "boolean",
+                        "description": "Vẫn đang theo học?",
+                        "example": false
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Thông tin thêm về quá trình học tập",
+                        "example": "Tốt nghiệp loại giỏi, GPA 3.5/4.0"
+                    }
+                }
+            },
+            "CreateProjectDto": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Tên dự án",
+                        "example": "Hệ thống quản lý tuyển dụng"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "description": "Ngày bắt đầu (YYYY-MM-DD)",
+                        "example": "2023-03-01"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "description": "Ngày kết thúc (YYYY-MM-DD)",
+                        "example": "2023-12-31"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Mô tả vai trò và kết quả trong dự án",
+                        "example": "Thiết kế và phát triển module quản lý ứng viên"
+                    }
+                },
+                "required": [
+                    "name"
+                ]
+            },
+            "UpdateProjectDto": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "Tên dự án",
+                        "example": "Hệ thống quản lý tuyển dụng"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "description": "Ngày bắt đầu (YYYY-MM-DD)",
+                        "example": "2023-03-01"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "description": "Ngày kết thúc (YYYY-MM-DD)",
+                        "example": "2023-12-31"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Mô tả vai trò và kết quả trong dự án",
+                        "example": "Thiết kế và phát triển module quản lý ứng viên"
+                    }
+                }
+            },
+            "AddSkillsDto": {
+                "type": "object",
+                "properties": {
+                    "skills": {
+                        "minItems": 1,
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                },
+                                {
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "description": "Mảng hỗn hợp: số (ID skill đã chọn từ gợi ý) hoặc chuỗi (skill user tự gõ, sẽ được AI format)",
+                        "example": [
+                            1,
+                            2,
+                            "Typescrist"
+                        ],
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "skills"
+                ]
+            },
+            "UpdateJobCategoriesDto": {
+                "type": "object",
+                "properties": {
+                    "categoryIds": {
+                        "minItems": 1,
+                        "items": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        "description": "Danh sách ID của các ngành nghề",
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ],
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "categoryIds"
+                ]
+            }
+        }
+    }
+}

@@ -53,18 +53,24 @@ class AuthProvider extends ChangeNotifier {
 
   /// Register method
   Future<bool> register({
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
+    required String phone,
+    required int provinceId,
   }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     final result = await registerUseCase(
-      fullName: fullName,
+      firstName: firstName,
+      lastName: lastName,
       email: email,
       password: password,
+      phone: phone,
+      provinceId: provinceId,
     );
 
     return result.fold(

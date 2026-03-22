@@ -4,6 +4,9 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/pages/main_page.dart';
 import '../providers/auth_provider.dart';
+import '../../../../injection_container.dart' as di;
+import '../../../metadata/domain/usecases/get_provinces_usecase.dart';
+import '../../../metadata/domain/entities/province_entity.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -14,16 +17,59 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController();
+  
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  
+  List<ProvinceEntity> _provinces = [];
+  int? _selectedProvinceId;
+  bool _isLoadingProvinces = true;
+  bool _hasErrorProvinces = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProvinces();
+  }
+
+  Future<void> _loadProvinces() async {
+    final getProvincesUseCase = di.sl<GetProvincesUseCase>();
+    final result = await getProvincesUseCase();
+    
+    if (mounted) {
+      setState(() {
+        _isLoadingProvinces = false;
+        result.fold(
+          (failure) {
+            _hasErrorProvinces = true;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Lỗi tải Tỉnh thành: ${failure.message}\n(Backend có thể chưa bật)'), 
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          },
+          (provinces) {
+            _provinces = provinces;
+          },
+        );
+      });
+    }
+  }
 
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -31,19 +77,28 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _handleRegister() async {
+    if (_selectedProvinceId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn Tỉnh/Thành phố'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       final authProvider = context.read<AuthProvider>();
 
       final success = await authProvider.register(
-        fullName: _fullNameController.text.trim(),
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        phone: _phoneController.text.trim(),
+        provinceId: _selectedProvinceId!,
       );
 
       if (!mounted) return;
 
       if (success) {
-        // Đăng ký thành công - tự động login và báo cho user
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Đăng ký thành công! Đang tự động đăng nhập...'),
@@ -51,14 +106,12 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         );
 
-        // Chuyển sang màn hình chính
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const MainPage()),
-          (route) => false, // Xoá hết lịch sử, không cho back về Register/Login
+          (route) => false,
         );
       } else {
-        // Đăng ký thất bại
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(authProvider.errorMessage ?? 'Đăng ký thất bại'),
@@ -100,20 +153,123 @@ class _RegisterPageState extends State<RegisterPage> {
                   'Đăng ký để tìm kiếm cơ hội việc làm tốt nhất',
                   style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
                 
-                // Họ và tên
+                // Họ và Tên (Row)
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomTextField(
+                        controller: _lastNameController,
+                        label: 'Họ',
+                        hint: 'Nguyễn',
+                        prefixIcon: const Icon(Icons.person_outline),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Nhập Họ';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: CustomTextField(
+                        controller: _firstNameController,
+                        label: 'Tên',
+                        hint: 'Văn A',
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Nhập Tên';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Số điện thoại
                 CustomTextField(
-                  controller: _fullNameController,
-                  label: 'Họ và tên',
-                  hint: 'Nhập họ tên đầy đủ',
-                  prefixIcon: const Icon(Icons.person_outline),
+                  controller: _phoneController,
+                  label: 'Số điện thoại',
+                  hint: 'Nhập số điện thoại',
+                  keyboardType: TextInputType.phone,
+                  prefixIcon: const Icon(Icons.phone_outlined),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Vui lòng nhập họ và tên';
+                      return 'Vui lòng nhập số điện thoại';
+                    }
+                    if (value.length < 10) {
+                      return 'SĐT phải có ít nhất 10 số';
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 20),
+
+                // Tỉnh / Thành phố (Dropdown)
+                Text(
+                  'Tỉnh/Thành phố',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: _isLoadingProvinces 
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                      )
+                    : _hasErrorProvinces || _provinces.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Trống (Lỗi API)', style: TextStyle(color: Colors.red[300])),
+                                IconButton(
+                                  constraints: const BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                  icon: const Icon(Icons.refresh, color: Colors.blue),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isLoadingProvinces = true;
+                                      _hasErrorProvinces = false;
+                                    });
+                                    _loadProvinces();
+                                  },
+                                )
+                              ],
+                            ),
+                          )
+                        : DropdownButtonHideUnderline(
+                            child: DropdownButton<int>(
+                          isExpanded: true,
+                          hint: const Text('Chọn Tỉnh/Thành phố'),
+                          value: _selectedProvinceId,
+                          items: _provinces.map((province) {
+                            return DropdownMenuItem<int>(
+                              value: province.id,
+                              child: Text(province.name),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedProvinceId = value;
+                            });
+                          },
+                        ),
+                      ),
                 ),
                 const SizedBox(height: 20),
                 
@@ -221,7 +377,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     TextButton(
                       onPressed: () {
-                        // Quay lại trang đăng nhập (pop)
                         Navigator.pop(context);
                       },
                       child: Text(

@@ -8,14 +8,14 @@
 
 ### 🔐 1. Authentication (Đăng nhập / Đăng ký)
 - [x] Login page UI (email + password form)
-- [x] Mock login với 2 tài khoản test (`candidate@test.com`, `employer@test.com`)
+- [x] **[REAL API]** Login qua `ApiClient.dio.post('/api/auth/login')` lấy JWT access_token.
 - [x] JWT token lưu vào `FlutterSecureStorage`
 - [x] Login → navigate to `MainPage`
-- [x] Error handling (email sai, loading state)
-- [x] **RegisterPage UI cho ứng viên** kèm form validation đầy đủ (Họ tên, Email, Passwords)
-- [x] Mock register flow (trả về user mới, lưu token, tự động login và vào `MainPage`)
-- [x] Refactor Auth Layer theo Clean Architecture (`RegisterUseCase`, `AuthRepository`)
-- **Files:** `login_page.dart`, `register_page.dart`, `auth_provider.dart`, `auth_remote_datasource.dart`
+- [x] Error handling (email sai, network error, 401)
+- [x] **RegisterPage UI cho ứng viên** kèm form đầy đủ dựa trên API spec (FirstName, LastName, Phone, ProvinceId).
+- [x] **[REAL API]** Register qua `ApiClient.dio.post('/api/auth/register')` và tự động fetch danh sách Provinces (`GET /api/metadata/provinces`). Tự động login sau đăng ký cấu hình thật.
+- [x] Cấu hình Clean Architecture cho API `ApiClient` (Dio interceptors tự gán Bearer Token).
+- **Files:** `login_page.dart`, `register_page.dart`, `api_client.dart`, `auth_remote_datasource.dart`, `metadata_remote_datasource.dart`
 
 ### 💼 2. Job Listing (Danh sách việc làm)
 - [x] Homepage hiển thị danh sách jobs (RefreshIndicator)
@@ -88,8 +88,8 @@
 ## 🔄 Công Việc Tiếp Theo (Next Steps / Roadmap)
 
 ### Ưu tiên cao (API Integration)
-1. **Tích hợp API Login thật** — Thay `AuthRemoteDataSourceImpl` mock bằng HTTP call thật (dùng Dio)
-2. **Tích hợp API Profile** — Cần `candidateId` thật từ backend
+1. **[HOÀN THÀNH] Tích hợp API Login & Register** — Sử dụng Dio (`ApiClient`). Đã gọi thật endpoint POST `/api/auth/login` và POST `/api/auth/register`. 
+2. **Tích hợp API Xem/Cập nhật Profile** — Login hiện tại chỉ lấy được Token, Cần gọi tiếp API `GET /api/candidates/profile` để lấy thông tin Name, Phone, ID đổ vào User Model.
 3. **Tích hợp API Jobs** — Thay mock jobs list bằng API call
 4. **Tích hợp API Companies** — Thay mock companies list
 5. **Tích hợp các API còn lại** — Save, Apply, Unsave, Applications

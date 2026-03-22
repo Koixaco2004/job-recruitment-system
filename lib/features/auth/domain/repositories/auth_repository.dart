@@ -14,9 +14,12 @@ abstract class AuthRepository {
 
   /// Đăng ký tài khoản ứng viên mới
   Future<Either<Failure, UserEntity>> register({
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
+    required String phone,
+    required int provinceId,
   });
 
   /// Logout

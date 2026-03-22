@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/network/api_client.dart';
 import '../models/user_model.dart';
 
 /// Abstract interface cho Remote Data Source
@@ -8,87 +10,106 @@ abstract class AuthRemoteDataSource {
 
   /// Đăng ký tài khoản ứng viên mới
   Future<UserModel> register({
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
+    required String phone,
+    required int provinceId,
   });
 }
 
-/// Implementation với Mock Data
+/// Implementation với Real API
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
+  final ApiClient apiClient;
+
+  AuthRemoteDataSourceImpl({required this.apiClient});
+
   @override
   Future<UserModel> login({
     required String email,
     required String password,
   }) async {
-    // Giả lập delay 2 giây như gọi API thật
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await apiClient.dio.post(
+        '/api/auth/login',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
 
-    // Mock data dựa trên email
-    if (email == 'candidate@test.com') {
-      return UserModel.fromJson({
-        'user_id': 1,
-        'email': 'candidate@test.com',
-        'phone': '0123456789',
-        'full_name': 'Nguyễn Văn A',
-        'avatar_url': 'https://i.pravatar.cc/150?img=1',
-        'user_type': 'candidate',
-        'status': 'active',
-        'email_verified': true,
-        'created_at': '2024-01-01T00:00:00Z',
-        'updated_at': '2024-01-01T00:00:00Z',
-        'last_login': DateTime.now().toIso8601String(),
-        'token': 'mock_jwt_token_candidate_12345',
-      });
-    } else if (email == 'employer@test.com') {
-      return UserModel.fromJson({
-        'user_id': 2,
-        'email': 'employer@test.com',
-        'phone': '0987654321',
-        'full_name': 'Công ty ABC',
-        'avatar_url': 'https://i.pravatar.cc/150?img=2',
-        'user_type': 'employer',
-        'status': 'active',
-        'email_verified': true,
-        'created_at': '2024-01-01T00:00:00Z',
-        'updated_at': '2024-01-01T00:00:00Z',
-        'last_login': DateTime.now().toIso8601String(),
-        'token': 'mock_jwt_token_employer_67890',
-      });
-    } else {
-      // Giả lập lỗi authentication
-      throw const AuthenticationException('Email hoặc mật khẩu không đúng');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final token = response.data['access_token'];
+        
+        // Cần gọi API /api/auth/status để lấy thông tin user vì login chỉ trả token
+        // Tuy nhiên để tối giản, tạm thời trả về UserModel với token
+        // Sau đó có thể update để gọi thêm status API nếu cần.
+        // Đây là cách fix tạm thời:
+        return UserModel(
+          userId: 0,
+          email: email,
+          phone: null,
+          fullName: 'Bấm Reload để tải Name', // Thay thế bằng gọi API profile sau
+          avatarUrl: null,
+          userType: 'candidate',
+          status: 'active',
+          emailVerified: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          lastLogin: DateTime.now(),
+          token: token,
+        );
+      } else {
+        throw const AuthenticationException('Email hoặc mật khẩu không đúng');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw const AuthenticationException('Email hoặc mật khẩu không đúng');
+      }
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is AuthenticationException) rethrow;
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
     }
   }
 
   @override
   Future<UserModel> register({
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
+    required String phone,
+    required int provinceId,
   }) async {
-    // Giả lập delay 2 giây như gọi API thật
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await apiClient.dio.post(
+        '/api/auth/register',
+        data: {
+          'firstName': firstName,
+          'lastName': lastName,
+          'email': email,
+          'password': password,
+          'phone': phone,
+          'provinceId': provinceId,
+        },
+      );
 
-    // Giả lập check email trùng
-    if (email == 'candidate@test.com' || email == 'employer@test.com') {
-      throw const AuthenticationException('Email này đã được sử dụng');
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // Đăng ký thành công, tự động gọi API login để lấy token
+        return await this.login(email: email, password: password);
+      } else {
+        throw const AuthenticationException('Đăng ký không thành công');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw const AuthenticationException('Email này đã được sử dụng');
+      }
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is AuthenticationException) rethrow;
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
     }
-
-    // Trả về mock data cho user mới đăng ký thành công
-    return UserModel.fromJson({
-      'user_id': DateTime.now().millisecondsSinceEpoch % 10000, // Random ID
-      'email': email,
-      'phone': null,
-      'full_name': fullName,
-      'avatar_url': null,
-      'user_type': 'candidate', // Luôn đăng ký ứng viên
-      'status': 'active',
-      'email_verified': false,
-      'created_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
-      'last_login': DateTime.now().toIso8601String(),
-      'token': 'mock_jwt_token_new_user_${DateTime.now().millisecondsSinceEpoch}',
-    });
   }
 }

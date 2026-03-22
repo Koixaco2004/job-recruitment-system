@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
+import 'core/network/api_client.dart';
 import 'core/services/cloudinary_service.dart';
 import 'features/auth/data/datasources/auth_local_datasource.dart';
 import 'features/auth/data/datasources/auth_remote_datasource.dart';
@@ -35,6 +36,10 @@ import 'features/profile/domain/repositories/profile_repository.dart';
 import 'features/profile/domain/usecases/get_profile_usecase.dart';
 import 'features/profile/domain/usecases/update_profile_usecase.dart';
 import 'features/profile/presentation/providers/profile_provider.dart';
+import 'features/metadata/data/datasources/metadata_remote_datasource.dart';
+import 'features/metadata/data/repositories/metadata_repository_impl.dart';
+import 'features/metadata/domain/repositories/metadata_repository.dart';
+import 'features/metadata/domain/usecases/get_provinces_usecase.dart';
 
 final sl = GetIt.instance; // Service Locator
 
@@ -63,7 +68,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(),
+    () => AuthRemoteDataSourceImpl(apiClient: sl()),
   );
 
   sl.registerLazySingleton<AuthLocalDataSource>(
@@ -167,8 +172,28 @@ Future<void> init() async {
   );
 
   // ========================
+  // Features - Metadata
+  // ========================
+
+  // Use cases
+  sl.registerLazySingleton(() => GetProvincesUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<MetadataRepository>(
+    () => MetadataRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<MetadataRemoteDataSource>(
+    () => MetadataRemoteDataSourceImpl(apiClient: sl()),
+  );
+
+  // ========================
   // Core
   // ========================
+
+  // ApiClient
+  sl.registerLazySingleton(() => ApiClient(authLocalDataSource: sl()));
 
   // Flutter Secure Storage
   sl.registerLazySingleton(() => const FlutterSecureStorage());
