@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/widgets/pdf_viewer_page.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/pages/login_page.dart';
 import '../providers/profile_provider.dart';
 import 'edit_profile_page.dart';
 
@@ -153,6 +155,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildLanguageSection(profile),
                 _buildCVSection(profile, provider),
                 const SizedBox(height: 24),
+                _buildLogoutButton(context),
+                const SizedBox(height: 32),
               ],
             ),
           );
@@ -823,6 +827,69 @@ class _ProfilePageState extends State<ProfilePage> {
       default:
         return 'Chưa cập nhật';
     }
+  }
+
+  Widget _buildLogoutButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () => _showLogoutConfirmDialog(context),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red[50],
+            foregroundColor: Colors.red,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.red.withValues(alpha: 0.5), width: 1.5),
+            ),
+          ),
+          icon: const Icon(Icons.logout),
+          label: const Text(
+            'Đăng xuất',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xác nhận đăng xuất'),
+        content: const Text('Bạn có chắc chắn muốn đăng xuất tài khoản này?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final authProvider = context.read<AuthProvider>();
+              await authProvider.logout();
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red, 
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
   }
 
   Color _proficiencyColor(String proficiency) {

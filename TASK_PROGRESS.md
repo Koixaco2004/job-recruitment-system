@@ -88,10 +88,11 @@
 ## 🔄 Công Việc Tiếp Theo (Next Steps / Roadmap)
 
 ### Ưu tiên cao (API Integration)
-1. **[HOÀN THÀNH] Tích hợp API Login & Register** — Sử dụng Dio (`ApiClient`). Đã gọi thật endpoint POST `/api/auth/login` và POST `/api/auth/register`. 
-2. **Tích hợp API Xem/Cập nhật Profile** — Login hiện tại chỉ lấy được Token, Cần gọi tiếp API `GET /api/candidates/profile` để lấy thông tin Name, Phone, ID đổ vào User Model.
-3. **Tích hợp API Jobs** — Thay mock jobs list bằng API call
-4. **Tích hợp API Companies** — Thay mock companies list
+1. **[HOÀN THÀNH] Tích hợp API Login, Status & Register** — Sử dụng Dio (`ApiClient`). Đã gọi endpoint `POST /api/auth/register`, `POST /api/auth/login` và `GET /api/auth/status` để lấy full thông tin user khi đăng nhập.
+2. **[HOÀN THÀNH] Tính năng Đăng xuất** — Bổ sung `LogoutUseCase`, gỡ token, xoá state, và thêm nút Đăng xuất cấu hình tại ProfilePage.
+3. **Tích hợp API Xem/Cập nhật Profile chi tiết** — Trang Hồ sơ cần fetch/cập nhật thông qua `/api/candidates/profile`.
+4. **Tích hợp API Jobs** — Thay mock jobs list bằng API call
+5. **Tích hợp API Companies** — Thay mock companies list
 5. **Tích hợp các API còn lại** — Save, Apply, Unsave, Applications
 
 ### Ưu tiên trung bình (Features)

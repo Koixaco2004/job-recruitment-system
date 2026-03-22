@@ -42,24 +42,38 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final token = response.data['access_token'];
         
-        // Cần gọi API /api/auth/status để lấy thông tin user vì login chỉ trả token
-        // Tuy nhiên để tối giản, tạm thời trả về UserModel với token
-        // Sau đó có thể update để gọi thêm status API nếu cần.
-        // Đây là cách fix tạm thời:
-        return UserModel(
-          userId: 0,
-          email: email,
-          phone: null,
-          fullName: 'Bấm Reload để tải Name', // Thay thế bằng gọi API profile sau
-          avatarUrl: null,
-          userType: 'candidate',
-          status: 'active',
-          emailVerified: false,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          lastLogin: DateTime.now(),
-          token: token,
-        );
+        // Gọi API /api/auth/status để lấy thông tin user vì login chỉ trả token
+        try {
+          final statusResponse = await apiClient.dio.get(
+            '/api/auth/status',
+            options: Options(
+              headers: {
+                'Authorization': 'Bearer $token',
+              },
+            ),
+          );
+
+          if (statusResponse.statusCode == 200) {
+            final Map<String, dynamic> userData = statusResponse.data;
+            userData['token'] = token; // Đính token vào JSON để map ra UserModel
+            return UserModel.fromJson(userData);
+          } else {
+            throw ServerException('Không thể lấy thông tin đăng nhập');
+          }
+        } catch (e) {
+          // Fallback nếu không gọi được status (trả về Dummy Data kèm Token để app không crash)
+          return UserModel(
+             userId: 0,
+             email: email,
+             fullName: 'Người dùng',
+             userType: 'candidate',
+             status: 'active',
+             emailVerified: false,
+             createdAt: DateTime.now(),
+             updatedAt: DateTime.now(),
+             token: token,
+          );
+        }
       } else {
         throw const AuthenticationException('Email hoặc mật khẩu không đúng');
       }

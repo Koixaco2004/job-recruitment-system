@@ -3,14 +3,18 @@ import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 
+import '../../domain/usecases/logout_usecase.dart';
+
 /// Provider quản lý state cho Authentication
 class AuthProvider extends ChangeNotifier {
   final LoginUseCase loginUseCase;
   final RegisterUseCase registerUseCase;
+  final LogoutUseCase logoutUseCase;
 
   AuthProvider({
     required this.loginUseCase,
     required this.registerUseCase,
+    required this.logoutUseCase,
   });
 
   // State
@@ -93,9 +97,15 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Logout method
-  void logout() {
+  Future<void> logout() async {
+    _isLoading = true;
+    notifyListeners();
+
+    await logoutUseCase();
+
     _user = null;
     _errorMessage = null;
+    _isLoading = false;
     notifyListeners();
   }
 

@@ -22,21 +22,27 @@ class UserModel extends UserEntity {
 
   /// Tạo UserModel từ JSON (response từ API)
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // API backend thực tế thường thiết kế dạng camelCase (e.g. userId, fullName)
+    // Nhưng data mock đang dùng snake_case nên ta phải fallback qua lại:
     return UserModel(
-      userId: json['user_id'] as int,
+      userId: json['user_id'] ?? json['id'] ?? json['userId'] ?? 0,
       email: json['email'] as String,
       phone: json['phone'] as String?,
-      fullName: json['full_name'] as String,
-      avatarUrl: json['avatar_url'] as String?,
-      userType: json['user_type'] as String,
-      status: json['status'] as String,
-      emailVerified: json['email_verified'] as bool,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      lastLogin: json['last_login'] != null
-          ? DateTime.parse(json['last_login'] as String)
-          : null,
-      token: json['token'] as String,
+      fullName: json['full_name'] ?? json['fullName'] ?? '${json['lastName'] ?? ''} ${json['firstName'] ?? ''}'.trim(),
+      avatarUrl: json['avatar_url'] ?? json['avatarUrl'] as String?,
+      userType: json['user_type'] ?? json['userType'] ?? 'candidate',
+      status: json['status'] ?? 'active',
+      emailVerified: json['email_verified'] ?? json['emailVerified'] ?? false,
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) 
+               : json['createdAt'] != null ? DateTime.parse(json['createdAt']) 
+               : DateTime.now(),
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) 
+               : json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) 
+               : DateTime.now(),
+      lastLogin: json['last_login'] != null ? DateTime.parse(json['last_login']) 
+               : json['lastLogin'] != null ? DateTime.parse(json['lastLogin']) 
+               : null,
+      token: json['token'] ?? json['access_token'] ?? '', // token có thể null nếu fetch status, ta tạo copyWith sau
     );
   }
 
