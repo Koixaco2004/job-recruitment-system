@@ -9,7 +9,9 @@ class ApiClient {
   ApiClient({required this.authLocalDataSource})
     : dio = Dio(
         BaseOptions(
-          baseUrl: "http://192.168.1.210:3000",
+          baseUrl: Platform.isAndroid
+              ? "http://10.0.2.2:3000"
+              : "http://localhost:3000",
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
           headers: {
