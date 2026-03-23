@@ -16,6 +16,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
     super.gender,
     super.address,
     super.cityName,
+    super.provinceId,
     super.educationLevel,
     required super.yearsOfExperience,
     super.currentJobTitle,
@@ -73,6 +74,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       gender: json['gender'] as String?,
       address: json['address']?.toString(),
       cityName: json['city_name'] ?? json['cityName']?.toString(),
+      provinceId: _parseIntNullable(json['province_id'] ?? json['provinceId']),
       educationLevel:
           json['education_level'] ?? json['educationLevel']?.toString(),
       yearsOfExperience: _parseInt(
@@ -156,6 +158,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       'gender': gender,
       'address': address,
       'city_name': cityName,
+      'province_id': provinceId,
       'education_level': educationLevel,
       'years_of_experience': yearsOfExperience,
       'current_job_title': currentJobTitle,
@@ -186,7 +189,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
       if (cvFileUrl != null) 'cvUrl': cvFileUrl,
       if (address != null) 'bio': address,
-      // 'provinceId': null, // Need integer provinceId, current city is String
+      if (provinceId != null) 'provinceId': provinceId,
       if (desiredJobTitle != null) 'position': desiredJobTitle,
       if (desiredSalaryMin != null) 'salaryMin': desiredSalaryMin,
       if (desiredSalaryMax != null) 'salaryMax': desiredSalaryMax,
@@ -208,6 +211,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       gender: entity.gender,
       address: entity.address,
       cityName: entity.cityName,
+      provinceId: entity.provinceId,
       educationLevel: entity.educationLevel,
       yearsOfExperience: entity.yearsOfExperience,
       currentJobTitle: entity.currentJobTitle,

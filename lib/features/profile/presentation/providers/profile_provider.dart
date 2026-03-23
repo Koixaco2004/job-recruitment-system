@@ -4,6 +4,9 @@ import '../../domain/entities/candidate_profile_entity.dart';
 import '../../domain/usecases/get_profile_usecase.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
+import '../../../../injection_container.dart' as di;
+import '../../../metadata/domain/usecases/get_provinces_usecase.dart';
+import '../../../metadata/domain/entities/province_entity.dart';
 
 class ProfileProvider extends ChangeNotifier {
   final GetProfileUseCase getProfileUseCase;
@@ -26,6 +29,9 @@ class ProfileProvider extends ChangeNotifier {
   String? _uploadError; // Separate error for CV upload
   String? _uploadedCvUrl;
 
+  List<ProvinceEntity> _provinces = [];
+  bool _isLoadingProvinces = false;
+
   // Getters
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
@@ -35,12 +41,48 @@ class ProfileProvider extends ChangeNotifier {
   String? get successMessage => _successMessage;
   String? get uploadError => _uploadError;
   String? get uploadedCvUrl => _uploadedCvUrl;
+  List<ProvinceEntity> get provinces => _provinces;
+  bool get isLoadingProvinces => _isLoadingProvinces;
+
+  Future<void> fetchProvincesIfEmpty() async {
+    if (_provinces.isNotEmpty) return;
+    _isLoadingProvinces = true;
+    notifyListeners();
+
+    try {
+      final getProvincesUseCase = di.sl<GetProvincesUseCase>();
+      final result = await getProvincesUseCase();
+      result.fold(
+        (failure) {
+          _isLoadingProvinces = false;
+        },
+        (provinces) {
+          _provinces = provinces;
+          _isLoadingProvinces = false;
+        },
+      );
+    } catch (_) {
+      _isLoadingProvinces = false;
+    }
+    notifyListeners();
+  }
+
+  String? getProvinceName(int? id) {
+    if (id == null) return null;
+    try {
+      return _provinces.firstWhere((p) => p.id == id).name;
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Fetch profile
   Future<void> fetchProfile() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+
+    await fetchProvincesIfEmpty();
 
     final result = await getProfileUseCase();
     result.fold(
@@ -129,6 +171,7 @@ class ProfileProvider extends ChangeNotifier {
               gender: _profile!.gender,
               address: _profile!.address,
               cityName: _profile!.cityName,
+              provinceId: _profile!.provinceId,
               educationLevel: _profile!.educationLevel,
               yearsOfExperience: _profile!.yearsOfExperience,
               currentJobTitle: _profile!.currentJobTitle,
@@ -227,6 +270,7 @@ class ProfileProvider extends ChangeNotifier {
       gender: _profile!.gender,
       address: _profile!.address,
       cityName: _profile!.cityName,
+      provinceId: _profile!.provinceId,
       educationLevel: _profile!.educationLevel,
       yearsOfExperience: _profile!.yearsOfExperience,
       currentJobTitle: _profile!.currentJobTitle,

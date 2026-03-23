@@ -145,9 +145,9 @@ class _ProfilePageState extends State<ProfilePage> {
           return SingleChildScrollView(
             child: Column(
               children: [
-                _buildHeader(profile),
+                _buildHeader(profile, provider),
                 _buildSearchableToggle(profile, provider),
-                _buildPersonalInfo(profile),
+                _buildPersonalInfo(profile, provider, context.read<AuthProvider>()),
                 _buildSkillsSection(profile),
                 _buildExperienceSection(profile),
                 _buildEducationSection(profile),
@@ -165,7 +165,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildHeader(CandidateProfileEntity profile) {
+  Widget _buildHeader(CandidateProfileEntity profile, ProfileProvider provider) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -221,8 +221,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 '${profile.yearsOfExperience} năm KN',
               ),
               const SizedBox(width: 12),
-              if (profile.cityName != null)
-                _buildHeaderChip(Icons.location_on, profile.cityName!),
+              if ((provider.getProvinceName(profile.provinceId) ?? profile.cityName) != null)
+                _buildHeaderChip(Icons.location_on, provider.getProvinceName(profile.provinceId) ?? profile.cityName!),
             ],
           ),
         ],
@@ -393,13 +393,13 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildPersonalInfo(CandidateProfileEntity profile) {
+  Widget _buildPersonalInfo(CandidateProfileEntity profile, ProfileProvider provider, AuthProvider authProvider) {
     return _buildSection(
       title: 'Thông tin chung',
       icon: Icons.person,
       child: Column(
         children: [
-          _infoRow('Email', profile.email),
+          _infoRow('Email', authProvider.user?.email ?? profile.email),
           _infoRow('Điện thoại', profile.phone ?? 'Chưa cập nhật'),
           _infoRow(
             'Ngày sinh',
@@ -408,7 +408,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 : 'Chưa cập nhật',
           ),
           _infoRow('Giới tính', profile.gender ?? 'Chưa cập nhật'),
-          _infoRow('Địa chỉ', profile.address ?? 'Chưa cập nhật'),
+          _infoRow('Địa chỉ', provider.getProvinceName(profile.provinceId) ?? profile.cityName ?? profile.address ?? 'Chưa cập nhật'),
           _infoRow('Trình độ', profile.educationLevel ?? 'Chưa cập nhật'),
           _infoRow(
             'Vị trí mong muốn',

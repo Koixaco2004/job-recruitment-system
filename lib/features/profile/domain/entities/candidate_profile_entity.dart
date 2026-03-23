@@ -19,6 +19,7 @@ class CandidateProfileEntity extends Equatable {
   final String? gender;
   final String? address;
   final String? cityName;
+  final int? provinceId;
   final String? educationLevel;
   final int yearsOfExperience;
   final String? currentJobTitle;
@@ -51,6 +52,7 @@ class CandidateProfileEntity extends Equatable {
     this.gender,
     this.address,
     this.cityName,
+    this.provinceId,
     this.educationLevel,
     required this.yearsOfExperience,
     this.currentJobTitle,
@@ -82,6 +84,7 @@ class CandidateProfileEntity extends Equatable {
     gender,
     address,
     cityName,
+    provinceId,
     educationLevel,
     yearsOfExperience,
     currentJobTitle,
