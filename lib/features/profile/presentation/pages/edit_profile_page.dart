@@ -7,6 +7,7 @@ import '../../domain/entities/work_experience_entity.dart';
 import '../../domain/entities/education_entity.dart';
 import '../../domain/entities/certificate_entity.dart';
 import '../../domain/entities/language_entity.dart';
+import '../../../metadata/domain/entities/province_entity.dart';
 import '../providers/profile_provider.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -30,11 +31,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _skillsCtrl;
 
   String? _selectedGender;
-  String? _selectedCity;
+  int? _selectedProvinceId;
   String? _selectedEducation;
   String? _selectedJobType;
   String? _selectedIndustry;
-  DateTime? _dateOfBirth;
   String? _avatarUrl; // URL ảnh đại diện (cập nhật khi upload)
 
   // Dynamic lists
@@ -44,7 +44,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   List<LanguageEntity> _languages = [];
 
   final genders = ['Nam', 'Nữ', 'Khác'];
-  final cities = ['Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng', 'Khác'];
   final educationLevels = ['Cao đẳng', 'Đại học', 'Thạc sĩ', 'Tiến sĩ'];
   final jobTypes = ['fulltime', 'parttime', 'remote', 'freelance'];
   final proficiencyLevels = ['Sơ cấp', 'Trung cấp', 'Cao cấp', 'Bản ngữ'];
@@ -85,11 +84,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _skillsCtrl = TextEditingController(text: profile.skills.join(', '));
 
     _selectedGender = profile.gender;
-    _selectedCity = profile.cityName;
+    _selectedProvinceId = profile.provinceId;
     _selectedEducation = profile.educationLevel;
     _selectedJobType = profile.desiredJobType;
     _selectedIndustry = profile.industry;
-    _dateOfBirth = profile.dateOfBirth;
     _avatarUrl = profile.avatarUrl;
 
     _workExperiences = List.from(profile.workExperiences);
@@ -246,7 +244,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _phoneCtrl,
           keyboardType: TextInputType.phone,
         ),
-        _buildDatePicker('Ngày sinh'),
         _buildDropdown(
           'Giới tính',
           genders,
@@ -254,11 +251,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
           (v) => setState(() => _selectedGender = v),
         ),
         _buildTextField('Địa chỉ', _addressCtrl),
-        _buildDropdown(
-          'Thành phố',
-          cities,
-          _selectedCity,
-          (v) => setState(() => _selectedCity = v),
+        Consumer<ProfileProvider>(
+          builder: (context, provider, _) {
+            if (provider.isLoadingProvinces) {
+              return const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: CircularProgressIndicator(),
+              );
+            }
+            return _buildProvinceDropdown(
+              'Thành phố/Tỉnh',
+              provider.provinces,
+              _selectedProvinceId,
+              (v) => setState(() => _selectedProvinceId = v),
+            );
+          },
         ),
         _buildDropdown(
           'Trình độ học vấn',
@@ -557,39 +564,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildDatePicker(String label) {
+  Widget _buildProvinceDropdown(
+    String label,
+    List<ProvinceEntity> items,
+    int? value,
+    void Function(int?) onChanged,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () async {
-          final picked = await showDatePicker(
-            context: context,
-            initialDate: _dateOfBirth ?? DateTime(1998),
-            firstDate: DateTime(1950),
-            lastDate: DateTime.now(),
-          );
-          if (picked != null) {
-            setState(() => _dateOfBirth = picked);
-          }
-        },
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: label,
-            border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
-          ),
-          child: Text(
-            _dateOfBirth != null
-                ? DateFormat('dd/MM/yyyy').format(_dateOfBirth!)
-                : 'Chọn ngày',
-            style: TextStyle(
-              color: _dateOfBirth != null ? Colors.black : Colors.grey,
-            ),
+      child: DropdownButtonFormField<int>(
+        value: items.any((p) => p.id == value) ? value : null,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
           ),
         ),
+        items: items
+            .map(
+              (item) => DropdownMenuItem(
+                value: item.id,
+                child: Text(item.name),
+              ),
+            )
+            .toList(),
+        onChanged: onChanged,
       ),
     );
   }
@@ -1147,10 +1148,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
       fullName: _fullNameCtrl.text,
       avatarUrl: _avatarUrl ?? profile.avatarUrl,
       candidateId: profile.candidateId,
-      dateOfBirth: _dateOfBirth,
+      dateOfBirth: profile.dateOfBirth,
       gender: _selectedGender,
       address: _addressCtrl.text.isEmpty ? null : _addressCtrl.text,
-      cityName: _selectedCity,
+      cityName: profile.cityName, // Retain original if needed, or null
+      provinceId: _selectedProvinceId,
       educationLevel: _selectedEducation,
       yearsOfExperience: profile.yearsOfExperience,
       currentJobTitle: _currentJobTitleCtrl.text.isEmpty

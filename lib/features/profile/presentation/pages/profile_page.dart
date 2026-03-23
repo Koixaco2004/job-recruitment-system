@@ -401,12 +401,6 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           _infoRow('Email', authProvider.user?.email ?? profile.email),
           _infoRow('Điện thoại', profile.phone ?? 'Chưa cập nhật'),
-          _infoRow(
-            'Ngày sinh',
-            profile.dateOfBirth != null
-                ? DateFormat('dd/MM/yyyy').format(profile.dateOfBirth!)
-                : 'Chưa cập nhật',
-          ),
           _infoRow('Giới tính', profile.gender ?? 'Chưa cập nhật'),
           _infoRow('Địa chỉ', provider.getProvinceName(profile.provinceId) ?? profile.cityName ?? profile.address ?? 'Chưa cập nhật'),
           _infoRow('Trình độ', profile.educationLevel ?? 'Chưa cập nhật'),

@@ -40,7 +40,10 @@ class CandidateProfileModel extends CandidateProfileEntity {
     if (value == null) return defaultValue;
     if (value is int) return value;
     if (value is double) return value.toInt();
-    if (value is String) return int.tryParse(value) ?? defaultValue;
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      return parsed?.toInt() ?? defaultValue;
+    }
     return defaultValue;
   }
 
@@ -48,7 +51,10 @@ class CandidateProfileModel extends CandidateProfileEntity {
     if (value == null) return null;
     if (value is int) return value;
     if (value is double) return value.toInt();
-    if (value is String) return int.tryParse(value);
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      return parsed?.toInt();
+    }
     return null;
   }
 
@@ -71,7 +77,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       dateOfBirth: (json['date_of_birth'] ?? json['dateOfBirth']) != null
           ? DateTime.parse(json['date_of_birth'] ?? json['dateOfBirth'])
           : null,
-      gender: json['gender'] as String?,
+      gender: _mapBackendGender(json['gender'] as String?),
       address: json['address']?.toString(),
       cityName: json['city_name'] ?? json['cityName']?.toString(),
       provinceId: _parseIntNullable(json['province_id'] ?? json['provinceId']),
@@ -231,4 +237,25 @@ class CandidateProfileModel extends CandidateProfileEntity {
       updatedAt: entity.updatedAt,
     );
   }
+
+  static String? _mapBackendGender(String? backendGender) {
+    if (backendGender == null) return null;
+    switch (backendGender.toLowerCase()) {
+      case 'male':
+        return 'Nam';
+      case 'female':
+        return 'Nữ';
+      case 'other':
+        return 'Khác';
+      case 'nam':
+        return 'Nam';
+      case 'nữ':
+        return 'Nữ';
+      case 'khác':
+        return 'Khác';
+      default:
+        return backendGender;
+    }
+  }
 }
+
