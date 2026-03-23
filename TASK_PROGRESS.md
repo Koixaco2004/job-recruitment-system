@@ -90,7 +90,7 @@
 ### Ưu tiên cao (API Integration)
 1. **[HOÀN THÀNH] Tích hợp API Login, Status & Register** — Sử dụng Dio (`ApiClient`). Đã gọi endpoint `POST /api/auth/register`, `POST /api/auth/login` và `GET /api/auth/status` để lấy full thông tin user khi đăng nhập.
 2. **[HOÀN THÀNH] Tính năng Đăng xuất** — Bổ sung `LogoutUseCase`, gỡ token, xoá state, và thêm nút Đăng xuất cấu hình tại ProfilePage.
-3. **Tích hợp API Xem/Cập nhật Profile chi tiết** — Trang Hồ sơ cần fetch/cập nhật thông qua `/api/candidates/profile`.
+3. **[HOÀN THÀNH] Tích hợp API Xem/Cập nhật Profile chi tiết** — Trang Hồ sơ cập nhật thông qua `/api/candidates/profile` GET/PUT. Chức năng upload CV (upload trung gian qua Cloudinary) giờ tự động gọi PUT để đẩy URL mới lấy được về Backend.
 4. **Tích hợp API Jobs** — Thay mock jobs list bằng API call
 5. **Tích hợp API Companies** — Thay mock companies list
 5. **Tích hợp các API còn lại** — Save, Apply, Unsave, Applications

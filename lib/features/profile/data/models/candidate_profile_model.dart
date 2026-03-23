@@ -35,60 +35,112 @@ class CandidateProfileModel extends CandidateProfileEntity {
     required super.updatedAt,
   });
 
+  static int _parseInt(dynamic value, int defaultValue) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? defaultValue;
+    return defaultValue;
+  }
+
+  static int? _parseIntNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static bool _parseBool(dynamic value, bool defaultValue) {
+    if (value == null) return defaultValue;
+    if (value is bool) return value;
+    if (value is int) return value == 1;
+    if (value is String) return value.toLowerCase() == 'true' || value == '1';
+    return defaultValue;
+  }
+
   factory CandidateProfileModel.fromJson(Map<String, dynamic> json) {
     return CandidateProfileModel(
-      userId: json['user_id'] as int,
-      email: json['email'] as String,
-      phone: json['phone'] as String?,
-      fullName: json['full_name'] as String,
-      avatarUrl: json['avatar_url'] as String?,
-      candidateId: json['candidate_id'] as int,
-      dateOfBirth: json['date_of_birth'] != null
-          ? DateTime.parse(json['date_of_birth'] as String)
+      userId: _parseInt(json['user_id'] ?? json['userId'], 0),
+      email: json['email'] ?? '',
+      phone: json['phone']?.toString(),
+      fullName: json['full_name'] ?? json['fullName'] ?? '',
+      avatarUrl: json['avatar_url'] ?? json['avatarUrl']?.toString(),
+      candidateId: _parseInt(json['candidate_id'] ?? json['id'] ?? json['candidateId'], 0),
+      dateOfBirth: (json['date_of_birth'] ?? json['dateOfBirth']) != null
+          ? DateTime.parse(json['date_of_birth'] ?? json['dateOfBirth'])
           : null,
       gender: json['gender'] as String?,
-      address: json['address'] as String?,
-      cityName: json['city_name'] as String?,
-      educationLevel: json['education_level'] as String?,
-      yearsOfExperience: json['years_of_experience'] as int? ?? 0,
-      currentJobTitle: json['current_job_title'] as String?,
-      desiredJobTitle: json['desired_job_title'] as String?,
-      desiredSalaryMin: json['desired_salary_min'] as int?,
-      desiredSalaryMax: json['desired_salary_max'] as int?,
-      desiredJobType: json['desired_job_type'] as String?,
+      address: json['address']?.toString(),
+      cityName: json['city_name'] ?? json['cityName']?.toString(),
+      educationLevel:
+          json['education_level'] ?? json['educationLevel']?.toString(),
+      yearsOfExperience: _parseInt(
+          json['years_of_experience'] ??
+          json['yearWorkingExperience'] ??
+          json['yearsOfExperience'], 0),
+      currentJobTitle:
+          json['current_job_title'] ?? json['currentJobTitle']?.toString(),
+      desiredJobTitle:
+          json['desired_job_title'] ??
+          json['position'] ??
+          json['desiredJobTitle']?.toString(),
+      desiredSalaryMin: _parseIntNullable(
+          json['desired_salary_min'] ??
+          json['salaryMin'] ??
+          json['desiredSalaryMin']),
+      desiredSalaryMax: _parseIntNullable(
+          json['desired_salary_max'] ??
+          json['salaryMax'] ??
+          json['desiredSalaryMax']),
+      desiredJobType:
+          json['desired_job_type'] ??
+          json['jobType'] ??
+          json['desiredJobType']
+              ?.toString(), // Note: backend dto takes jobTypeId in PUT, but might return jobType object or string
       skills: json['skills'] != null
-          ? List<String>.from(json['skills'] as List)
-          : [],
-      cvFileUrl: json['cv_file_url'] as String?,
-      industry: json['industry'] as String?,
-      isSearchable: json['is_searchable'] as bool? ?? false,
-      workExperiences: json['work_experiences'] != null
-          ? (json['work_experiences'] as List)
-                .map(
+          ? List<String>.from(json['skills'])
+          : <String>[],
+      cvFileUrl:
+          json['cv_file_url'] ?? json['cvUrl'] ?? json['cvFileUrl']?.toString(),
+      industry: json['industry']?.toString(),
+      isSearchable: _parseBool(json['is_searchable'] ?? json['isSearchable'], false),
+      workExperiences:
+          json['work_experiences'] ?? json['workExperiences'] != null
+          ? (json['work_experiences'] ?? json['workExperiences'] as List)
+                .map<WorkExperienceModel>(
                   (e) =>
                       WorkExperienceModel.fromJson(e as Map<String, dynamic>),
                 )
                 .toList()
-          : [],
+          : <WorkExperienceModel>[],
       educations: json['educations'] != null
           ? (json['educations'] as List)
-                .map((e) => EducationModel.fromJson(e as Map<String, dynamic>))
+                .map<EducationModel>(
+                  (e) => EducationModel.fromJson(e as Map<String, dynamic>),
+                )
                 .toList()
-          : [],
+          : <EducationModel>[],
       certificates: json['certificates'] != null
           ? (json['certificates'] as List)
-                .map(
+                .map<CertificateModel>(
                   (e) => CertificateModel.fromJson(e as Map<String, dynamic>),
                 )
                 .toList()
-          : [],
+          : <CertificateModel>[],
       languages: json['languages'] != null
           ? (json['languages'] as List)
-                .map((e) => LanguageModel.fromJson(e as Map<String, dynamic>))
+                .map<LanguageModel>(
+                  (e) => LanguageModel.fromJson(e as Map<String, dynamic>),
+                )
                 .toList()
-          : [],
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+          : <LanguageModel>[],
+      createdAt: (json['created_at'] ?? json['createdAt']) != null
+          ? DateTime.parse(json['created_at'] ?? json['createdAt'])
+          : DateTime.now(),
+      updatedAt: (json['updated_at'] ?? json['updatedAt']) != null
+          ? DateTime.parse(json['updated_at'] ?? json['updatedAt'])
+          : DateTime.now(),
     );
   }
 
@@ -117,6 +169,29 @@ class CandidateProfileModel extends CandidateProfileEntity {
       'is_searchable': isSearchable,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  /// Create JSON body matching UpdateProfileDto spec from backend
+  Map<String, dynamic> toUpdateProfileDto() {
+    return {
+      if (fullName.isNotEmpty) 'fullName': fullName,
+      if (gender != null)
+        'gender': gender == 'Nam'
+            ? 'male'
+            : gender == 'Nữ'
+            ? 'female'
+            : 'other',
+      if (phone != null) 'phone': phone,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      if (cvFileUrl != null) 'cvUrl': cvFileUrl,
+      if (address != null) 'bio': address,
+      // 'provinceId': null, // Need integer provinceId, current city is String
+      if (desiredJobTitle != null) 'position': desiredJobTitle,
+      if (desiredSalaryMin != null) 'salaryMin': desiredSalaryMin,
+      if (desiredSalaryMax != null) 'salaryMax': desiredSalaryMax,
+      // 'jobTypeId': 1, // Fallback placeholder since backend expects number
+      'yearWorkingExperience': yearsOfExperience,
     };
   }
 

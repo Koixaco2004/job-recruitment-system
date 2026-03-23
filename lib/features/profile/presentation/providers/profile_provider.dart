@@ -112,7 +112,7 @@ class ProfileProvider extends ChangeNotifier {
           _uploadError =
               failure.message; // Dùng uploadError, KHÔNG ghi đè errorMessage
         },
-        (url) {
+        (url) async {
           _isUploadingCV = false;
           _uploadedCvUrl = url;
           _successMessage = 'Upload CV thành công!';
@@ -145,6 +145,8 @@ class ProfileProvider extends ChangeNotifier {
               createdAt: _profile!.createdAt,
               updatedAt: DateTime.now(),
             );
+            // Gửi cập nhật này lên Backend
+            await updateProfile(_profile!);
           }
         },
       );

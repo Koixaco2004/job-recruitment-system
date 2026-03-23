@@ -171,7 +171,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<ProfileRemoteDataSource>(
-    () => ProfileRemoteDataSourceImpl(),
+    () => ProfileRemoteDataSourceImpl(apiClient: sl()),
   );
 
   // ========================
