@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
+import '../../domain/entities/work_experience_entity.dart';
+import '../../domain/entities/education_entity.dart';
 import '../../domain/usecases/get_profile_usecase.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -298,5 +300,234 @@ class ProfileProvider extends ChangeNotifier {
     _successMessage = null;
     _uploadError = null;
     notifyListeners();
+  }
+
+  // ─── Work Experience CRUD ──────────────────────────────────────────────
+
+  bool _isWorkExpLoading = false;
+  String? _workExpError;
+  bool get isWorkExpLoading => _isWorkExpLoading;
+  String? get workExpError => _workExpError;
+
+  Future<bool> addWorkExperience(WorkExperienceEntity exp) async {
+    _isWorkExpLoading = true;
+    _workExpError = null;
+    notifyListeners();
+
+    final result = await profileRepository.createWorkExperience(exp);
+    return result.fold(
+      (failure) {
+        _workExpError = failure.message;
+        _isWorkExpLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (created) {
+        // Add to local profile state
+        if (_profile != null) {
+          final updated = List<WorkExperienceEntity>.from(_profile!.workExperiences)
+            ..add(created);
+          _profile = _rebuildProfileWithExperiences(updated);
+        }
+        _isWorkExpLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> editWorkExperience(int id, WorkExperienceEntity exp) async {
+    _isWorkExpLoading = true;
+    _workExpError = null;
+    notifyListeners();
+
+    final result = await profileRepository.updateWorkExperience(id, exp);
+    return result.fold(
+      (failure) {
+        _workExpError = failure.message;
+        _isWorkExpLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (updated) {
+        if (_profile != null) {
+          final list = _profile!.workExperiences.map((e) => e.id == id ? updated : e).toList();
+          _profile = _rebuildProfileWithExperiences(list);
+        }
+        _isWorkExpLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> removeWorkExperience(int id) async {
+    _isWorkExpLoading = true;
+    _workExpError = null;
+    notifyListeners();
+
+    final result = await profileRepository.deleteWorkExperience(id);
+    return result.fold(
+      (failure) {
+        _workExpError = failure.message;
+        _isWorkExpLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (_) {
+        if (_profile != null) {
+          final list = _profile!.workExperiences.where((e) => e.id != id).toList();
+          _profile = _rebuildProfileWithExperiences(list);
+        }
+        _isWorkExpLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  CandidateProfileEntity _rebuildProfileWithExperiences(List<WorkExperienceEntity> exps) {
+    return CandidateProfileEntity(
+      userId: _profile!.userId,
+      email: _profile!.email,
+      phone: _profile!.phone,
+      fullName: _profile!.fullName,
+      avatarUrl: _profile!.avatarUrl,
+      candidateId: _profile!.candidateId,
+      dateOfBirth: _profile!.dateOfBirth,
+      gender: _profile!.gender,
+      address: _profile!.address,
+      cityName: _profile!.cityName,
+      provinceId: _profile!.provinceId,
+      educationLevel: _profile!.educationLevel,
+      yearsOfExperience: _profile!.yearsOfExperience,
+      currentJobTitle: _profile!.currentJobTitle,
+      desiredJobTitle: _profile!.desiredJobTitle,
+      desiredSalaryMin: _profile!.desiredSalaryMin,
+      desiredSalaryMax: _profile!.desiredSalaryMax,
+      desiredJobType: _profile!.desiredJobType,
+      skills: _profile!.skills,
+      cvFileUrl: _profile!.cvFileUrl,
+      industry: _profile!.industry,
+      isSearchable: _profile!.isSearchable,
+      workExperiences: exps,
+      educations: _profile!.educations,
+      certificates: _profile!.certificates,
+      languages: _profile!.languages,
+      createdAt: _profile!.createdAt,
+      updatedAt: _profile!.updatedAt,
+    );
+  }
+
+  // ─── Education CRUD ────────────────────────────────────────────────────
+
+  bool _isEduLoading = false;
+  String? _eduError;
+  bool get isEduLoading => _isEduLoading;
+  String? get eduError => _eduError;
+
+  Future<bool> addEducation(EducationEntity edu) async {
+    _isEduLoading = true;
+    _eduError = null;
+    notifyListeners();
+    final result = await profileRepository.createEducation(edu);
+    return result.fold(
+      (failure) {
+        _eduError = failure.message;
+        _isEduLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (created) {
+        if (_profile != null) {
+          final updated = List<EducationEntity>.from(_profile!.educations)..add(created);
+          _profile = _rebuildProfileWithEducations(updated);
+        }
+        _isEduLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> editEducation(int id, EducationEntity edu) async {
+    _isEduLoading = true;
+    _eduError = null;
+    notifyListeners();
+    final result = await profileRepository.updateEducation(id, edu);
+    return result.fold(
+      (failure) {
+        _eduError = failure.message;
+        _isEduLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (updated) {
+        if (_profile != null) {
+          final list = _profile!.educations.map((e) => e.id == id ? updated : e).toList();
+          _profile = _rebuildProfileWithEducations(list);
+        }
+        _isEduLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> removeEducation(int id) async {
+    _isEduLoading = true;
+    _eduError = null;
+    notifyListeners();
+    final result = await profileRepository.deleteEducation(id);
+    return result.fold(
+      (failure) {
+        _eduError = failure.message;
+        _isEduLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (_) {
+        if (_profile != null) {
+          final list = _profile!.educations.where((e) => e.id != id).toList();
+          _profile = _rebuildProfileWithEducations(list);
+        }
+        _isEduLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  CandidateProfileEntity _rebuildProfileWithEducations(List<EducationEntity> edus) {
+    return CandidateProfileEntity(
+      userId: _profile!.userId,
+      email: _profile!.email,
+      phone: _profile!.phone,
+      fullName: _profile!.fullName,
+      avatarUrl: _profile!.avatarUrl,
+      candidateId: _profile!.candidateId,
+      dateOfBirth: _profile!.dateOfBirth,
+      gender: _profile!.gender,
+      address: _profile!.address,
+      cityName: _profile!.cityName,
+      provinceId: _profile!.provinceId,
+      educationLevel: _profile!.educationLevel,
+      yearsOfExperience: _profile!.yearsOfExperience,
+      currentJobTitle: _profile!.currentJobTitle,
+      desiredJobTitle: _profile!.desiredJobTitle,
+      desiredSalaryMin: _profile!.desiredSalaryMin,
+      desiredSalaryMax: _profile!.desiredSalaryMax,
+      desiredJobType: _profile!.desiredJobType,
+      skills: _profile!.skills,
+      cvFileUrl: _profile!.cvFileUrl,
+      industry: _profile!.industry,
+      isSearchable: _profile!.isSearchable,
+      workExperiences: _profile!.workExperiences,
+      educations: edus,
+      certificates: _profile!.certificates,
+      languages: _profile!.languages,
+      createdAt: _profile!.createdAt,
+      updatedAt: _profile!.updatedAt,
+    );
   }
 }

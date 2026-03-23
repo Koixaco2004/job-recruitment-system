@@ -2,11 +2,23 @@ import 'package:dio/dio.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/candidate_profile_model.dart';
+import '../models/work_experience_model.dart';
+import '../models/education_model.dart';
 
 /// Abstract interface cho Profile Data Source
 abstract class ProfileRemoteDataSource {
   Future<CandidateProfileModel> getProfile();
   Future<CandidateProfileModel> updateProfile(CandidateProfileModel profile);
+  // Work Experiences
+  Future<List<WorkExperienceModel>> getWorkExperiences();
+  Future<WorkExperienceModel> createWorkExperience(WorkExperienceModel exp);
+  Future<WorkExperienceModel> updateWorkExperience(int id, WorkExperienceModel exp);
+  Future<void> deleteWorkExperience(int id);
+  // Educations
+  Future<List<EducationModel>> getEducations();
+  Future<EducationModel> createEducation(EducationModel edu);
+  Future<EducationModel> updateEducation(int id, EducationModel edu);
+  Future<void> deleteEducation(int id);
 }
 
 /// Implementation gọi API thật
@@ -78,4 +90,166 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   // Fallback mock logic for missing APIs temporarily (Skills, Educations, Experiences...) 
   // currently we keep parsing them out if missing from GET call or fetch from other ones later
+
+  // ─── Work Experiences ──────────────────────────────────────────────────
+
+  @override
+  Future<List<WorkExperienceModel>> getWorkExperiences() async {
+    try {
+      final response = await apiClient.dio.get('/api/candidates/work-experiences');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final list = (data['data'] ?? data) as List;
+        return list
+            .map((e) => WorkExperienceModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      throw ServerException('Không thể lấy danh sách kinh nghiệm');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<WorkExperienceModel> createWorkExperience(WorkExperienceModel exp) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/candidates/work-experiences',
+        data: exp.toCreateDto(),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        return WorkExperienceModel.fromJson(data['data'] ?? data);
+      }
+      throw ServerException('Tạo kinh nghiệm thất bại');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<WorkExperienceModel> updateWorkExperience(int id, WorkExperienceModel exp) async {
+    try {
+      final response = await apiClient.dio.put(
+        '/api/candidates/work-experiences/$id',
+        data: exp.toUpdateDto(),
+      );
+      if (response.statusCode == 200) {
+        final data = response.data;
+        return WorkExperienceModel.fromJson(data['data'] ?? data);
+      }
+      throw ServerException('Cập nhật kinh nghiệm thất bại');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> deleteWorkExperience(int id) async {
+    try {
+      final response = await apiClient.dio.delete('/api/candidates/work-experiences/$id');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw ServerException('Xóa kinh nghiệm thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  // ─── Educations ──────────────────────────────────────────────────────
+
+  @override
+  Future<List<EducationModel>> getEducations() async {
+    try {
+      final response = await apiClient.dio.get('/api/candidates/educations');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final list = (data['data'] ?? data) as List;
+        return list
+            .map((e) => EducationModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      throw ServerException('Không thể lấy danh sách học vấn');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<EducationModel> createEducation(EducationModel edu) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/candidates/educations',
+        data: edu.toCreateDto(),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        return EducationModel.fromJson(data['data'] ?? data);
+      }
+      throw ServerException('Tạo học vấn thất bại');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<EducationModel> updateEducation(int id, EducationModel edu) async {
+    try {
+      final response = await apiClient.dio.put(
+        '/api/candidates/educations/$id',
+        data: edu.toUpdateDto(),
+      );
+      if (response.statusCode == 200) {
+        final data = response.data;
+        return EducationModel.fromJson(data['data'] ?? data);
+      }
+      throw ServerException('Cập nhật học vấn thất bại');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> deleteEducation(int id) async {
+    try {
+      final response = await apiClient.dio.delete('/api/candidates/educations/$id');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw ServerException('Xóa học vấn thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
 }

@@ -423,7 +423,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 subtitle:
                     '${exp.companyName} • ${DateFormat('MM/yyyy').format(exp.startDate)} - ${exp.endDate != null ? DateFormat('MM/yyyy').format(exp.endDate!) : 'Hiện tại'}',
                 onEdit: () => _editExperience(i),
-                onDelete: () => setState(() => _workExperiences.removeAt(i)),
+                onDelete: () async {
+                  final id = exp.id;
+                  if (id != null) {
+                    // Has an id => delete from API
+                    final ok = await context.read<ProfileProvider>().removeWorkExperience(id);
+                    if (ok && mounted) setState(() => _workExperiences.removeAt(i));
+                  } else {
+                    // Local-only (never saved to API yet)
+                    setState(() => _workExperiences.removeAt(i));
+                  }
+                },
               );
             }).toList(),
     );
@@ -448,7 +458,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 title: '${edu.degree} - ${edu.fieldOfStudy}',
                 subtitle: edu.institution,
                 onEdit: () => _editEducation(i),
-                onDelete: () => setState(() => _educations.removeAt(i)),
+                onDelete: () async {
+                  final id = edu.id;
+                  if (id != null) {
+                    final ok = await context.read<ProfileProvider>().removeEducation(id);
+                    if (ok && mounted) setState(() => _educations.removeAt(i));
+                  } else {
+                    setState(() => _educations.removeAt(i));
+                  }
+                },
               );
             }).toList(),
     );
@@ -735,10 +753,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: const Text('Hủy'),
             ),
             ElevatedButton(
-              onPressed: () {
-                if (companyCtrl.text.isEmpty || positionCtrl.text.isEmpty) {
-                  return;
-                }
+              onPressed: () async {
+                if (companyCtrl.text.isEmpty || positionCtrl.text.isEmpty) return;
                 final newExp = WorkExperienceEntity(
                   id: exp?.id,
                   companyName: companyCtrl.text,
@@ -748,14 +764,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   description: descCtrl.text.isEmpty ? null : descCtrl.text,
                   isCurrentJob: isCurrentJob,
                 );
-                setState(() {
-                  if (isEdit) {
-                    _workExperiences[editIndex] = newExp;
-                  } else {
-                    _workExperiences.add(newExp);
+
+                final provider = context.read<ProfileProvider>();
+                if (isEdit && exp?.id != null) {
+                  final ok = await provider.editWorkExperience(exp!.id!, newExp);
+                  if (mounted) {
+                    if (ok) {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _workExperiences = List.from(provider.profile!.workExperiences);
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(provider.workExpError ?? 'Lỗi cập nhật'), backgroundColor: Colors.red),
+                      );
+                    }
                   }
-                });
-                Navigator.pop(ctx);
+                } else {
+                  final ok = await provider.addWorkExperience(newExp);
+                  if (mounted) {
+                    if (ok) {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _workExperiences = List.from(provider.profile!.workExperiences);
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(provider.workExpError ?? 'Lỗi thêm mới'), backgroundColor: Colors.red),
+                      );
+                    }
+                  }
+                }
               },
               child: const Text('Lưu'),
             ),
@@ -862,10 +901,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: const Text('Hủy'),
             ),
             ElevatedButton(
-              onPressed: () {
-                if (institutionCtrl.text.isEmpty || fieldCtrl.text.isEmpty) {
-                  return;
-                }
+              onPressed: () async {
+                if (institutionCtrl.text.isEmpty || fieldCtrl.text.isEmpty) return;
                 final newEdu = EducationEntity(
                   id: edu?.id,
                   institution: institutionCtrl.text,
@@ -875,14 +912,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   endDate: endDate,
                   description: descCtrl.text.isEmpty ? null : descCtrl.text,
                 );
-                setState(() {
-                  if (isEdit) {
-                    _educations[editIndex] = newEdu;
-                  } else {
-                    _educations.add(newEdu);
+
+                final provider = context.read<ProfileProvider>();
+                if (isEdit && edu?.id != null) {
+                  final ok = await provider.editEducation(edu!.id!, newEdu);
+                  if (mounted) {
+                    if (ok) {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _educations = List.from(provider.profile!.educations);
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(provider.eduError ?? 'Lỗi cập nhật'), backgroundColor: Colors.red),
+                      );
+                    }
                   }
-                });
-                Navigator.pop(ctx);
+                } else {
+                  final ok = await provider.addEducation(newEdu);
+                  if (mounted) {
+                    if (ok) {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _educations = List.from(provider.profile!.educations);
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(provider.eduError ?? 'Lỗi thêm mới'), backgroundColor: Colors.red),
+                      );
+                    }
+                  }
+                }
               },
               child: const Text('Lưu'),
             ),

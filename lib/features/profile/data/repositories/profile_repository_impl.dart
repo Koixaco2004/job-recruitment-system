@@ -2,10 +2,14 @@ import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
+import '../../domain/entities/work_experience_entity.dart';
+import '../../domain/entities/education_entity.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_datasource.dart';
 import '../models/candidate_profile_model.dart';
+import '../models/work_experience_model.dart';
+import '../models/education_model.dart';
 import '../../../../core/services/cloudinary_service.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
@@ -58,6 +62,126 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return Right(url);
     } catch (e) {
       return Left(ServerFailure('Không thể upload CV: $e'));
+    }
+  }
+
+  // ─── Work Experiences ──────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, List<WorkExperienceEntity>>> getWorkExperiences() async {
+    try {
+      final list = await remoteDataSource.getWorkExperiences();
+      return Right(list);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, WorkExperienceEntity>> createWorkExperience(WorkExperienceEntity exp) async {
+    try {
+      final model = WorkExperienceModel.fromEntity(exp);
+      final result = await remoteDataSource.createWorkExperience(model);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, WorkExperienceEntity>> updateWorkExperience(int id, WorkExperienceEntity exp) async {
+    try {
+      final model = WorkExperienceModel.fromEntity(exp);
+      final result = await remoteDataSource.updateWorkExperience(id, model);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteWorkExperience(int id) async {
+    try {
+      await remoteDataSource.deleteWorkExperience(id);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  // ─── Educations ─────────────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, List<EducationEntity>>> getEducations() async {
+    try {
+      final list = await remoteDataSource.getEducations();
+      return Right(list);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EducationEntity>> createEducation(EducationEntity edu) async {
+    try {
+      final model = EducationModel.fromEntity(edu);
+      final result = await remoteDataSource.createEducation(model);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EducationEntity>> updateEducation(int id, EducationEntity edu) async {
+    try {
+      final model = EducationModel.fromEntity(edu);
+      final result = await remoteDataSource.updateEducation(id, model);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteEducation(int id) async {
+    try {
+      await remoteDataSource.deleteEducation(id);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
     }
   }
 }
