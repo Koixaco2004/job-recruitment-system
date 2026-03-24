@@ -4,7 +4,6 @@ import 'package:equatable/equatable.dart';
 class CertificateEntity extends Equatable {
   final int? id;
   final String name;
-  final String issuingOrganization;
   final DateTime issueDate;
   final DateTime? expirationDate;
   final String? credentialUrl;
@@ -12,7 +11,6 @@ class CertificateEntity extends Equatable {
   const CertificateEntity({
     this.id,
     required this.name,
-    required this.issuingOrganization,
     required this.issueDate,
     this.expirationDate,
     this.credentialUrl,
@@ -22,7 +20,6 @@ class CertificateEntity extends Equatable {
   List<Object?> get props => [
     id,
     name,
-    issuingOrganization,
     issueDate,
     expirationDate,
     credentialUrl,

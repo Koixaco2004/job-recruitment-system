@@ -1,8 +1,10 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
 import '../../domain/entities/work_experience_entity.dart';
 import '../../domain/entities/education_entity.dart';
+import '../../domain/entities/certificate_entity.dart';
 import '../../domain/usecases/get_profile_usecase.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -525,6 +527,137 @@ class ProfileProvider extends ChangeNotifier {
       workExperiences: _profile!.workExperiences,
       educations: edus,
       certificates: _profile!.certificates,
+      languages: _profile!.languages,
+      createdAt: _profile!.createdAt,
+      updatedAt: _profile!.updatedAt,
+    );
+  }
+
+  // ─── Certificate CRUD ──────────────────────────────────────────────────
+
+  bool _isCertLoading = false;
+  String? _certError;
+  bool get isCertLoading => _isCertLoading;
+  String? get certError => _certError;
+
+  Future<bool> addCertificate({
+    required String name,
+    Uint8List? imageBytes,
+    String? fileName,
+  }) async {
+    _isCertLoading = true;
+    _certError = null;
+    notifyListeners();
+    final result = await profileRepository.createCertificate(
+      name: name,
+      imageBytes: imageBytes,
+      fileName: fileName,
+    );
+    return result.fold(
+      (failure) {
+        _certError = failure.message;
+        _isCertLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (created) {
+        if (_profile != null) {
+          final updated = List<CertificateEntity>.from(_profile!.certificates)..add(created);
+          _profile = _rebuildProfileWithCertificates(updated);
+        }
+        _isCertLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> editCertificate({
+    required int id,
+    required String name,
+    Uint8List? imageBytes,
+    String? fileName,
+  }) async {
+    _isCertLoading = true;
+    _certError = null;
+    notifyListeners();
+    final result = await profileRepository.updateCertificate(
+      id: id,
+      name: name,
+      imageBytes: imageBytes,
+      fileName: fileName,
+    );
+    return result.fold(
+      (failure) {
+        _certError = failure.message;
+        _isCertLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (updated) {
+        if (_profile != null) {
+          final list = _profile!.certificates.map((c) => c.id == id ? updated : c).toList();
+          _profile = _rebuildProfileWithCertificates(list);
+        }
+        _isCertLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+
+  Future<bool> removeCertificate(int id) async {
+    _isCertLoading = true;
+    _certError = null;
+    notifyListeners();
+    final result = await profileRepository.deleteCertificate(id);
+    return result.fold(
+      (failure) {
+        _certError = failure.message;
+        _isCertLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (_) {
+        if (_profile != null) {
+          final list = _profile!.certificates.where((c) => c.id != id).toList();
+          _profile = _rebuildProfileWithCertificates(list);
+        }
+        _isCertLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  CandidateProfileEntity _rebuildProfileWithCertificates(List<CertificateEntity> certs) {
+    return CandidateProfileEntity(
+      userId: _profile!.userId,
+      email: _profile!.email,
+      phone: _profile!.phone,
+      fullName: _profile!.fullName,
+      avatarUrl: _profile!.avatarUrl,
+      candidateId: _profile!.candidateId,
+      dateOfBirth: _profile!.dateOfBirth,
+      gender: _profile!.gender,
+      address: _profile!.address,
+      cityName: _profile!.cityName,
+      provinceId: _profile!.provinceId,
+      educationLevel: _profile!.educationLevel,
+      yearsOfExperience: _profile!.yearsOfExperience,
+      currentJobTitle: _profile!.currentJobTitle,
+      desiredJobTitle: _profile!.desiredJobTitle,
+      desiredSalaryMin: _profile!.desiredSalaryMin,
+      desiredSalaryMax: _profile!.desiredSalaryMax,
+      desiredJobType: _profile!.desiredJobType,
+      skills: _profile!.skills,
+      cvFileUrl: _profile!.cvFileUrl,
+      industry: _profile!.industry,
+      isSearchable: _profile!.isSearchable,
+      workExperiences: _profile!.workExperiences,
+      educations: _profile!.educations,
+      certificates: certs,
       languages: _profile!.languages,
       createdAt: _profile!.createdAt,
       updatedAt: _profile!.updatedAt,

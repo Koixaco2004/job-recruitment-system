@@ -1,4 +1,6 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -489,9 +491,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
               final cert = entry.value;
               return _buildListItem(
                 title: cert.name,
-                subtitle: cert.issuingOrganization,
+                subtitle: DateFormat('MM/yyyy').format(cert.issueDate),
                 onEdit: () => _editCertificate(i),
-                onDelete: () => setState(() => _certificates.removeAt(i)),
+                onDelete: () async {
+                  final id = cert.id;
+                  if (id != null) {
+                    final ok = await context.read<ProfileProvider>().removeCertificate(id);
+                    if (ok && mounted) setState(() => _certificates.removeAt(i));
+                  } else {
+                    setState(() => _certificates.removeAt(i));
+                  }
+                },
               );
             }).toList(),
     );
@@ -960,13 +970,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final cert = isEdit ? _certificates[editIndex] : null;
 
     final nameCtrl = TextEditingController(text: cert?.name ?? '');
-    final orgCtrl = TextEditingController(
-      text: cert?.issuingOrganization ?? '',
-    );
     DateTime issueDate = cert?.issueDate ?? DateTime.now();
     DateTime? expirationDate = cert?.expirationDate;
     String? certImageUrl = cert?.credentialUrl;
-    bool isUploadingCertImage = false;
+    Uint8List? selectedImageBytes;
+    String? selectedFileName;
 
     showDialog(
       context: context,
@@ -983,11 +991,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     labelText: 'Tên chứng chỉ *',
                   ),
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: orgCtrl,
-                  decoration: const InputDecoration(labelText: 'Tổ chức cấp *'),
-                ),
                 const SizedBox(height: 12),
                 // === Ảnh chứng chỉ ===
                 Container(
@@ -999,11 +1002,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                   child: Column(
                     children: [
-                      if (certImageUrl != null && certImageUrl!.isNotEmpty) ...[
+                      if (selectedImageBytes != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(
+                            selectedImageBytes!,
+                            height: 120,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      else if (certImageUrl != null && certImageUrl.isNotEmpty)
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: CachedNetworkImage(
-                            imageUrl: certImageUrl!,
+                            imageUrl: certImageUrl,
                             height: 120,
                             fit: BoxFit.cover,
                             placeholder: (_, __) => const SizedBox(
@@ -1016,37 +1028,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                      ],
+                      const SizedBox(height: 8),
                       OutlinedButton.icon(
-                          onPressed: isUploadingCertImage
-                              ? null
-                              : () async {
-                                  final provider = context.read<ProfileProvider>();
-                                  setDialogState(() => isUploadingCertImage = true);
-                                  final url = await provider.pickAndUploadImage();
-                                  setDialogState(() {
-                                    isUploadingCertImage = false;
-                                    if (url != null) certImageUrl = url;
-                                  });
-                                },
-                          icon: isUploadingCertImage
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : Icon(
-                                  certImageUrl != null ? Icons.refresh : Icons.add_photo_alternate,
-                                ),
-                          label: Text(
-                            isUploadingCertImage
-                                ? 'Đang upload...'
-                                : certImageUrl != null
-                                    ? 'Đổi ảnh chứng chỉ'
-                                    : 'Tải ảnh chứng chỉ lên',
-                          ),
+                        onPressed: () async {
+                          final result = await FilePicker.platform.pickFiles(
+                            type: FileType.image,
+                            withData: true,
+                          );
+                          if (result != null && result.files.single.bytes != null) {
+                            setDialogState(() {
+                              selectedImageBytes = result.files.single.bytes;
+                              selectedFileName = result.files.single.name;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.add_photo_alternate),
+                        label: Text(
+                          selectedImageBytes != null || certImageUrl != null
+                              ? 'Đổi ảnh chứng chỉ'
+                              : 'Tải ảnh chứng chỉ lên',
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -1094,24 +1096,41 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: const Text('Hủy'),
             ),
             ElevatedButton(
-              onPressed: () {
-                if (nameCtrl.text.isEmpty || orgCtrl.text.isEmpty) return;
-                final newCert = CertificateEntity(
-                  id: cert?.id,
-                  name: nameCtrl.text,
-                  issuingOrganization: orgCtrl.text,
-                  issueDate: issueDate,
-                  expirationDate: expirationDate,
-                  credentialUrl: certImageUrl,
-                );
-                setState(() {
-                  if (isEdit) {
-                    _certificates[editIndex] = newCert;
+              onPressed: () async {
+                if (nameCtrl.text.isEmpty) return;
+
+                final provider = context.read<ProfileProvider>();
+                bool ok = false;
+                if (isEdit && cert?.id != null) {
+                  ok = await provider.editCertificate(
+                    id: cert!.id!,
+                    name: nameCtrl.text,
+                    imageBytes: selectedImageBytes,
+                    fileName: selectedFileName,
+                  );
+                } else {
+                  ok = await provider.addCertificate(
+                    name: nameCtrl.text,
+                    imageBytes: selectedImageBytes,
+                    fileName: selectedFileName,
+                  );
+                }
+
+                if (mounted) {
+                  if (ok) {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _certificates = List.from(provider.profile!.certificates);
+                    });
                   } else {
-                    _certificates.add(newCert);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(provider.certError ?? 'Lỗi khi lưu'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
-                });
-                Navigator.pop(ctx);
+                }
               },
               child: const Text('Lưu'),
             ),
@@ -1120,6 +1139,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
     );
   }
+
 
   void _addLanguage() => _showLanguageDialog(null);
   void _editLanguage(int index) => _showLanguageDialog(index);

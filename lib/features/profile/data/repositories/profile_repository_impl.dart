@@ -4,6 +4,7 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
 import '../../domain/entities/work_experience_entity.dart';
 import '../../domain/entities/education_entity.dart';
+import '../../domain/entities/certificate_entity.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_datasource.dart';
@@ -175,6 +176,83 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, void>> deleteEducation(int id) async {
     try {
       await remoteDataSource.deleteEducation(id);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  // ─── Certificates ───────────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, List<CertificateEntity>>> getCertificates() async {
+    try {
+      final list = await remoteDataSource.getCertificates();
+      return Right(list);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CertificateEntity>> createCertificate({
+    required String name,
+    Uint8List? imageBytes,
+    String? fileName,
+  }) async {
+    try {
+      final result = await remoteDataSource.createCertificate(
+        name: name,
+        imageBytes: imageBytes,
+        fileName: fileName,
+      );
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CertificateEntity>> updateCertificate({
+    required int id,
+    required String name,
+    Uint8List? imageBytes,
+    String? fileName,
+  }) async {
+    try {
+      final result = await remoteDataSource.updateCertificate(
+        id: id,
+        name: name,
+        imageBytes: imageBytes,
+        fileName: fileName,
+      );
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+
+  @override
+  Future<Either<Failure, void>> deleteCertificate(int id) async {
+    try {
+      await remoteDataSource.deleteCertificate(id);
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

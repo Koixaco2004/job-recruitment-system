@@ -620,14 +620,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        cert.issuingOrganization,
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
                         'Ngày cấp: ${DateFormat('MM/yyyy').format(cert.issueDate)}${cert.expirationDate != null ? ' - HSD: ${DateFormat('MM/yyyy').format(cert.expirationDate!)}' : ''}',
                         style: const TextStyle(
                           color: Colors.grey,
