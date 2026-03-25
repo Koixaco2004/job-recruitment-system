@@ -27,6 +27,7 @@ class CandidateProfileEntity extends Equatable {
   final int? desiredSalaryMin;
   final int? desiredSalaryMax;
   final String? desiredJobType;
+  final int? jobTypeId;
   final List<String> skills;
   final String? cvFileUrl;
   final String? industry; // Ngành nghề của ứng viên
@@ -60,6 +61,7 @@ class CandidateProfileEntity extends Equatable {
     this.desiredSalaryMin,
     this.desiredSalaryMax,
     this.desiredJobType,
+    this.jobTypeId,
     this.skills = const [],
     this.cvFileUrl,
     this.industry,
@@ -92,6 +94,7 @@ class CandidateProfileEntity extends Equatable {
     desiredSalaryMin,
     desiredSalaryMax,
     desiredJobType,
+    jobTypeId,
     skills,
     cvFileUrl,
     industry,

@@ -24,6 +24,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
     super.desiredSalaryMin,
     super.desiredSalaryMax,
     super.desiredJobType,
+    super.jobTypeId,
     super.skills,
     super.cvFileUrl,
     super.industry,
@@ -66,6 +67,15 @@ class CandidateProfileModel extends CandidateProfileEntity {
     return defaultValue;
   }
 
+  static String? _parseStringNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    if (value is Map && value.containsKey('name')) {
+      return value['name']?.toString();
+    }
+    return value.toString();
+  }
+
   factory CandidateProfileModel.fromJson(Map<String, dynamic> json) {
     return CandidateProfileModel(
       userId: _parseInt(json['user_id'] ?? json['userId'], 0),
@@ -79,20 +89,18 @@ class CandidateProfileModel extends CandidateProfileEntity {
           : null,
       gender: _mapBackendGender(json['gender'] as String?),
       address: json['address']?.toString(),
-      cityName: json['city_name'] ?? json['cityName']?.toString(),
+      cityName: _parseStringNullable(json['city_name'] ?? json['cityName']),
       provinceId: _parseIntNullable(json['province_id'] ?? json['provinceId']),
-      educationLevel:
-          json['education_level'] ?? json['educationLevel']?.toString(),
+      educationLevel: _parseStringNullable(
+          json['education_level'] ?? json['educationLevel']),
       yearsOfExperience: _parseInt(
           json['years_of_experience'] ??
           json['yearWorkingExperience'] ??
           json['yearsOfExperience'], 0),
-      currentJobTitle:
-          json['current_job_title'] ?? json['currentJobTitle']?.toString(),
-      desiredJobTitle:
-          json['desired_job_title'] ??
-          json['position'] ??
-          json['desiredJobTitle']?.toString(),
+      currentJobTitle: _parseStringNullable(
+          json['current_job_title'] ?? json['currentJobTitle']),
+      desiredJobTitle: _parseStringNullable(
+          json['desired_job_title'] ?? json['position'] ?? json['desiredJobTitle']),
       desiredSalaryMin: _parseIntNullable(
           json['desired_salary_min'] ??
           json['salaryMin'] ??
@@ -101,17 +109,17 @@ class CandidateProfileModel extends CandidateProfileEntity {
           json['desired_salary_max'] ??
           json['salaryMax'] ??
           json['desiredSalaryMax']),
-      desiredJobType:
-          json['desired_job_type'] ??
-          json['jobType'] ??
-          json['desiredJobType']
-              ?.toString(), // Note: backend dto takes jobTypeId in PUT, but might return jobType object or string
+      desiredJobType: _parseStringNullable(
+          json['desired_job_type'] ?? json['jobType'] ?? json['desiredJobType']),
+      jobTypeId: _parseIntNullable(json['job_type_id'] ??
+          json['jobTypeId'] ??
+          (json['jobType'] is Map ? json['jobType']['id'] : null)),
       skills: json['skills'] != null
           ? List<String>.from(json['skills'])
           : <String>[],
-      cvFileUrl:
-          json['cv_file_url'] ?? json['cvUrl'] ?? json['cvFileUrl']?.toString(),
-      industry: json['industry']?.toString(),
+      cvFileUrl: _parseStringNullable(
+          json['cv_file_url'] ?? json['cvUrl'] ?? json['cvFileUrl']),
+      industry: _parseStringNullable(json['industry']),
       isSearchable: _parseBool(json['is_searchable'] ?? json['isSearchable'], false),
       workExperiences:
           json['work_experiences'] ?? json['workExperiences'] != null
@@ -172,6 +180,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       'desired_salary_min': desiredSalaryMin,
       'desired_salary_max': desiredSalaryMax,
       'desired_job_type': desiredJobType,
+      'job_type_id': jobTypeId,
       'skills': skills,
       'cv_file_url': cvFileUrl,
       'industry': industry,
@@ -199,7 +208,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       if (desiredJobTitle != null) 'position': desiredJobTitle,
       if (desiredSalaryMin != null) 'salaryMin': desiredSalaryMin,
       if (desiredSalaryMax != null) 'salaryMax': desiredSalaryMax,
-      // 'jobTypeId': 1, // Fallback placeholder since backend expects number
+      if (jobTypeId != null) 'jobTypeId': jobTypeId,
       'yearWorkingExperience': yearsOfExperience,
     };
   }
@@ -225,6 +234,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       desiredSalaryMin: entity.desiredSalaryMin,
       desiredSalaryMax: entity.desiredSalaryMax,
       desiredJobType: entity.desiredJobType,
+      jobTypeId: entity.jobTypeId,
       skills: entity.skills,
       cvFileUrl: entity.cvFileUrl,
       industry: entity.industry,

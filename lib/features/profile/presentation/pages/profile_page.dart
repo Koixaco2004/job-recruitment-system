@@ -415,7 +415,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 : 'Thỏa thuận',
           ),
           _infoRow('Ngành nghề', profile.industry ?? 'Chưa cập nhật'),
-          _infoRow('Hình thức', _jobTypeLabel(profile.desiredJobType)),
+          _infoRow('Hình thức', provider.getJobTypeName(profile.jobTypeId) ?? _jobTypeLabel(profile.desiredJobType)),
         ],
       ),
     );

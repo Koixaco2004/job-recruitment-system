@@ -7,6 +7,7 @@ import '../models/work_experience_model.dart';
 import '../models/education_model.dart';
 import '../models/certificate_model.dart';
 import '../models/project_model.dart';
+import '../models/job_type_model.dart';
 
 /// Abstract interface cho Profile Data Source
 abstract class ProfileRemoteDataSource {
@@ -41,6 +42,8 @@ abstract class ProfileRemoteDataSource {
   Future<ProjectModel> createProject(ProjectModel project);
   Future<ProjectModel> updateProject(int id, ProjectModel project);
   Future<void> deleteProject(int id);
+
+  Future<List<JobTypeModel>> getJobTypes();
 }
 
 /// Implementation gọi API thật
@@ -462,6 +465,25 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException('Xóa dự án thất bại');
       }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<JobTypeModel>> getJobTypes() async {
+    try {
+      final response = await apiClient.dio.get('/api/candidates/job-types');
+      if (response.data != null && response.data is List) {
+        return (response.data as List)
+            .map((e) => JobTypeModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');

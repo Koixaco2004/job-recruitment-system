@@ -6,6 +6,7 @@ import '../entities/work_experience_entity.dart';
 import '../entities/education_entity.dart';
 import '../entities/certificate_entity.dart';
 import '../entities/project_entity.dart';
+import '../entities/job_type_entity.dart';
 
 abstract class ProfileRepository {
   Future<Either<Failure, CandidateProfileEntity>> getProfile();
@@ -43,4 +44,6 @@ abstract class ProfileRepository {
   Future<Either<Failure, ProjectEntity>> createProject(ProjectEntity project);
   Future<Either<Failure, ProjectEntity>> updateProject(int id, ProjectEntity project);
   Future<Either<Failure, void>> deleteProject(int id);
+
+  Future<Either<Failure, List<JobTypeEntity>>> getJobTypes();
 }

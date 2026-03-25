@@ -12,6 +12,7 @@ import '../../domain/repositories/profile_repository.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../metadata/domain/usecases/get_provinces_usecase.dart';
 import '../../../metadata/domain/entities/province_entity.dart';
+import '../../domain/entities/job_type_entity.dart';
 
 class ProfileProvider extends ChangeNotifier {
   final GetProfileUseCase getProfileUseCase;
@@ -37,6 +38,9 @@ class ProfileProvider extends ChangeNotifier {
   List<ProvinceEntity> _provinces = [];
   bool _isLoadingProvinces = false;
 
+  List<JobTypeEntity> _jobTypes = [];
+  bool _isLoadingJobTypes = false;
+
   // Getters
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
@@ -48,6 +52,8 @@ class ProfileProvider extends ChangeNotifier {
   String? get uploadedCvUrl => _uploadedCvUrl;
   List<ProvinceEntity> get provinces => _provinces;
   bool get isLoadingProvinces => _isLoadingProvinces;
+  List<JobTypeEntity> get jobTypes => _jobTypes;
+  bool get isLoadingJobTypes => _isLoadingJobTypes;
 
   Future<void> fetchProvincesIfEmpty() async {
     if (_provinces.isNotEmpty) return;
@@ -72,6 +78,35 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> fetchJobTypesIfEmpty() async {
+    if (_jobTypes.isNotEmpty) return;
+    _isLoadingJobTypes = true;
+    notifyListeners();
+
+    try {
+      final result = await profileRepository.getJobTypes();
+      result.fold(
+        (failure) => _isLoadingJobTypes = false,
+        (jobTypes) {
+          _jobTypes = jobTypes;
+          _isLoadingJobTypes = false;
+        },
+      );
+    } catch (_) {
+      _isLoadingJobTypes = false;
+    }
+    notifyListeners();
+  }
+
+  String? getJobTypeName(int? id) {
+    if (id == null) return null;
+    try {
+      return _jobTypes.firstWhere((jt) => jt.id == id).name;
+    } catch (_) {
+      return null;
+    }
+  }
+
   String? getProvinceName(int? id) {
     if (id == null) return null;
     try {
@@ -88,6 +123,7 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
 
     await fetchProvincesIfEmpty();
+    await fetchJobTypesIfEmpty();
 
     final result = await getProfileUseCase();
     result.fold(
@@ -184,6 +220,7 @@ class ProfileProvider extends ChangeNotifier {
               desiredSalaryMin: _profile!.desiredSalaryMin,
               desiredSalaryMax: _profile!.desiredSalaryMax,
               desiredJobType: _profile!.desiredJobType,
+              jobTypeId: _profile!.jobTypeId,
               skills: _profile!.skills,
               cvFileUrl: url,
               workExperiences: _profile!.workExperiences,
@@ -409,6 +446,7 @@ class ProfileProvider extends ChangeNotifier {
       desiredSalaryMin: _profile!.desiredSalaryMin,
       desiredSalaryMax: _profile!.desiredSalaryMax,
       desiredJobType: _profile!.desiredJobType,
+      jobTypeId: _profile!.jobTypeId,
       skills: _profile!.skills,
       cvFileUrl: _profile!.cvFileUrl,
       industry: _profile!.industry,
@@ -521,6 +559,7 @@ class ProfileProvider extends ChangeNotifier {
       desiredSalaryMin: _profile!.desiredSalaryMin,
       desiredSalaryMax: _profile!.desiredSalaryMax,
       desiredJobType: _profile!.desiredJobType,
+      jobTypeId: _profile!.jobTypeId,
       skills: _profile!.skills,
       cvFileUrl: _profile!.cvFileUrl,
       industry: _profile!.industry,
@@ -652,6 +691,7 @@ class ProfileProvider extends ChangeNotifier {
       desiredSalaryMin: _profile!.desiredSalaryMin,
       desiredSalaryMax: _profile!.desiredSalaryMax,
       desiredJobType: _profile!.desiredJobType,
+      jobTypeId: _profile!.jobTypeId,
       skills: _profile!.skills,
       cvFileUrl: _profile!.cvFileUrl,
       industry: _profile!.industry,
@@ -768,6 +808,7 @@ class ProfileProvider extends ChangeNotifier {
       desiredSalaryMin: _profile!.desiredSalaryMin,
       desiredSalaryMax: _profile!.desiredSalaryMax,
       desiredJobType: _profile!.desiredJobType,
+      jobTypeId: _profile!.jobTypeId,
       skills: _profile!.skills,
       cvFileUrl: _profile!.cvFileUrl,
       industry: _profile!.industry,

@@ -36,6 +36,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   int? _selectedProvinceId;
   String? _selectedEducation;
   String? _selectedJobType;
+  int? _selectedJobTypeId;
   String? _selectedIndustry;
   String? _avatarUrl; // URL ảnh đại diện (cập nhật khi upload)
 
@@ -47,7 +48,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   final genders = ['Nam', 'Nữ', 'Khác'];
   final educationLevels = ['Cao đẳng', 'Đại học', 'Thạc sĩ', 'Tiến sĩ'];
-  final jobTypes = ['fulltime', 'parttime', 'remote', 'freelance'];
   final industries = [
     'Công nghệ thông tin',
     'Tài chính - Ngân hàng',
@@ -88,6 +88,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _selectedProvinceId = profile.provinceId;
     _selectedEducation = profile.educationLevel;
     _selectedJobType = profile.desiredJobType;
+    _selectedJobTypeId = profile.jobTypeId;
     _selectedIndustry = profile.industry;
     _avatarUrl = profile.avatarUrl;
 
@@ -295,18 +296,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           ],
         ),
-        _buildDropdown(
-          'Hình thức',
-          jobTypes,
-          _selectedJobType,
-          (v) => setState(() => _selectedJobType = v),
-          labels: {
-            'fulltime': 'Full-time',
-            'parttime': 'Part-time',
-            'remote': 'Remote',
-            'freelance': 'Freelance',
-          },
-        ),
+        _buildJobTypeDropdown(),
         _buildDropdown(
           'Ngành nghề',
           industries,
@@ -564,6 +554,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
         validator: required
             ? (v) => v == null || v.isEmpty ? 'Trường này bắt buộc' : null
             : null,
+      ),
+    );
+  }
+
+  Widget _buildJobTypeDropdown() {
+    final provider = context.watch<ProfileProvider>();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DropdownButtonFormField<int>(
+        value: provider.jobTypes.any((jt) => jt.id == _selectedJobTypeId)
+            ? _selectedJobTypeId
+            : null,
+        decoration: const InputDecoration(
+          labelText: 'Hình thức',
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        ),
+        items: provider.jobTypes.map((jt) {
+          return DropdownMenuItem<int>(
+            value: jt.id,
+            child: Text(jt.name),
+          );
+        }).toList(),
+        onChanged: (v) {
+          setState(() {
+            _selectedJobTypeId = v;
+            // Cập nhật cả name để hiển thị fallback nếu cần
+            _selectedJobType = provider.getJobTypeName(v);
+          });
+        },
+        validator: (v) => v == null ? 'Trường này bắt buộc' : null,
       ),
     );
   }
@@ -1325,6 +1346,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       desiredSalaryMin: int.tryParse(_salaryMinCtrl.text),
       desiredSalaryMax: int.tryParse(_salaryMaxCtrl.text),
       desiredJobType: _selectedJobType,
+      jobTypeId: _selectedJobTypeId,
       skills: skills,
       cvFileUrl: profile.cvFileUrl,
       industry: _selectedIndustry,
