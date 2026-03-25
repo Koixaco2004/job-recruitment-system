@@ -2,7 +2,7 @@ import '../../domain/entities/candidate_profile_entity.dart';
 import 'work_experience_model.dart';
 import 'education_model.dart';
 import 'certificate_model.dart';
-import 'language_model.dart';
+import 'project_model.dart';
 
 class CandidateProfileModel extends CandidateProfileEntity {
   const CandidateProfileModel({
@@ -31,7 +31,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
     super.workExperiences,
     super.educations,
     super.certificates,
-    super.languages,
+    super.projects,
     required super.createdAt,
     required super.updatedAt,
   });
@@ -136,13 +136,13 @@ class CandidateProfileModel extends CandidateProfileEntity {
                 )
                 .toList()
           : <CertificateModel>[],
-      languages: json['languages'] != null
-          ? (json['languages'] as List)
-                .map<LanguageModel>(
-                  (e) => LanguageModel.fromJson(e as Map<String, dynamic>),
+      projects: json['projects'] != null
+          ? (json['projects'] as List)
+                .map<ProjectModel>(
+                  (e) => ProjectModel.fromJson(e as Map<String, dynamic>),
                 )
                 .toList()
-          : <LanguageModel>[],
+          : <ProjectModel>[],
       createdAt: (json['created_at'] ?? json['createdAt']) != null
           ? DateTime.parse(json['created_at'] ?? json['createdAt'])
           : DateTime.now(),
@@ -232,7 +232,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       workExperiences: entity.workExperiences,
       educations: entity.educations,
       certificates: entity.certificates,
-      languages: entity.languages,
+      projects: entity.projects,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );

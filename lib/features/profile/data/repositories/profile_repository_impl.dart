@@ -5,12 +5,14 @@ import '../../domain/entities/candidate_profile_entity.dart';
 import '../../domain/entities/work_experience_entity.dart';
 import '../../domain/entities/education_entity.dart';
 import '../../domain/entities/certificate_entity.dart';
+import '../../domain/entities/project_entity.dart'; // Added this import
 import '../../../../core/error/exceptions.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_datasource.dart';
 import '../models/candidate_profile_model.dart';
 import '../models/work_experience_model.dart';
 import '../models/education_model.dart';
+import '../models/project_model.dart';
 import '../../../../core/services/cloudinary_service.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
@@ -253,6 +255,66 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, void>> deleteCertificate(int id) async {
     try {
       await remoteDataSource.deleteCertificate(id);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  // ─── Projects ──────────────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, List<ProjectEntity>>> getProjects() async {
+    try {
+      final list = await remoteDataSource.getProjects();
+      return Right(list);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ProjectEntity>> createProject(ProjectEntity project) async {
+    try {
+      final model = ProjectModel.fromEntity(project);
+      final result = await remoteDataSource.createProject(model);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ProjectEntity>> updateProject(int id, ProjectEntity project) async {
+    try {
+      final model = ProjectModel.fromEntity(project);
+      final result = await remoteDataSource.updateProject(id, model);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteProject(int id) async {
+    try {
+      await remoteDataSource.deleteProject(id);
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

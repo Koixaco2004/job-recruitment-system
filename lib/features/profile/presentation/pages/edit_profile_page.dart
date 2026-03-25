@@ -8,7 +8,7 @@ import '../../domain/entities/candidate_profile_entity.dart';
 import '../../domain/entities/work_experience_entity.dart';
 import '../../domain/entities/education_entity.dart';
 import '../../domain/entities/certificate_entity.dart';
-import '../../domain/entities/language_entity.dart';
+import '../../domain/entities/project_entity.dart';
 import '../../../metadata/domain/entities/province_entity.dart';
 import '../providers/profile_provider.dart';
 
@@ -43,12 +43,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
   List<WorkExperienceEntity> _workExperiences = [];
   List<EducationEntity> _educations = [];
   List<CertificateEntity> _certificates = [];
-  List<LanguageEntity> _languages = [];
+  List<ProjectEntity> _projects = [];
 
   final genders = ['Nam', 'Nữ', 'Khác'];
   final educationLevels = ['Cao đẳng', 'Đại học', 'Thạc sĩ', 'Tiến sĩ'];
   final jobTypes = ['fulltime', 'parttime', 'remote', 'freelance'];
-  final proficiencyLevels = ['Sơ cấp', 'Trung cấp', 'Cao cấp', 'Bản ngữ'];
   final industries = [
     'Công nghệ thông tin',
     'Tài chính - Ngân hàng',
@@ -95,7 +94,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _workExperiences = List.from(profile.workExperiences);
     _educations = List.from(profile.educations);
     _certificates = List.from(profile.certificates);
-    _languages = List.from(profile.languages);
+    _projects = List.from(profile.projects);
   }
 
   @override
@@ -167,7 +166,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               const SizedBox(height: 16),
               _buildCertificateSection(),
               const SizedBox(height: 16),
-              _buildLanguageSection(),
+              _buildProjectSection(),
               const SizedBox(height: 32),
             ],
           ),
@@ -507,26 +506,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildLanguageSection() {
+  Widget _buildProjectSection() {
     return _buildSectionCard(
-      title: 'Ngoại ngữ',
-      icon: Icons.language,
-      onAdd: _addLanguage,
-      children: _languages.isEmpty
+      title: 'Dự án nổi bật',
+      icon: Icons.assignment_outlined,
+      onAdd: _addProject,
+      children: _projects.isEmpty
           ? [
               const Text(
                 'Chưa có. Nhấn + để thêm.',
                 style: TextStyle(color: Colors.grey),
               ),
             ]
-          : _languages.asMap().entries.map((entry) {
+          : _projects.asMap().entries.map((entry) {
               final i = entry.key;
-              final lang = entry.value;
+              final project = entry.value;
               return _buildListItem(
-                title: lang.name,
-                subtitle: lang.proficiency,
-                onEdit: () => _editLanguage(i),
-                onDelete: () => setState(() => _languages.removeAt(i)),
+                title: project.name,
+                subtitle:
+                    '${project.startDate != null ? DateFormat('MM/yyyy').format(project.startDate!) : 'Chưa rõ'} - ${project.endDate != null ? DateFormat('MM/yyyy').format(project.endDate!) : 'Hiện tại'}',
+                onEdit: () => _editProject(i),
+                onDelete: () async {
+                  final id = project.id;
+                  if (id != null) {
+                    final ok = await context.read<ProfileProvider>().removeProject(id);
+                    if (ok && mounted) setState(() => _projects.removeAt(i));
+                  } else {
+                    setState(() => _projects.removeAt(i));
+                  }
+                },
               );
             }).toList(),
     );
@@ -1141,42 +1149,84 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
 
-  void _addLanguage() => _showLanguageDialog(null);
-  void _editLanguage(int index) => _showLanguageDialog(index);
+  void _addProject() => _showProjectDialog(null);
+  void _editProject(int index) => _showProjectDialog(index);
 
-  void _showLanguageDialog(int? editIndex) {
+  void _showProjectDialog(int? editIndex) {
     final isEdit = editIndex != null;
-    final lang = isEdit ? _languages[editIndex] : null;
+    final project = isEdit ? _projects[editIndex] : null;
 
-    final nameCtrl = TextEditingController(text: lang?.name ?? '');
-    String selectedProficiency = lang?.proficiency ?? 'Trung cấp';
+    final nameCtrl = TextEditingController(text: project?.name ?? '');
+    final descCtrl = TextEditingController(text: project?.description ?? '');
+    DateTime startDate = project?.startDate ?? DateTime.now();
+    DateTime? endDate = project?.endDate;
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(isEdit ? 'Sửa ngoại ngữ' : 'Thêm ngoại ngữ'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Ngôn ngữ *'),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: selectedProficiency,
-                decoration: const InputDecoration(labelText: 'Trình độ'),
-                items: proficiencyLevels
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) {
-                    setDialogState(() => selectedProficiency = v);
-                  }
-                },
-              ),
-            ],
+          title: Text(isEdit ? 'Sửa dự án' : 'Thêm dự án'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Tên dự án *'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: descCtrl,
+                  decoration: const InputDecoration(labelText: 'Mô tả'),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  title: Text(
+                    'Bắt đầu: ${DateFormat('MM/yyyy').format(startDate)}',
+                  ),
+                  trailing: const Icon(Icons.calendar_today),
+                  onTap: () async {
+                    final d = await showDatePicker(
+                      context: ctx,
+                      initialDate: startDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+                    if (d != null) setDialogState(() => startDate = d);
+                  },
+                ),
+                CheckboxListTile(
+                  title: const Text('Đang thực hiện'),
+                  value: endDate == null,
+                  onChanged: (v) {
+                    setDialogState(() {
+                      if (v == true) {
+                        endDate = null;
+                      } else {
+                        endDate = DateTime.now();
+                      }
+                    });
+                  },
+                ),
+                if (endDate != null)
+                  ListTile(
+                    title: Text(
+                      'Kết thúc: ${DateFormat('MM/yyyy').format(endDate!)}',
+                    ),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: () async {
+                      final d = await showDatePicker(
+                        context: ctx,
+                        initialDate: endDate ?? DateTime.now(),
+                        firstDate: startDate,
+                        lastDate: DateTime.now(),
+                      );
+                      if (d != null) setDialogState(() => endDate = d);
+                    },
+                  ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -1184,21 +1234,52 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: const Text('Hủy'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (nameCtrl.text.isEmpty) return;
-                final newLang = LanguageEntity(
-                  id: lang?.id,
+                final newProject = ProjectEntity(
+                  id: project?.id,
                   name: nameCtrl.text,
-                  proficiency: selectedProficiency,
+                  startDate: startDate,
+                  endDate: endDate,
+                  description: descCtrl.text.isEmpty ? null : descCtrl.text,
                 );
-                setState(() {
-                  if (isEdit) {
-                    _languages[editIndex] = newLang;
-                  } else {
-                    _languages.add(newLang);
+
+                final provider = context.read<ProfileProvider>();
+                if (isEdit && project?.id != null) {
+                  final ok = await provider.editProject(project!.id!, newProject);
+                  if (mounted) {
+                    if (ok) {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _projects = List.from(provider.profile!.projects);
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(provider.projectError ?? 'Lỗi cập nhật'), backgroundColor: Colors.red),
+                      );
+                    }
                   }
-                });
-                Navigator.pop(ctx);
+                } else if (!isEdit) {
+                  final ok = await provider.addProject(newProject);
+                  if (mounted) {
+                    if (ok) {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        _projects = List.from(provider.profile!.projects);
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(provider.projectError ?? 'Lỗi khi thêm'), backgroundColor: Colors.red),
+                      );
+                    }
+                  }
+                } else {
+                  // Local edit for something without id (rare if always synced)
+                  setState(() {
+                    _projects[editIndex] = newProject;
+                  });
+                  Navigator.pop(ctx);
+                }
               },
               child: const Text('Lưu'),
             ),
@@ -1251,7 +1332,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       workExperiences: _workExperiences,
       educations: _educations,
       certificates: _certificates,
-      languages: _languages,
+      projects: _projects,
       createdAt: profile.createdAt,
       updatedAt: DateTime.now(),
     );

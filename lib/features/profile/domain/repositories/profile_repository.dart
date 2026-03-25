@@ -5,6 +5,7 @@ import '../entities/candidate_profile_entity.dart';
 import '../entities/work_experience_entity.dart';
 import '../entities/education_entity.dart';
 import '../entities/certificate_entity.dart';
+import '../entities/project_entity.dart';
 
 abstract class ProfileRepository {
   Future<Either<Failure, CandidateProfileEntity>> getProfile();
@@ -37,4 +38,9 @@ abstract class ProfileRepository {
     String? fileName,
   });
   Future<Either<Failure, void>> deleteCertificate(int id);
+  // Projects
+  Future<Either<Failure, List<ProjectEntity>>> getProjects();
+  Future<Either<Failure, ProjectEntity>> createProject(ProjectEntity project);
+  Future<Either<Failure, ProjectEntity>> updateProject(int id, ProjectEntity project);
+  Future<Either<Failure, void>> deleteProject(int id);
 }

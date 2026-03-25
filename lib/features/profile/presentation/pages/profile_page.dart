@@ -152,7 +152,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildExperienceSection(profile),
                 _buildEducationSection(profile),
                 _buildCertificateSection(profile),
-                _buildLanguageSection(profile),
+                _buildProjectSection(profile),
                 _buildCVSection(profile, provider),
                 const SizedBox(height: 24),
                 _buildLogoutButton(context),
@@ -663,47 +663,43 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildLanguageSection(CandidateProfileEntity profile) {
+  Widget _buildProjectSection(CandidateProfileEntity profile) {
     return _buildSection(
-      title: 'Ngoại ngữ',
-      icon: Icons.language,
-      child: profile.languages.isEmpty
+      title: 'Dự án nổi bật',
+      icon: Icons.assignment_outlined,
+      child: profile.projects.isEmpty
           ? const Text('Chưa cập nhật', style: TextStyle(color: Colors.grey))
           : Column(
-              children: profile.languages.map((lang) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
+              children: profile.projects.map((project) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          lang.name,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
+                      Text(
+                        project.name,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _proficiencyColor(
-                            lang.proficiency,
-                          ).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          lang.proficiency,
-                          style: TextStyle(
-                            color: _proficiencyColor(lang.proficiency),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${project.startDate != null ? DateFormat('MM/yyyy').format(project.startDate!) : 'Chưa rõ'} - ${project.endDate != null ? DateFormat('MM/yyyy').format(project.endDate!) : 'Hiện tại'}',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 13,
                         ),
                       ),
+                      if (project.description != null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          project.description!,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
+                      if (profile.projects.last != project)
+                        const Divider(height: 24),
                     ],
                   ),
                 );
@@ -876,20 +872,5 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
     );
-  }
-
-  Color _proficiencyColor(String proficiency) {
-    switch (proficiency) {
-      case 'Bản ngữ':
-        return Colors.green;
-      case 'Cao cấp':
-        return Colors.blue;
-      case 'Trung cấp':
-        return Colors.orange;
-      case 'Sơ cấp':
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
   }
 }

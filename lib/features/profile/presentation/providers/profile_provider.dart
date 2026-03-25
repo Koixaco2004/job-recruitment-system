@@ -5,6 +5,7 @@ import '../../domain/entities/candidate_profile_entity.dart';
 import '../../domain/entities/work_experience_entity.dart';
 import '../../domain/entities/education_entity.dart';
 import '../../domain/entities/certificate_entity.dart';
+import '../../domain/entities/project_entity.dart';
 import '../../domain/usecases/get_profile_usecase.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -188,7 +189,7 @@ class ProfileProvider extends ChangeNotifier {
               workExperiences: _profile!.workExperiences,
               educations: _profile!.educations,
               certificates: _profile!.certificates,
-              languages: _profile!.languages,
+              projects: _profile!.projects,
               createdAt: _profile!.createdAt,
               updatedAt: DateTime.now(),
             );
@@ -289,7 +290,7 @@ class ProfileProvider extends ChangeNotifier {
       workExperiences: _profile!.workExperiences,
       educations: _profile!.educations,
       certificates: _profile!.certificates,
-      languages: _profile!.languages,
+      projects: _profile!.projects,
       createdAt: _profile!.createdAt,
       updatedAt: DateTime.now(),
     );
@@ -415,7 +416,7 @@ class ProfileProvider extends ChangeNotifier {
       workExperiences: exps,
       educations: _profile!.educations,
       certificates: _profile!.certificates,
-      languages: _profile!.languages,
+      projects: _profile!.projects,
       createdAt: _profile!.createdAt,
       updatedAt: _profile!.updatedAt,
     );
@@ -527,7 +528,7 @@ class ProfileProvider extends ChangeNotifier {
       workExperiences: _profile!.workExperiences,
       educations: edus,
       certificates: _profile!.certificates,
-      languages: _profile!.languages,
+      projects: _profile!.projects,
       createdAt: _profile!.createdAt,
       updatedAt: _profile!.updatedAt,
     );
@@ -658,7 +659,123 @@ class ProfileProvider extends ChangeNotifier {
       workExperiences: _profile!.workExperiences,
       educations: _profile!.educations,
       certificates: certs,
-      languages: _profile!.languages,
+      projects: _profile!.projects,
+      createdAt: _profile!.createdAt,
+      updatedAt: _profile!.updatedAt,
+    );
+  }
+
+  // ─── Project CRUD ──────────────────────────────────────────────────────
+
+  bool _isProjectLoading = false;
+  String? _projectError;
+  bool get isProjectLoading => _isProjectLoading;
+  String? get projectError => _projectError;
+
+  Future<bool> addProject(ProjectEntity project) async {
+    _isProjectLoading = true;
+    _projectError = null;
+    notifyListeners();
+
+    final result = await profileRepository.createProject(project);
+    return result.fold(
+      (failure) {
+        _projectError = failure.message;
+        _isProjectLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (created) {
+        if (_profile != null) {
+          final updated = List<ProjectEntity>.from(_profile!.projects)
+            ..add(created);
+          _profile = _rebuildProfileWithProjects(updated);
+        }
+        _isProjectLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> editProject(int id, ProjectEntity project) async {
+    _isProjectLoading = true;
+    _projectError = null;
+    notifyListeners();
+
+    final result = await profileRepository.updateProject(id, project);
+    return result.fold(
+      (failure) {
+        _projectError = failure.message;
+        _isProjectLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (updated) {
+        if (_profile != null) {
+          final list = _profile!.projects.map((e) => e.id == id ? updated : e).toList();
+          _profile = _rebuildProfileWithProjects(list);
+        }
+        _isProjectLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> removeProject(int id) async {
+    _isProjectLoading = true;
+    _projectError = null;
+    notifyListeners();
+
+    final result = await profileRepository.deleteProject(id);
+    return result.fold(
+      (failure) {
+        _projectError = failure.message;
+        _isProjectLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (_) {
+        if (_profile != null) {
+          final list = _profile!.projects.where((e) => e.id != id).toList();
+          _profile = _rebuildProfileWithProjects(list);
+        }
+        _isProjectLoading = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  CandidateProfileEntity _rebuildProfileWithProjects(List<ProjectEntity> projects) {
+    return CandidateProfileEntity(
+      userId: _profile!.userId,
+      email: _profile!.email,
+      phone: _profile!.phone,
+      fullName: _profile!.fullName,
+      avatarUrl: _profile!.avatarUrl,
+      candidateId: _profile!.candidateId,
+      dateOfBirth: _profile!.dateOfBirth,
+      gender: _profile!.gender,
+      address: _profile!.address,
+      cityName: _profile!.cityName,
+      provinceId: _profile!.provinceId,
+      educationLevel: _profile!.educationLevel,
+      yearsOfExperience: _profile!.yearsOfExperience,
+      currentJobTitle: _profile!.currentJobTitle,
+      desiredJobTitle: _profile!.desiredJobTitle,
+      desiredSalaryMin: _profile!.desiredSalaryMin,
+      desiredSalaryMax: _profile!.desiredSalaryMax,
+      desiredJobType: _profile!.desiredJobType,
+      skills: _profile!.skills,
+      cvFileUrl: _profile!.cvFileUrl,
+      industry: _profile!.industry,
+      isSearchable: _profile!.isSearchable,
+      workExperiences: _profile!.workExperiences,
+      educations: _profile!.educations,
+      certificates: _profile!.certificates,
+      projects: projects,
       createdAt: _profile!.createdAt,
       updatedAt: _profile!.updatedAt,
     );

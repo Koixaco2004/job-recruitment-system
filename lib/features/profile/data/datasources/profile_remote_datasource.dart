@@ -6,6 +6,7 @@ import '../models/candidate_profile_model.dart';
 import '../models/work_experience_model.dart';
 import '../models/education_model.dart';
 import '../models/certificate_model.dart';
+import '../models/project_model.dart';
 
 /// Abstract interface cho Profile Data Source
 abstract class ProfileRemoteDataSource {
@@ -35,6 +36,11 @@ abstract class ProfileRemoteDataSource {
     String? fileName,
   });
   Future<void> deleteCertificate(int id);
+  // Projects
+  Future<List<ProjectModel>> getProjects();
+  Future<ProjectModel> createProject(ProjectModel project);
+  Future<ProjectModel> updateProject(int id, ProjectModel project);
+  Future<void> deleteProject(int id);
 }
 
 /// Implementation gọi API thật
@@ -374,6 +380,87 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       final response = await apiClient.dio.delete('/api/candidates/certificates/$id');
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException('Xóa chứng chỉ thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  // ─── Projects ────────────────────────────────────────────────────────
+
+  @override
+  Future<List<ProjectModel>> getProjects() async {
+    try {
+      final response = await apiClient.dio.get('/api/candidates/projects');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final list = (data['data'] ?? data) as List;
+        return list
+            .map((e) => ProjectModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      throw ServerException('Không thể lấy danh sách dự án');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<ProjectModel> createProject(ProjectModel project) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/candidates/projects',
+        data: project.toCreateDto(),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        return ProjectModel.fromJson(data['data'] ?? data);
+      }
+      throw ServerException('Tạo dự án thất bại');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<ProjectModel> updateProject(int id, ProjectModel project) async {
+    try {
+      final response = await apiClient.dio.put(
+        '/api/candidates/projects/$id',
+        data: project.toUpdateDto(),
+      );
+      if (response.statusCode == 200) {
+        final data = response.data;
+        return ProjectModel.fromJson(data['data'] ?? data);
+      }
+      throw ServerException('Cập nhật dự án thất bại');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> deleteProject(int id) async {
+    try {
+      final response = await apiClient.dio.delete('/api/candidates/projects/$id');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw ServerException('Xóa dự án thất bại');
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');

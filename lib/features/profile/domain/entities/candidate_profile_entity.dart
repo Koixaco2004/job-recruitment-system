@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'work_experience_entity.dart';
 import 'education_entity.dart';
 import 'certificate_entity.dart';
-import 'language_entity.dart';
+import 'project_entity.dart';
 
 /// Entity tổng hợp hồ sơ ứng viên (USERS + CANDIDATES)
 class CandidateProfileEntity extends Equatable {
@@ -36,7 +36,7 @@ class CandidateProfileEntity extends Equatable {
   final List<WorkExperienceEntity> workExperiences;
   final List<EducationEntity> educations;
   final List<CertificateEntity> certificates;
-  final List<LanguageEntity> languages;
+  final List<ProjectEntity> projects;
 
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -67,7 +67,7 @@ class CandidateProfileEntity extends Equatable {
     this.workExperiences = const [],
     this.educations = const [],
     this.certificates = const [],
-    this.languages = const [],
+    this.projects = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -99,7 +99,7 @@ class CandidateProfileEntity extends Equatable {
     workExperiences,
     educations,
     certificates,
-    languages,
+    projects,
     createdAt,
     updatedAt,
   ];
