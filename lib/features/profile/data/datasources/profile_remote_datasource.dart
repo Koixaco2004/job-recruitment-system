@@ -9,6 +9,7 @@ import '../models/certificate_model.dart';
 import '../models/project_model.dart';
 import '../models/job_type_model.dart';
 import '../models/job_category_model.dart';
+import '../models/skill_model.dart';
 
 /// Abstract interface cho Profile Data Source
 abstract class ProfileRemoteDataSource {
@@ -51,6 +52,12 @@ abstract class ProfileRemoteDataSource {
   Future<List<CandidateJobCategoryModel>> getCandidateJobCategories();
   Future<void> addCandidateJobCategories(List<int> categoryIds);
   Future<void> deleteCandidateJobCategory(int mappingId);
+
+  // Skills
+  Future<List<SkillModel>> searchSkills(String query);
+  Future<List<CandidateSkillModel>> getCandidateSkills();
+  Future<void> addCandidateSkills(List<dynamic> skills);
+  Future<void> deleteCandidateSkill(int mappingId);
 }
 
 /// Implementation gọi API thật
@@ -583,6 +590,98 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       final response = await apiClient.dio.delete('/api/candidates/job-categories/$mappingId');
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException('Xóa ngành nghề thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  // ─── Skills ───────────────────────────────────────────────────────────
+
+  @override
+  Future<List<SkillModel>> searchSkills(String query) async {
+    try {
+      final response = await apiClient.dio.get(
+        '/api/metadata/skills/search',
+        queryParameters: {'q': query, 'limit': 20},
+      );
+      if (response.statusCode == 200) {
+        final data = response.data;
+        List list;
+        if (data is List) {
+          list = data;
+        } else if (data is Map && data['data'] is List) {
+          list = data['data'];
+        } else {
+          list = [];
+        }
+        return list.map((e) => SkillModel.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      throw ServerException('Không thể tìm kiếm kỹ năng');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<CandidateSkillModel>> getCandidateSkills() async {
+    try {
+      final response = await apiClient.dio.get('/api/candidates/skills');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        List list;
+        if (data is List) {
+          list = data;
+        } else if (data is Map && data['data'] is List) {
+          list = data['data'];
+        } else {
+          list = [];
+        }
+        return list.map((e) => CandidateSkillModel.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      throw ServerException('Không thể lấy danh sách kỹ năng');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> addCandidateSkills(List<dynamic> skills) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/candidates/skills',
+        data: {'skills': skills},
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException('Thêm kỹ năng thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> deleteCandidateSkill(int mappingId) async {
+    try {
+      final response = await apiClient.dio.delete('/api/candidates/skills/$mappingId');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw ServerException('Xóa kỹ năng thất bại');
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');

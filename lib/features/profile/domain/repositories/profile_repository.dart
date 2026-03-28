@@ -8,6 +8,7 @@ import '../entities/certificate_entity.dart';
 import '../entities/project_entity.dart';
 import '../entities/job_type_entity.dart';
 import '../entities/job_category_entity.dart';
+import '../entities/skill_entity.dart';
 
 abstract class ProfileRepository {
   Future<Either<Failure, CandidateProfileEntity>> getProfile();
@@ -53,4 +54,10 @@ abstract class ProfileRepository {
   Future<Either<Failure, List<CandidateJobCategoryEntity>>> getCandidateJobCategories();
   Future<Either<Failure, void>> addCandidateJobCategories(List<int> categoryIds);
   Future<Either<Failure, void>> deleteCandidateJobCategory(int mappingId);
+
+  /// Skill Methods
+  Future<Either<Failure, List<SkillEntity>>> searchSkills(String query);
+  Future<Either<Failure, List<CandidateSkillEntity>>> getCandidateSkills();
+  Future<Either<Failure, void>> addCandidateSkills(List<dynamic> skills);
+  Future<Either<Failure, void>> deleteCandidateSkill(int mappingId);
 }

@@ -14,6 +14,7 @@ import '../../../metadata/domain/usecases/get_provinces_usecase.dart';
 import '../../../metadata/domain/entities/province_entity.dart';
 import '../../domain/entities/job_type_entity.dart';
 import '../../domain/entities/job_category_entity.dart';
+import '../../domain/entities/skill_entity.dart';
 
 class ProfileProvider extends ChangeNotifier {
   final GetProfileUseCase getProfileUseCase;
@@ -48,6 +49,13 @@ class ProfileProvider extends ChangeNotifier {
   bool _isLoadingJobCategories = false;
   String? _jobCategoryError;
 
+  // Skills
+  List<CandidateSkillEntity> _initialSkillMappingRecords = [];
+  List<dynamic> _selectedSkills = []; // Mix of SkillEntity (metadata) and String (new skill)
+  List<SkillEntity> _skillSearchResults = [];
+  bool _isLoadingSkills = false;
+  String? _skillError;
+
   // Getters
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
@@ -65,6 +73,12 @@ class ProfileProvider extends ChangeNotifier {
   List<int> get selectedJobCategoryIds => _selectedJobCategoryIds;
   bool get isLoadingJobCategories => _isLoadingJobCategories;
   String? get jobCategoryError => _jobCategoryError;
+
+  // Skills Getters
+  List<dynamic> get selectedSkills => _selectedSkills;
+  List<SkillEntity> get skillSearchResults => _skillSearchResults;
+  bool get isLoadingSkills => _isLoadingSkills;
+  String? get skillError => _skillError;
 
   Future<void> fetchProvincesIfEmpty() async {
     if (_provinces.isNotEmpty) return;
@@ -137,6 +151,7 @@ class ProfileProvider extends ChangeNotifier {
     await fetchJobTypesIfEmpty();
     await fetchJobCategoriesMetadata();
     await fetchCandidateJobCategories();
+    await fetchCandidateSkills();
 
     final result = await getProfileUseCase();
     result.fold(
@@ -244,6 +259,149 @@ class ProfileProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _jobCategoryError = "Lỗi hệ thống: $e";
+      _isSaving = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Update profile... (restored or kept)
+
+  // ─── Skills ───────────────────────────────────────────────────────────
+
+  Future<void> fetchCandidateSkills() async {
+    _isLoadingSkills = true;
+    notifyListeners();
+
+    final result = await profileRepository.getCandidateSkills();
+    result.fold(
+      (failure) => _skillError = failure.message,
+      (mappings) {
+        _initialSkillMappingRecords = mappings;
+        _selectedSkills = List<dynamic>.from(
+          mappings.map((m) => m.skillMetadata).whereType<SkillEntity>(),
+        );
+      },
+    );
+    _isLoadingSkills = false;
+    notifyListeners();
+  }
+
+  Future<void> searchSkills(String query) async {
+    if (query.isEmpty) {
+      _skillSearchResults = [];
+      notifyListeners();
+      return;
+    }
+
+    _isLoadingSkills = true;
+    notifyListeners();
+
+    final result = await profileRepository.searchSkills(query);
+    result.fold(
+      (failure) => _skillError = failure.message,
+      (results) => _skillSearchResults = results,
+    );
+    _isLoadingSkills = false;
+    notifyListeners();
+  }
+
+  void addSelectedSkill(dynamic skill) {
+    // Prevent duplicates
+    bool exists = false;
+    if (skill is String) {
+      final trimmed = skill.trim();
+      if (trimmed.isEmpty) return;
+      
+      exists = _selectedSkills.any((s) => s is String && s.toLowerCase().trim() == trimmed.toLowerCase());
+      if (!exists) {
+        exists = _selectedSkills.any((s) => s is SkillEntity && s.canonicalName.toLowerCase().trim() == trimmed.toLowerCase());
+      }
+      if (!exists) {
+        _selectedSkills.add(trimmed);
+        notifyListeners();
+      }
+    } else if (skill is SkillEntity) {
+      exists = _selectedSkills.any((s) => s is SkillEntity && s.id == skill.id);
+      if (!exists) {
+        _selectedSkills.add(skill);
+        notifyListeners();
+      }
+    }
+  }
+
+  void removeSelectedSkill(dynamic skill) {
+    if (skill is String) {
+      _selectedSkills.removeWhere((s) => s is String && s == skill);
+    } else if (skill is SkillEntity) {
+      _selectedSkills.removeWhere((s) => s is SkillEntity && s.id == skill.id);
+    }
+    notifyListeners();
+  }
+
+  Future<bool> saveSkills() async {
+    _isSaving = true;
+    _skillError = null;
+    notifyListeners();
+
+    try {
+      // 1. Identify skills to DELETE
+      // We look at _initialSkillMappingRecords and see which ones are NOT in _selectedSkills
+      final List<int> mappingIdsToDelete = [];
+      for (var initialRecord in _initialSkillMappingRecords) {
+        final skillMetadataId = initialRecord.skillMetadataId;
+        final stillSelected = _selectedSkills.any((s) => s is SkillEntity && s.id == skillMetadataId);
+        if (!stillSelected) {
+          mappingIdsToDelete.add(initialRecord.id);
+        }
+      }
+
+      // 2. Identify skills to ADD
+      // We look at _selectedSkills and see which ones are NOT in _initialSkillMappingRecords
+      final List<dynamic> skillsToAdd = [];
+      for (var selected in _selectedSkills) {
+        if (selected is String) {
+          // Strings are always new (or at least treated as such by the specific append logic of the backend)
+          skillsToAdd.add(selected);
+        } else if (selected is SkillEntity) {
+          final isInitiallyPresent = _initialSkillMappingRecords.any((m) => m.skillMetadataId == selected.id);
+          if (!isInitiallyPresent) {
+            skillsToAdd.add(selected.id);
+          }
+        }
+      }
+
+      // Execute Deletions
+      for (var id in mappingIdsToDelete) {
+        final result = await profileRepository.deleteCandidateSkill(id);
+        final fail = result.fold((f) => f, (_) => null);
+        if (fail != null) {
+          _skillError = "Lỗi xóa kỹ năng: ${fail.message}";
+          _isSaving = false;
+          notifyListeners();
+          return false;
+        }
+      }
+
+      // Execute Additions
+      if (skillsToAdd.isNotEmpty) {
+        final result = await profileRepository.addCandidateSkills(skillsToAdd);
+        final fail = result.fold((f) => f, (_) => null);
+        if (fail != null) {
+          _skillError = "Lỗi thêm kỹ năng: ${fail.message}";
+          _isSaving = false;
+          notifyListeners();
+          return false;
+        }
+      }
+
+      // Refresh data
+      await fetchCandidateSkills();
+      _isSaving = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _skillError = e.toString();
       _isSaving = false;
       notifyListeners();
       return false;

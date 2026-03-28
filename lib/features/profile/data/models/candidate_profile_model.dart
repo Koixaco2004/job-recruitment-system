@@ -115,7 +115,18 @@ class CandidateProfileModel extends CandidateProfileEntity {
           json['jobTypeId'] ??
           (json['jobType'] is Map ? json['jobType']['id'] : null)),
       skills: json['skills'] != null
-          ? List<String>.from(json['skills'])
+          ? (json['skills'] as List).map<String>((e) {
+              if (e is String) return e;
+              if (e is Map) {
+                // Case CandidateSkillTagEntity mapping
+                final metadata = e['skillMetadata'];
+                if (metadata is Map) {
+                  return metadata['canonicalName']?.toString() ?? '';
+                }
+                return e['name']?.toString() ?? ''; // Fallback
+              }
+              return e.toString();
+            }).toList()
           : <String>[],
       cvFileUrl: _parseStringNullable(
           json['cv_file_url'] ?? json['cvUrl'] ?? json['cvFileUrl']),

@@ -8,6 +8,7 @@ import '../../domain/entities/certificate_entity.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/entities/job_type_entity.dart';
 import '../../domain/entities/job_category_entity.dart';
+import '../../domain/entities/skill_entity.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_datasource.dart';
@@ -393,7 +394,57 @@ class ProfileRepositoryImpl implements ProfileRepository {
     } on AuthenticationException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Lỗi: $e'));
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  // ─── Skills ───────────────────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, List<SkillEntity>>> searchSkills(String query) async {
+    try {
+      final results = await remoteDataSource.searchSkills(query);
+      return Right(results);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CandidateSkillEntity>>> getCandidateSkills() async {
+    try {
+      final results = await remoteDataSource.getCandidateSkills();
+      return Right(results);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> addCandidateSkills(List<dynamic> skills) async {
+    try {
+      await remoteDataSource.addCandidateSkills(skills);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteCandidateSkill(int mappingId) async {
+    try {
+      await remoteDataSource.deleteCandidateSkill(mappingId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
@@ -9,6 +10,7 @@ import '../../domain/entities/work_experience_entity.dart';
 import '../../domain/entities/education_entity.dart';
 import '../../domain/entities/certificate_entity.dart';
 import '../../domain/entities/project_entity.dart';
+import '../../domain/entities/skill_entity.dart';
 import '../../../metadata/domain/entities/province_entity.dart';
 import '../providers/profile_provider.dart';
 
@@ -30,7 +32,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _desiredJobTitleCtrl;
   late TextEditingController _salaryMinCtrl;
   late TextEditingController _salaryMaxCtrl;
-  late TextEditingController _skillsCtrl;
 
   String? _selectedGender;
   int? _selectedProvinceId;
@@ -48,9 +49,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final genders = ['Nam', 'Nữ', 'Khác'];
   final educationLevels = ['Cao đẳng', 'Đại học', 'Thạc sĩ', 'Tiến sĩ'];
 
+  Timer? _skillDebounce;
+  final TextEditingController _skillSearchCtrl = TextEditingController();
+
   @override
   void initState() {
     super.initState();
+    // Initial fetch for metadata and mappings
+    context.read<ProfileProvider>().fetchProfile();
+    
     final profile = context.read<ProfileProvider>().profile!;
 
     _fullNameCtrl = TextEditingController(text: profile.fullName);
@@ -68,7 +75,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _salaryMaxCtrl = TextEditingController(
       text: profile.desiredSalaryMax?.toString() ?? '',
     );
-    _skillsCtrl = TextEditingController(text: profile.skills.join(', '));
 
     _selectedGender = profile.gender;
     _selectedProvinceId = profile.provinceId;
@@ -92,7 +98,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _desiredJobTitleCtrl.dispose();
     _salaryMinCtrl.dispose();
     _salaryMaxCtrl.dispose();
-    _skillsCtrl.dispose();
+    _skillSearchCtrl.dispose();
+    _skillDebounce?.cancel();
     super.dispose();
   }
 
@@ -357,24 +364,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildSkillsSection() {
-    return _buildSectionCard(
-      title: 'Kỹ năng',
-      icon: Icons.code,
-      children: [
-        TextFormField(
-          controller: _skillsCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Kỹ năng (phân cách bằng dấu phẩy)',
-            hintText: 'Flutter, Dart, Firebase...',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 3,
-        ),
-      ],
-    );
-  }
-
   Widget _buildExperienceSection() {
     return _buildSectionCard(
       title: 'Kinh nghiệm làm việc',
@@ -508,6 +497,158 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 },
               );
             }).toList(),
+    );
+  }
+
+  Widget _buildSkillsSection() {
+    return _buildSectionCard(
+      title: 'Kỹ năng',
+      icon: Icons.bolt,
+      children: [
+        Consumer<ProfileProvider>(
+          builder: (context, provider, _) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Search field
+                TextField(
+                  controller: _skillSearchCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'Tìm kiếm hoặc nhập kỹ năng mới...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: _skillSearchCtrl.text.trim().isNotEmpty
+                          ? IconButton(
+                              key: const ValueKey('add_skill_btn'),
+                              icon: const Icon(Icons.add_circle, color: Colors.blue, size: 28),
+                              onPressed: () {
+                                final text = _skillSearchCtrl.text.trim();
+                                if (text.isNotEmpty) {
+                                  provider.addSelectedSkill(text);
+                                  _skillSearchCtrl.clear();
+                                  provider.searchSkills('');
+                                  setState(() {});
+                                }
+                              },
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                  onChanged: (value) {
+                    if (_skillDebounce?.isActive ?? false) _skillDebounce!.cancel();
+                    _skillDebounce = Timer(const Duration(milliseconds: 500), () {
+                      provider.searchSkills(value.trim());
+                    });
+                    setState(() {}); // For suffix icon refresh
+                  },
+                  onSubmitted: (value) {
+                    final text = value.trim();
+                    if (text.isNotEmpty) {
+                      provider.addSelectedSkill(text);
+                      _skillSearchCtrl.clear();
+                      provider.searchSkills('');
+                      setState(() {});
+                    }
+                  },
+                ),
+                
+                // Search Results Dropdown-like
+                if (provider.isLoadingSkills)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: LinearProgressIndicator(),
+                  ),
+                
+                if (provider.skillSearchResults.isNotEmpty && _skillSearchCtrl.text.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: provider.skillSearchResults.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final skill = provider.skillSearchResults[index];
+                        return ListTile(
+                          title: Text(skill.canonicalName),
+                          onTap: () {
+                            provider.addSelectedSkill(skill);
+                            _skillSearchCtrl.clear();
+                            provider.searchSkills(''); // Clear results
+                            setState(() {});
+                          },
+                        );
+                      },
+                    ),
+                  ),
+
+                const SizedBox(height: 12),
+                
+                // Selected Skills Chips
+                if (provider.selectedSkills.isEmpty)
+                  Text(
+                    'Chưa có kỹ năng nào được chọn',
+                    style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 0,
+                    children: provider.selectedSkills.map((skill) {
+                      String label = '';
+                      if (skill is String) {
+                        label = skill;
+                      } else if (skill is SkillEntity) {
+                        label = skill.canonicalName;
+                      }
+                      
+                      return Chip(
+                        label: Text(label),
+                        onDeleted: () => provider.removeSelectedSkill(skill),
+                        backgroundColor: (skill is String) 
+                            ? Colors.orange.withOpacity(0.1) 
+                            : Theme.of(context).primaryColor.withOpacity(0.1),
+                        deleteIconColor: Colors.red[400],
+                        labelStyle: TextStyle(
+                          color: (skill is String) ? Colors.orange[900] : Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                
+                if (provider.skillError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      provider.skillError!,
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -1329,13 +1470,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final profile = context.read<ProfileProvider>().profile!;
+    final provider = context.read<ProfileProvider>();
+    final profile = provider.profile!;
 
-    final skills = _skillsCtrl.text
-        .split(',')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final skills = provider.selectedSkills.map((s) {
+      if (s is String) return s;
+      if (s is SkillEntity) return s.canonicalName;
+      return '';
+    }).where((s) => s.isNotEmpty).toList();
 
     final updatedProfile = CandidateProfileEntity(
       userId: profile.userId,
@@ -1371,20 +1513,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
       createdAt: profile.createdAt,
       updatedAt: DateTime.now(),
     );
-
-    final provider = context.read<ProfileProvider>();
     
     // Save Profile and Job Categories
     final results = await Future.wait([
       provider.updateProfile(updatedProfile),
       provider.saveJobCategories(),
+      provider.saveSkills(),
     ]);
 
     final profileSuccess = results[0];
     final categorySuccess = results[1];
+    final skillSuccess = results[2];
 
     if (mounted) {
-      if (profileSuccess && categorySuccess) {
+      if (profileSuccess && categorySuccess && skillSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Cập nhật hồ sơ thành công!'),
@@ -1395,11 +1537,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       } else {
         String error = '';
         if (!profileSuccess) error += provider.errorMessage ?? 'Lỗi cập nhật hồ sơ. ';
-        if (!categorySuccess) error += provider.jobCategoryError ?? 'Lỗi cập nhật ngành nghề.';
+        if (!categorySuccess) error += provider.jobCategoryError ?? 'Lỗi cập nhật ngành nghề. ';
+        if (!skillSuccess) error += provider.skillError ?? 'Lỗi cập nhật kỹ năng.';
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(error),
+            content: Text(error.trim()),
             backgroundColor: Colors.red,
           ),
         );
