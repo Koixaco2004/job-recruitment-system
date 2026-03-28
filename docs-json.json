@@ -50,6 +50,34 @@
                 ]
             }
         },
+        "/api/auth/employer/register": {
+            "post": {
+                "operationId": "AuthController_registerEmployer",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterEmployerDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Đăng ký thành công"
+                    },
+                    "409": {
+                        "description": "Email đã được sử dụng"
+                    }
+                },
+                "summary": "Đăng ký tài khoản Nhà tuyển dụng (HR)",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
         "/api/auth/login": {
             "post": {
                 "operationId": "AuthController_login",
@@ -1105,6 +1133,441 @@
                     "Metadata - Provinces"
                 ]
             }
+        },
+        "/api/metadata/provinces/{id}": {
+            "get": {
+                "operationId": "ProvincesController_findOne",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "Mã tỉnh / thành phố (code)",
+                        "schema": {
+                            "example": "01",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thông tin tỉnh / thành phố"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy tỉnh / thành phố"
+                    }
+                },
+                "summary": "Lấy thông tin một tỉnh / thành phố theo ID",
+                "tags": [
+                    "Metadata - Provinces"
+                ]
+            }
+        },
+        "/api/metadata/job-categories": {
+            "get": {
+                "operationId": "JobCategoriesController_findAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/JobCategoryMetadataEntity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Lấy danh sách ngành nghề (Job Categories)",
+                "tags": [
+                    "Metadata"
+                ]
+            }
+        },
+        "/api/metadata/job-types": {
+            "get": {
+                "operationId": "JobTypesController_findAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/JobTypeMetadataEntity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Lấy danh sách hình thức làm việc (Job Types)",
+                "tags": [
+                    "Metadata"
+                ]
+            }
+        },
+        "/api/employers/setup-company": {
+            "post": {
+                "operationId": "EmployersController_setupCompany",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetupCompanyDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Khởi tạo công ty (Dành cho HR mới)",
+                "tags": [
+                    "Employers - Quản lý HR"
+                ]
+            }
+        },
+        "/api/employers/profile": {
+            "get": {
+                "operationId": "EmployersController_getProfile",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmployerEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy thông tin cá nhân HR hiện tại",
+                "tags": [
+                    "Employers - Quản lý HR"
+                ]
+            },
+            "put": {
+                "operationId": "EmployersController_updateProfile",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateEmployerProfileDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmployerEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật thông tin cá nhân HR",
+                "tags": [
+                    "Employers - Quản lý HR"
+                ]
+            }
+        },
+        "/api/employers/avatar": {
+            "post": {
+                "operationId": "EmployersController_uploadAvatar",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Upload ảnh đại diện HR",
+                "tags": [
+                    "Employers - Quản lý HR"
+                ]
+            }
+        },
+        "/api/companies/profile": {
+            "put": {
+                "operationId": "CompaniesController_updateCompanyProfile",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCompanyDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật thông tin công ty",
+                "tags": [
+                    "Companies - Quản lý hồ sơ doanh nghiệp"
+                ]
+            }
+        },
+        "/api/companies/logo": {
+            "post": {
+                "operationId": "CompaniesController_uploadLogo",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Upload Logo công ty",
+                "tags": [
+                    "Companies - Quản lý hồ sơ doanh nghiệp"
+                ]
+            }
+        },
+        "/api/companies/banner": {
+            "post": {
+                "operationId": "CompaniesController_uploadBanner",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Upload Banner công ty",
+                "tags": [
+                    "Companies - Quản lý hồ sơ doanh nghiệp"
+                ]
+            }
+        },
+        "/api/companies/images": {
+            "post": {
+                "operationId": "CompaniesController_uploadCompanyImages",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "files": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Upload nhiều hình ảnh làm việc (tối đa 10 file)",
+                "tags": [
+                    "Companies - Quản lý hồ sơ doanh nghiệp"
+                ]
+            }
+        },
+        "/api/companies/images/{id}": {
+            "delete": {
+                "operationId": "CompaniesController_deleteCompanyImage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa hình ảnh làm việc",
+                "tags": [
+                    "Companies - Quản lý hồ sơ doanh nghiệp"
+                ]
+            }
         }
     },
     "info": {
@@ -1172,6 +1635,29 @@
                     "lastName",
                     "phone",
                     "provinceId"
+                ]
+            },
+            "RegisterEmployerDto": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "minLength": 1,
+                        "format": "email",
+                        "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                        "description": "Email đăng ký của HR",
+                        "example": "hr@company.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 6,
+                        "description": "Mật khẩu (tối thiểu 6 ký tự)",
+                        "example": "password123"
+                    }
+                },
+                "required": [
+                    "email",
+                    "password"
                 ]
             },
             "LoginDto": {
@@ -1556,6 +2042,790 @@
                 "required": [
                     "categoryIds"
                 ]
+            },
+            "JobCategoryMetadataEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug",
+                    "createdAt"
+                ]
+            },
+            "JobTypeMetadataEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug"
+                ]
+            },
+            "SetupCompanyDto": {
+                "type": "object",
+                "properties": {
+                    "fullName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Họ và tên HR"
+                    },
+                    "phoneContact": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Số điện thoại cá nhân HR"
+                    },
+                    "companyName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Tên Công ty"
+                    },
+                    "categoryId": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "ID Ngành nghề / Lĩnh vực công ty"
+                    },
+                    "provinceId": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "ID Tỉnh / Thành phố trụ sở"
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "Địa chỉ cụ thể"
+                    }
+                },
+                "required": [
+                    "fullName",
+                    "phoneContact",
+                    "companyName",
+                    "categoryId"
+                ]
+            },
+            "CertificateEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "candidateId": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "cerImgUrl": {
+                        "type": "string"
+                    },
+                    "candidate": {
+                        "$ref": "#/components/schemas/CandidateEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "candidateId",
+                    "name",
+                    "cerImgUrl",
+                    "candidate"
+                ]
+            },
+            "CandidateJobCategoryEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "candidateId": {
+                        "type": "number"
+                    },
+                    "jobCategoryId": {
+                        "type": "number"
+                    },
+                    "candidate": {
+                        "$ref": "#/components/schemas/CandidateEntity"
+                    },
+                    "jobCategory": {
+                        "$ref": "#/components/schemas/JobCategoryMetadataEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "candidateId",
+                    "jobCategoryId",
+                    "candidate",
+                    "jobCategory"
+                ]
+            },
+            "WorkExperienceEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "candidateId": {
+                        "type": "number"
+                    },
+                    "companyName": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "string"
+                    },
+                    "isWorkingHere": {
+                        "type": "boolean"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "candidate": {
+                        "$ref": "#/components/schemas/CandidateEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "candidateId",
+                    "companyName",
+                    "position",
+                    "startDate",
+                    "endDate",
+                    "isWorkingHere",
+                    "description",
+                    "candidate"
+                ]
+            },
+            "EducationEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "candidateId": {
+                        "type": "number"
+                    },
+                    "schoolName": {
+                        "type": "string"
+                    },
+                    "major": {
+                        "type": "string"
+                    },
+                    "degree": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "string"
+                    },
+                    "isStillStudying": {
+                        "type": "boolean"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "candidate": {
+                        "$ref": "#/components/schemas/CandidateEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "candidateId",
+                    "schoolName",
+                    "major",
+                    "degree",
+                    "startDate",
+                    "endDate",
+                    "isStillStudying",
+                    "description",
+                    "candidate"
+                ]
+            },
+            "ProjectEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "candidateId": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "candidate": {
+                        "$ref": "#/components/schemas/CandidateEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "candidateId",
+                    "name",
+                    "startDate",
+                    "endDate",
+                    "description",
+                    "candidate"
+                ]
+            },
+            "SkillMetadataEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "canonicalName": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "aliases": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "hard",
+                            "soft"
+                        ]
+                    },
+                    "useCount": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "canonicalName",
+                    "slug",
+                    "aliases",
+                    "type",
+                    "useCount",
+                    "createdAt"
+                ]
+            },
+            "CandidateSkillTagEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "candidateId": {
+                        "type": "number"
+                    },
+                    "skillMetadataId": {
+                        "type": "number"
+                    },
+                    "candidate": {
+                        "$ref": "#/components/schemas/CandidateEntity"
+                    },
+                    "skillMetadata": {
+                        "$ref": "#/components/schemas/SkillMetadataEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "candidateId",
+                    "skillMetadataId",
+                    "candidate",
+                    "skillMetadata"
+                ]
+            },
+            "CandidateEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "userId": {
+                        "type": "number"
+                    },
+                    "fullName": {
+                        "type": "string"
+                    },
+                    "gender": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "cvUrl": {
+                        "type": "string"
+                    },
+                    "bio": {
+                        "type": "string"
+                    },
+                    "provinceId": {
+                        "type": "number"
+                    },
+                    "position": {
+                        "type": "string"
+                    },
+                    "salaryMin": {
+                        "type": "number"
+                    },
+                    "salaryMax": {
+                        "type": "number"
+                    },
+                    "jobTypeId": {
+                        "type": "number"
+                    },
+                    "jobType": {
+                        "$ref": "#/components/schemas/JobTypeMetadataEntity"
+                    },
+                    "yearWorkingExperience": {
+                        "type": "number"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserEntity"
+                    },
+                    "certificates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CertificateEntity"
+                        }
+                    },
+                    "jobCategories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CandidateJobCategoryEntity"
+                        }
+                    },
+                    "workExperiences": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WorkExperienceEntity"
+                        }
+                    },
+                    "educations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EducationEntity"
+                        }
+                    },
+                    "projects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProjectEntity"
+                        }
+                    },
+                    "skills": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CandidateSkillTagEntity"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "userId",
+                    "fullName",
+                    "gender",
+                    "phone",
+                    "avatarUrl",
+                    "cvUrl",
+                    "bio",
+                    "provinceId",
+                    "position",
+                    "salaryMin",
+                    "salaryMax",
+                    "jobTypeId",
+                    "jobType",
+                    "yearWorkingExperience",
+                    "user",
+                    "certificates",
+                    "jobCategories",
+                    "workExperiences",
+                    "educations",
+                    "projects",
+                    "skills"
+                ]
+            },
+            "UserEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "admin",
+                            "employer",
+                            "candidate"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "locked"
+                        ]
+                    },
+                    "created_at": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "candidate": {
+                        "$ref": "#/components/schemas/CandidateEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "email",
+                    "password",
+                    "role",
+                    "status",
+                    "created_at",
+                    "candidate"
+                ]
+            },
+            "EmployerEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "userId": {
+                        "type": "number"
+                    },
+                    "companyId": {
+                        "type": "number"
+                    },
+                    "fullName": {
+                        "type": "string"
+                    },
+                    "phoneContact": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "isAdminCompany": {
+                        "type": "boolean"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserEntity"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/CompanyEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "userId",
+                    "companyId",
+                    "fullName",
+                    "phoneContact",
+                    "avatarUrl",
+                    "isAdminCompany",
+                    "status",
+                    "createdAt",
+                    "updatedAt",
+                    "user",
+                    "company"
+                ]
+            },
+            "CompanyImageEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "companyId": {
+                        "type": "number"
+                    },
+                    "imageUrl": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/CompanyEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "companyId",
+                    "imageUrl",
+                    "createdAt",
+                    "company"
+                ]
+            },
+            "CompanyEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "userCreatorId": {
+                        "type": "number"
+                    },
+                    "categoryId": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "emailContact": {
+                        "type": "string"
+                    },
+                    "phoneContact": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "provinceId": {
+                        "type": "number"
+                    },
+                    "logoUrl": {
+                        "type": "string"
+                    },
+                    "bannerUrl": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "companySize": {
+                        "type": "string"
+                    },
+                    "websiteUrl": {
+                        "type": "string"
+                    },
+                    "facebookUrl": {
+                        "type": "string"
+                    },
+                    "linkedinUrl": {
+                        "type": "string"
+                    },
+                    "businessLicenseUrl": {
+                        "type": "string"
+                    },
+                    "isVerified": {
+                        "type": "boolean"
+                    },
+                    "verifiedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "employers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EmployerEntity"
+                        }
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CompanyImageEntity"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "userCreatorId",
+                    "categoryId",
+                    "name",
+                    "emailContact",
+                    "phoneContact",
+                    "address",
+                    "provinceId",
+                    "logoUrl",
+                    "bannerUrl",
+                    "description",
+                    "content",
+                    "companySize",
+                    "websiteUrl",
+                    "facebookUrl",
+                    "linkedinUrl",
+                    "businessLicenseUrl",
+                    "isVerified",
+                    "verifiedAt",
+                    "createdAt",
+                    "updatedAt",
+                    "employers",
+                    "images"
+                ]
+            },
+            "UpdateEmployerProfileDto": {
+                "type": "object",
+                "properties": {
+                    "fullName": {
+                        "type": "string",
+                        "description": "Họ và tên HR"
+                    },
+                    "phoneContact": {
+                        "type": "string",
+                        "description": "Số điện thoại liên hệ"
+                    }
+                }
+            },
+            "UpdateCompanyDto": {
+                "type": "object",
+                "properties": {
+                    "categoryId": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "emailContact": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "email",
+                                "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                            },
+                            {
+                                "type": "string",
+                                "const": ""
+                            }
+                        ],
+                        "x-nestjs_zod-empty-type": true
+                    },
+                    "phoneContact": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "provinceId": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "companySize": {
+                        "type": "string"
+                    },
+                    "websiteUrl": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            {
+                                "type": "string",
+                                "const": ""
+                            }
+                        ],
+                        "x-nestjs_zod-empty-type": true
+                    },
+                    "facebookUrl": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            {
+                                "type": "string",
+                                "const": ""
+                            }
+                        ],
+                        "x-nestjs_zod-empty-type": true
+                    },
+                    "linkedinUrl": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            {
+                                "type": "string",
+                                "const": ""
+                            }
+                        ],
+                        "x-nestjs_zod-empty-type": true
+                    }
+                }
             }
         }
     }

@@ -8,6 +8,7 @@ import '../models/education_model.dart';
 import '../models/certificate_model.dart';
 import '../models/project_model.dart';
 import '../models/job_type_model.dart';
+import '../models/job_category_model.dart';
 
 /// Abstract interface cho Profile Data Source
 abstract class ProfileRemoteDataSource {
@@ -44,6 +45,12 @@ abstract class ProfileRemoteDataSource {
   Future<void> deleteProject(int id);
 
   Future<List<JobTypeModel>> getJobTypes();
+
+  // Job Categories
+  Future<List<JobCategoryModel>> getJobCategoriesMetadata();
+  Future<List<CandidateJobCategoryModel>> getCandidateJobCategories();
+  Future<void> addCandidateJobCategories(List<int> categoryIds);
+  Future<void> deleteCandidateJobCategory(int mappingId);
 }
 
 /// Implementation gọi API thật
@@ -484,6 +491,99 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
             .toList();
       }
       return [];
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  // ─── Job Categories ──────────────────────────────────────────────────
+
+  @override
+  Future<List<JobCategoryModel>> getJobCategoriesMetadata() async {
+    try {
+      final response = await apiClient.dio.get('/api/metadata/job-categories');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        List list;
+        if (data is List) {
+          list = data;
+        } else if (data is Map && data['data'] is List) {
+          list = data['data'];
+        } else {
+          list = [];
+        }
+        return list
+            .map((e) => JobCategoryModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      throw ServerException('Không thể lấy danh sách ngành nghề');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<CandidateJobCategoryModel>> getCandidateJobCategories() async {
+    try {
+      final response = await apiClient.dio.get('/api/candidates/job-categories');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        List list;
+        if (data is List) {
+          list = data;
+        } else if (data is Map && data['data'] is List) {
+          list = data['data'];
+        } else {
+          list = [];
+        }
+        return list
+            .map((e) => CandidateJobCategoryModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      throw ServerException('Không thể lấy ngành nghề ứng viên đã chọn');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> addCandidateJobCategories(List<int> categoryIds) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/candidates/job-categories',
+        data: {'categoryIds': categoryIds},
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException('Thêm ngành nghề thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> deleteCandidateJobCategory(int mappingId) async {
+    try {
+      final response = await apiClient.dio.delete('/api/candidates/job-categories/$mappingId');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw ServerException('Xóa ngành nghề thất bại');
+      }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');

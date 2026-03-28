@@ -7,6 +7,7 @@ import '../entities/education_entity.dart';
 import '../entities/certificate_entity.dart';
 import '../entities/project_entity.dart';
 import '../entities/job_type_entity.dart';
+import '../entities/job_category_entity.dart';
 
 abstract class ProfileRepository {
   Future<Either<Failure, CandidateProfileEntity>> getProfile();
@@ -46,4 +47,10 @@ abstract class ProfileRepository {
   Future<Either<Failure, void>> deleteProject(int id);
 
   Future<Either<Failure, List<JobTypeEntity>>> getJobTypes();
+
+  // Job Categories
+  Future<Either<Failure, List<JobCategoryEntity>>> getJobCategoriesMetadata();
+  Future<Either<Failure, List<CandidateJobCategoryEntity>>> getCandidateJobCategories();
+  Future<Either<Failure, void>> addCandidateJobCategories(List<int> categoryIds);
+  Future<Either<Failure, void>> deleteCandidateJobCategory(int mappingId);
 }

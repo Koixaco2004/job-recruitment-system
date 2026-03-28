@@ -37,7 +37,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? _selectedEducation;
   String? _selectedJobType;
   int? _selectedJobTypeId;
-  String? _selectedIndustry;
   String? _avatarUrl; // URL ảnh đại diện (cập nhật khi upload)
 
   // Dynamic lists
@@ -48,19 +47,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   final genders = ['Nam', 'Nữ', 'Khác'];
   final educationLevels = ['Cao đẳng', 'Đại học', 'Thạc sĩ', 'Tiến sĩ'];
-  final industries = [
-    'Công nghệ thông tin',
-    'Tài chính - Ngân hàng',
-    'Marketing - Truyền thông',
-    'Giáo dục - Đào tạo',
-    'Y tế - Sức khỏe',
-    'Xây dựng - Bất động sản',
-    'Sản xuất - Chế tạo',
-    'Thương mại - Bán lẻ',
-    'Du lịch - Nhà hàng - Khách sạn',
-    'Vận tải - Logistics',
-    'Khác',
-  ];
 
   @override
   void initState() {
@@ -89,7 +75,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _selectedEducation = profile.educationLevel;
     _selectedJobType = profile.desiredJobType;
     _selectedJobTypeId = profile.jobTypeId;
-    _selectedIndustry = profile.industry;
     _avatarUrl = profile.avatarUrl;
 
     _workExperiences = List.from(profile.workExperiences);
@@ -168,6 +153,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
               _buildCertificateSection(),
               const SizedBox(height: 16),
               _buildProjectSection(),
+              const SizedBox(height: 16),
+              _buildJobCategorySection(),
               const SizedBox(height: 32),
             ],
           ),
@@ -297,12 +284,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ],
         ),
         _buildJobTypeDropdown(),
-        _buildDropdown(
-          'Ngành nghề',
-          industries,
-          _selectedIndustry,
-          (v) => setState(() => _selectedIndustry = v),
-        ),
       ],
     );
   }
@@ -527,6 +508,39 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 },
               );
             }).toList(),
+    );
+  }
+
+  Widget _buildJobCategorySection() {
+    return _buildSectionCard(
+      title: 'Ngành nghề quan tâm',
+      icon: Icons.category_outlined,
+      children: [
+        Consumer<ProfileProvider>(
+          builder: (context, provider, _) {
+            if (provider.isLoadingJobCategories) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (provider.allJobCategories.isEmpty) {
+              return const Text('Không có dữ liệu ngành nghề');
+            }
+            return Wrap(
+              spacing: 8,
+              runSpacing: 0,
+              children: provider.allJobCategories.map((cat) {
+                final isSelected = provider.selectedJobCategoryIds.contains(cat.id);
+                return FilterChip(
+                  label: Text(cat.name),
+                  selected: isSelected,
+                  onSelected: (_) => provider.toggleJobCategory(cat.id),
+                  selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                  checkmarkColor: Theme.of(context).primaryColor,
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -1349,7 +1363,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       jobTypeId: _selectedJobTypeId,
       skills: skills,
       cvFileUrl: profile.cvFileUrl,
-      industry: _selectedIndustry,
       isSearchable: profile.isSearchable,
       workExperiences: _workExperiences,
       educations: _educations,
@@ -1360,10 +1373,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
 
     final provider = context.read<ProfileProvider>();
-    final success = await provider.updateProfile(updatedProfile);
+    
+    // Save Profile and Job Categories
+    final results = await Future.wait([
+      provider.updateProfile(updatedProfile),
+      provider.saveJobCategories(),
+    ]);
+
+    final profileSuccess = results[0];
+    final categorySuccess = results[1];
 
     if (mounted) {
-      if (success) {
+      if (profileSuccess && categorySuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Cập nhật hồ sơ thành công!'),
@@ -1372,9 +1393,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
         Navigator.pop(context);
       } else {
+        String error = '';
+        if (!profileSuccess) error += provider.errorMessage ?? 'Lỗi cập nhật hồ sơ. ';
+        if (!categorySuccess) error += provider.jobCategoryError ?? 'Lỗi cập nhật ngành nghề.';
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(provider.errorMessage ?? 'Lỗi cập nhật'),
+            content: Text(error),
             backgroundColor: Colors.red,
           ),
         );

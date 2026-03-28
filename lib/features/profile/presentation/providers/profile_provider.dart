@@ -13,6 +13,7 @@ import '../../../../injection_container.dart' as di;
 import '../../../metadata/domain/usecases/get_provinces_usecase.dart';
 import '../../../metadata/domain/entities/province_entity.dart';
 import '../../domain/entities/job_type_entity.dart';
+import '../../domain/entities/job_category_entity.dart';
 
 class ProfileProvider extends ChangeNotifier {
   final GetProfileUseCase getProfileUseCase;
@@ -41,6 +42,12 @@ class ProfileProvider extends ChangeNotifier {
   List<JobTypeEntity> _jobTypes = [];
   bool _isLoadingJobTypes = false;
 
+  List<JobCategoryEntity> _allJobCategories = [];
+  List<CandidateJobCategoryEntity> _initialMappingRecords = [];
+  List<int> _selectedJobCategoryIds = [];
+  bool _isLoadingJobCategories = false;
+  String? _jobCategoryError;
+
   // Getters
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
@@ -54,6 +61,10 @@ class ProfileProvider extends ChangeNotifier {
   bool get isLoadingProvinces => _isLoadingProvinces;
   List<JobTypeEntity> get jobTypes => _jobTypes;
   bool get isLoadingJobTypes => _isLoadingJobTypes;
+  List<JobCategoryEntity> get allJobCategories => _allJobCategories;
+  List<int> get selectedJobCategoryIds => _selectedJobCategoryIds;
+  bool get isLoadingJobCategories => _isLoadingJobCategories;
+  String? get jobCategoryError => _jobCategoryError;
 
   Future<void> fetchProvincesIfEmpty() async {
     if (_provinces.isNotEmpty) return;
@@ -124,6 +135,8 @@ class ProfileProvider extends ChangeNotifier {
 
     await fetchProvincesIfEmpty();
     await fetchJobTypesIfEmpty();
+    await fetchJobCategoriesMetadata();
+    await fetchCandidateJobCategories();
 
     final result = await getProfileUseCase();
     result.fold(
@@ -137,6 +150,104 @@ class ProfileProvider extends ChangeNotifier {
       },
     );
     notifyListeners();
+  }
+
+  // ─── Job Categories Logic ──────────────────────────────────────────────
+
+  Future<void> fetchJobCategoriesMetadata() async {
+    if (_allJobCategories.isNotEmpty) return;
+    _isLoadingJobCategories = true;
+    notifyListeners();
+
+    final result = await profileRepository.getJobCategoriesMetadata();
+    result.fold(
+      (failure) => _jobCategoryError = failure.message,
+      (categories) {
+        _allJobCategories = categories;
+      },
+    );
+    _isLoadingJobCategories = false;
+    notifyListeners();
+  }
+
+  Future<void> fetchCandidateJobCategories() async {
+    _isLoadingJobCategories = true;
+    notifyListeners();
+
+    final result = await profileRepository.getCandidateJobCategories();
+    result.fold(
+      (failure) => _jobCategoryError = failure.message,
+      (mappings) {
+        _initialMappingRecords = mappings;
+        _selectedJobCategoryIds = mappings.map((m) => m.jobCategoryId).toList();
+      },
+    );
+    _isLoadingJobCategories = false;
+    notifyListeners();
+  }
+
+  void toggleJobCategory(int categoryId) {
+    if (_selectedJobCategoryIds.contains(categoryId)) {
+      _selectedJobCategoryIds.remove(categoryId);
+    } else {
+      _selectedJobCategoryIds.add(categoryId);
+    }
+    notifyListeners();
+  }
+
+  Future<bool> saveJobCategories() async {
+    _isSaving = true;
+    _jobCategoryError = null;
+    notifyListeners();
+
+    try {
+      // 1. Identify additions
+      final initialIds = _initialMappingRecords.map((m) => m.jobCategoryId).toSet();
+      final currentIds = _selectedJobCategoryIds.toSet();
+
+      final idsToAdd = currentIds.difference(initialIds).toList();
+      
+      // 2. Identify removals
+      final mappingsToRemove = _initialMappingRecords
+          .where((m) => !currentIds.contains(m.jobCategoryId))
+          .toList();
+
+      // Execute Additions
+      if (idsToAdd.isNotEmpty) {
+        final addResult = await profileRepository.addCandidateJobCategories(idsToAdd);
+        final addFail = addResult.fold((f) => f, (_) => null);
+        if (addFail != null) {
+          _jobCategoryError = "Lỗi thêm ngành nghề: ${addFail.message}";
+          _isSaving = false;
+          notifyListeners();
+          return false;
+        }
+      }
+
+      // Execute Removals
+      for (final mapping in mappingsToRemove) {
+        final delResult = await profileRepository.deleteCandidateJobCategory(mapping.id);
+        final delFail = delResult.fold((f) => f, (_) => null);
+        if (delFail != null) {
+          _jobCategoryError = "Lỗi xóa ngành nghề: ${delFail.message}";
+          _isSaving = false;
+          notifyListeners();
+          return false;
+        }
+      }
+
+      // Refresh initial state after successful sync
+      await fetchCandidateJobCategories();
+      
+      _isSaving = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _jobCategoryError = "Lỗi hệ thống: $e";
+      _isSaving = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   /// Update profile

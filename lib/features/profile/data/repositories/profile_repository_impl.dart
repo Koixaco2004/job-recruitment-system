@@ -7,6 +7,7 @@ import '../../domain/entities/education_entity.dart';
 import '../../domain/entities/certificate_entity.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/entities/job_type_entity.dart';
+import '../../domain/entities/job_category_entity.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_datasource.dart';
@@ -331,6 +332,62 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.getJobTypes();
       return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<JobCategoryEntity>>> getJobCategoriesMetadata() async {
+    try {
+      final result = await remoteDataSource.getJobCategoriesMetadata();
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CandidateJobCategoryEntity>>> getCandidateJobCategories() async {
+    try {
+      final result = await remoteDataSource.getCandidateJobCategories();
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> addCandidateJobCategories(List<int> categoryIds) async {
+    try {
+      await remoteDataSource.addCandidateJobCategories(categoryIds);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteCandidateJobCategory(int mappingId) async {
+    try {
+      await remoteDataSource.deleteCandidateJobCategory(mappingId);
+      return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {

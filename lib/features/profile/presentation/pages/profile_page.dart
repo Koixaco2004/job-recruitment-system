@@ -153,6 +153,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildEducationSection(profile),
                 _buildCertificateSection(profile),
                 _buildProjectSection(profile),
+                _buildJobCategorySection(provider),
                 _buildCVSection(profile, provider),
                 const SizedBox(height: 24),
                 _buildLogoutButton(context),
@@ -414,7 +415,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ? '${NumberFormat("#,###").format(profile.desiredSalaryMin)} - ${NumberFormat("#,###").format(profile.desiredSalaryMax)} VND'
                 : 'Thỏa thuận',
           ),
-          _infoRow('Ngành nghề', profile.industry ?? 'Chưa cập nhật'),
           _infoRow('Hình thức', provider.getJobTypeName(profile.jobTypeId) ?? _jobTypeLabel(profile.desiredJobType)),
         ],
       ),
@@ -541,6 +541,33 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 );
               }).toList(),
+            ),
+    );
+  }
+
+  Widget _buildJobCategorySection(ProfileProvider provider) {
+    final selectedCategories = provider.allJobCategories
+        .where((cat) => provider.selectedJobCategoryIds.contains(cat.id))
+        .toList();
+
+    return _buildSection(
+      title: 'Ngành nghề quan tâm',
+      icon: Icons.category_outlined,
+      child: selectedCategories.isEmpty
+          ? const Text('Chưa cập nhật', style: TextStyle(color: Colors.grey))
+          : Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: selectedCategories
+                  .map(
+                    (cat) => Chip(
+                      label: Text(cat.name, style: const TextStyle(fontSize: 13)),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.1),
+                    ),
+                  )
+                  .toList(),
             ),
     );
   }
