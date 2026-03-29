@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/register_employer_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 
 import '../../domain/usecases/logout_usecase.dart';
@@ -9,11 +10,13 @@ import '../../domain/usecases/logout_usecase.dart';
 class AuthProvider extends ChangeNotifier {
   final LoginUseCase loginUseCase;
   final RegisterUseCase registerUseCase;
+  final RegisterEmployerUseCase registerEmployerUseCase;
   final LogoutUseCase logoutUseCase;
 
   AuthProvider({
     required this.loginUseCase,
     required this.registerUseCase,
+    required this.registerEmployerUseCase,
     required this.logoutUseCase,
   });
 
@@ -87,6 +90,37 @@ class AuthProvider extends ChangeNotifier {
       },
       (user) {
         // Đăng ký thành công
+        _isLoading = false;
+        _user = user;
+        _errorMessage = null;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  /// Register Employer method
+  Future<bool> employerRegister({
+    required String email,
+    required String password,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await registerEmployerUseCase(
+      email: email,
+      password: password,
+    );
+
+    return result.fold(
+      (failure) {
+        _isLoading = false;
+        _errorMessage = failure.message;
+        notifyListeners();
+        return false;
+      },
+      (user) {
         _isLoading = false;
         _user = user;
         _errorMessage = null;

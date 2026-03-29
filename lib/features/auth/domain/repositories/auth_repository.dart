@@ -22,6 +22,12 @@ abstract class AuthRepository {
     required int provinceId,
   });
 
+  /// Đăng ký tài khoản Nhà tuyển dụng mới
+  Future<Either<Failure, UserEntity>> employerRegister({
+    required String email,
+    required String password,
+  });
+
   /// Logout
   Future<Either<Failure, void>> logout();
 

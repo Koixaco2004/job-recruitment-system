@@ -30,7 +30,7 @@ class UserModel extends UserEntity {
       phone: json['phone'] as String?,
       fullName: json['full_name'] ?? json['fullName'] ?? '${json['lastName'] ?? ''} ${json['firstName'] ?? ''}'.trim(),
       avatarUrl: json['avatar_url'] ?? json['avatarUrl'] as String?,
-      userType: json['user_type'] ?? json['userType'] ?? 'candidate',
+      userType: json['user_type'] ?? json['userType'] ?? json['role'] ?? 'candidate',
       status: json['status'] ?? 'active',
       emailVerified: json['email_verified'] ?? json['emailVerified'] ?? false,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) 

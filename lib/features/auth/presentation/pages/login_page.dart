@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/pages/main_page.dart';
-import '../providers/auth_provider.dart';
-import 'register_page.dart';
+import 'package:test1/features/auth/presentation/providers/auth_provider.dart';
+import 'package:test1/features/employer/presentation/pages/employer_main_page.dart';
+import 'package:test1/features/auth/presentation/pages/register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -46,11 +47,19 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
 
-        // Navigate to home page
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainPage()),
-        );
+        // Navigate to home page based on role (case-insensitive)
+        final String role = authProvider.user?.userType.toLowerCase() ?? '';
+        if (role == 'employer' || role.contains('employer')) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const EmployerMainPage()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainPage()),
+          );
+        }
       } else {
         // Login thất bại - Show error
         ScaffoldMessenger.of(context).showSnackBar(

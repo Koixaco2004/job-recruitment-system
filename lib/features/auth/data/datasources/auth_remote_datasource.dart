@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/user_model.dart';
@@ -16,6 +17,12 @@ abstract class AuthRemoteDataSource {
     required String password,
     required String phone,
     required int provinceId,
+  });
+
+  /// Đăng ký tài khoản Nhà tuyển dụng mới
+  Future<UserModel> employerRegister({
+    required String email,
+    required String password,
   });
 }
 
@@ -55,24 +62,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
           if (statusResponse.statusCode == 200) {
             final Map<String, dynamic> userData = statusResponse.data;
+            debugPrint('DEBUG: /api/auth/status response: $userData');
             userData['token'] = token; // Đính token vào JSON để map ra UserModel
             return UserModel.fromJson(userData);
           } else {
-            throw ServerException('Không thể lấy thông tin đăng nhập');
+            throw ServerException('Không thể lấy thông tin đăng nhập: Status Code ${statusResponse.statusCode}');
           }
         } catch (e) {
-          // Fallback nếu không gọi được status (trả về Dummy Data kèm Token để app không crash)
-          return UserModel(
-             userId: 0,
-             email: email,
-             fullName: 'Người dùng',
-             userType: 'candidate',
-             status: 'active',
-             emailVerified: false,
-             createdAt: DateTime.now(),
-             updatedAt: DateTime.now(),
-             token: token,
-          );
+          debugPrint('DEBUG: Error during status check: $e');
+          // Không fallback cứng sang candidate nữa, báo lỗi để dễ debug
+          throw ServerException('Lỗi khi lấy trạng thái tài khoản: $e');
         }
       } else {
         throw const AuthenticationException('Email hoặc mật khẩu không đúng');
@@ -107,6 +106,37 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'password': password,
           'phone': phone,
           'provinceId': provinceId,
+        },
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // Đăng ký thành công, tự động gọi API login để lấy token
+        return await this.login(email: email, password: password);
+      } else {
+        throw const AuthenticationException('Đăng ký không thành công');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw const AuthenticationException('Email này đã được sử dụng');
+      }
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is AuthenticationException) rethrow;
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<UserModel> employerRegister({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/auth/employer/register',
+        data: {
+          'email': email,
+          'password': password,
         },
       );
 

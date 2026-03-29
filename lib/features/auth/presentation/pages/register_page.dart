@@ -5,8 +5,9 @@ import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/pages/main_page.dart';
 import '../providers/auth_provider.dart';
 import '../../../../injection_container.dart' as di;
-import '../../../metadata/domain/usecases/get_provinces_usecase.dart';
-import '../../../metadata/domain/entities/province_entity.dart';
+import 'package:test1/features/metadata/domain/usecases/get_provinces_usecase.dart';
+import 'package:test1/features/metadata/domain/entities/province_entity.dart';
+import 'package:test1/features/employer/presentation/pages/employer_main_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -27,6 +28,7 @@ class _RegisterPageState extends State<RegisterPage> {
   
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isEmployer = false; // Toggle giữa Ứng viên và Nhà tuyển dụng
   
   List<ProvinceEntity> _provinces = [];
   int? _selectedProvinceId;
@@ -77,7 +79,10 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _handleRegister() async {
-    if (_selectedProvinceId == null) {
+    final authProvider = context.read<AuthProvider>();
+
+    // Validation cho Ứng viên (Yêu cầu Tỉnh thành)
+    if (!_isEmployer && _selectedProvinceId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng chọn Tỉnh/Thành phố'), backgroundColor: Colors.red),
       );
@@ -85,16 +90,23 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     if (_formKey.currentState!.validate()) {
-      final authProvider = context.read<AuthProvider>();
-
-      final success = await authProvider.register(
-        firstName: _firstNameController.text.trim(),
-        lastName: _lastNameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        phone: _phoneController.text.trim(),
-        provinceId: _selectedProvinceId!,
-      );
+      bool success = false;
+      
+      if (_isEmployer) {
+        success = await authProvider.employerRegister(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      } else {
+        success = await authProvider.register(
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          phone: _phoneController.text.trim(),
+          provinceId: _selectedProvinceId!,
+        );
+      }
 
       if (!mounted) return;
 
@@ -106,11 +118,20 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         );
 
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const MainPage()),
-          (route) => false,
-        );
+        final String role = authProvider.user?.userType.toLowerCase() ?? '';
+        if (role == 'employer' || role.contains('employer')) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const EmployerMainPage()),
+            (route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MainPage()),
+            (route) => false,
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -120,6 +141,40 @@ class _RegisterPageState extends State<RegisterPage> {
         );
       }
     }
+  }
+
+  Widget _buildRoleButton({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? Theme.of(context).primaryColor : Colors.grey[600],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -139,7 +194,6 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 10),
                 const Text(
                   'Tạo tài khoản mới',
                   style: TextStyle(
@@ -149,130 +203,172 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Đăng ký để tìm kiếm cơ hội việc làm tốt nhất',
-                  style: TextStyle(fontSize: 16, color: Colors.black54),
-                ),
-                const SizedBox(height: 30),
-                
-                // Họ và Tên (Row)
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _lastNameController,
-                        label: 'Họ',
-                        hint: 'Nguyễn',
-                        prefixIcon: const Icon(Icons.person_outline),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Nhập Họ';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _firstNameController,
-                        label: 'Tên',
-                        hint: 'Văn A',
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Nhập Tên';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Số điện thoại
-                CustomTextField(
-                  controller: _phoneController,
-                  label: 'Số điện thoại',
-                  hint: 'Nhập số điện thoại',
-                  keyboardType: TextInputType.phone,
-                  prefixIcon: const Icon(Icons.phone_outlined),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Vui lòng nhập số điện thoại';
-                    }
-                    if (value.length < 10) {
-                      return 'SĐT phải có ít nhất 10 số';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // Tỉnh / Thành phố (Dropdown)
                 Text(
-                  'Tỉnh/Thành phố',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
-                  ),
+                  _isEmployer
+                      ? 'Đăng ký để đăng tin tuyển dụng và tìm kiếm nhân tài'
+                      : 'Đăng ký để tìm kiếm cơ hội việc làm tốt nhất',
+                  style: const TextStyle(fontSize: 16, color: Colors.black54),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 24),
+
+                // Role Toggle Buttons
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
+                    color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: _isLoadingProvinces 
-                    ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
-                      )
-                    : _hasErrorProvinces || _provinces.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Trống (Lỗi API)', style: TextStyle(color: Colors.red[300])),
-                                IconButton(
-                                  constraints: const BoxConstraints(),
-                                  padding: EdgeInsets.zero,
-                                  icon: const Icon(Icons.refresh, color: Colors.blue),
-                                  onPressed: () {
-                                    setState(() {
-                                      _isLoadingProvinces = true;
-                                      _hasErrorProvinces = false;
-                                    });
-                                    _loadProvinces();
-                                  },
-                                )
-                              ],
-                            ),
-                          )
-                        : DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                          isExpanded: true,
-                          hint: const Text('Chọn Tỉnh/Thành phố'),
-                          value: _selectedProvinceId,
-                          items: _provinces.map((province) {
-                            return DropdownMenuItem<int>(
-                              value: province.id,
-                              child: Text(province.name),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedProvinceId = value;
-                            });
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildRoleButton(
+                          title: 'Ứng viên',
+                          isSelected: !_isEmployer,
+                          onTap: () => setState(() => _isEmployer = false),
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildRoleButton(
+                          title: 'Nhà tuyển dụng',
+                          isSelected: _isEmployer,
+                          onTap: () => setState(() => _isEmployer = true),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                if (!_isEmployer) ...[
+                  // Họ và Tên (Row)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomTextField(
+                          controller: _lastNameController,
+                          label: 'Họ',
+                          hint: 'Nguyễn',
+                          prefixIcon: const Icon(Icons.person_outline),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Nhập Họ';
+                            }
+                            return null;
                           },
                         ),
                       ),
-                ),
-                const SizedBox(height: 20),
-                
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: CustomTextField(
+                          controller: _firstNameController,
+                          label: 'Tên',
+                          hint: 'Văn A',
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Nhập Tên';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Số điện thoại
+                  CustomTextField(
+                    controller: _phoneController,
+                    label: 'Số điện thoại',
+                    hint: 'Nhập số điện thoại',
+                    keyboardType: TextInputType.phone,
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Vui lòng nhập số điện thoại';
+                      }
+                      if (value.length < 10) {
+                        return 'SĐT phải có ít nhất 10 số';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Tỉnh / Thành phố (Dropdown)
+                  Text(
+                    'Tỉnh/Thành phố',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _isLoadingProvinces
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                                child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2))),
+                          )
+                        : _hasErrorProvinces || _provinces.isEmpty
+                            ? Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Trống (Lỗi API)',
+                                        style:
+                                            TextStyle(color: Colors.red[300])),
+                                    IconButton(
+                                      constraints: const BoxConstraints(),
+                                      padding: EdgeInsets.zero,
+                                      icon: const Icon(Icons.refresh,
+                                          color: Colors.blue),
+                                      onPressed: () {
+                                        setState(() {
+                                          _isLoadingProvinces = true;
+                                          _hasErrorProvinces = false;
+                                        });
+                                        _loadProvinces();
+                                      },
+                                    )
+                                  ],
+                                ),
+                              )
+                            : DropdownButtonHideUnderline(
+                                child: DropdownButton<int>(
+                                  isExpanded: true,
+                                  hint: const Text('Chọn Tỉnh/Thành phố'),
+                                  value: _selectedProvinceId,
+                                  items: _provinces.map((province) {
+                                    return DropdownMenuItem<int>(
+                                      value: province.id,
+                                      child: Text(province.name),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedProvinceId = value;
+                                    });
+                                  },
+                                ),
+                              ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
                 // Email field
                 CustomTextField(
                   controller: _emailController,
@@ -291,7 +387,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Mật khẩu
                 CustomTextField(
                   controller: _passwordController,
@@ -322,7 +418,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Xác nhận mật khẩu
                 CustomTextField(
                   controller: _confirmPasswordController,
@@ -352,9 +448,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Register button
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
@@ -366,7 +462,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Login link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

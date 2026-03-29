@@ -9,6 +9,7 @@ import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/domain/usecases/logout_usecase.dart';
+import 'features/auth/domain/usecases/register_employer_usecase.dart';
 import 'features/auth/domain/usecases/register_usecase.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/companies/data/datasources/company_remote_datasource.dart';
@@ -55,6 +56,7 @@ Future<void> init() async {
     () => AuthProvider(
       loginUseCase: sl(),
       registerUseCase: sl(),
+      registerEmployerUseCase: sl(),
       logoutUseCase: sl(),
     ),
   );
@@ -62,6 +64,7 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
+  sl.registerLazySingleton(() => RegisterEmployerUseCase(repository: sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
 
   // Repository

@@ -79,6 +79,33 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, UserEntity>> employerRegister({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      // Gọi API employer register
+      final user = await remoteDataSource.employerRegister(
+        email: email,
+        password: password,
+      );
+
+      // Đăng ký xong tự động đăng nhập luôn (Cache token và user)
+      await localDataSource.cacheToken(user.token);
+      await localDataSource.cacheUser(user);
+
+      // Trả về UserEntity mới
+      return Right(user);
+    } on AuthenticationException catch (e) {
+      return Left(AuthenticationFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> logout() async {
     try {
       await localDataSource.clearCache();
