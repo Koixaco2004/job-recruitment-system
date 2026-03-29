@@ -27,15 +27,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
   // Controllers cho thông tin chung
   late TextEditingController _fullNameCtrl;
   late TextEditingController _phoneCtrl;
-  late TextEditingController _addressCtrl;
-  late TextEditingController _currentJobTitleCtrl;
+  late TextEditingController _bioCtrl;
+  late TextEditingController _yearsOfExperienceCtrl;
   late TextEditingController _desiredJobTitleCtrl;
   late TextEditingController _salaryMinCtrl;
   late TextEditingController _salaryMaxCtrl;
 
   String? _selectedGender;
   int? _selectedProvinceId;
-  String? _selectedEducation;
   String? _selectedJobType;
   int? _selectedJobTypeId;
   String? _avatarUrl; // URL ảnh đại diện (cập nhật khi upload)
@@ -62,9 +61,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     _fullNameCtrl = TextEditingController(text: profile.fullName);
     _phoneCtrl = TextEditingController(text: profile.phone ?? '');
-    _addressCtrl = TextEditingController(text: profile.address ?? '');
-    _currentJobTitleCtrl = TextEditingController(
-      text: profile.currentJobTitle ?? '',
+    _bioCtrl = TextEditingController(text: profile.bio ?? '');
+    _yearsOfExperienceCtrl = TextEditingController(
+      text: profile.yearsOfExperience.toString(),
     );
     _desiredJobTitleCtrl = TextEditingController(
       text: profile.desiredJobTitle ?? '',
@@ -78,7 +77,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     _selectedGender = profile.gender;
     _selectedProvinceId = profile.provinceId;
-    _selectedEducation = profile.educationLevel;
     _selectedJobType = profile.desiredJobType;
     _selectedJobTypeId = profile.jobTypeId;
     _avatarUrl = profile.avatarUrl;
@@ -93,8 +91,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void dispose() {
     _fullNameCtrl.dispose();
     _phoneCtrl.dispose();
-    _addressCtrl.dispose();
-    _currentJobTitleCtrl.dispose();
+    _bioCtrl.dispose();
+    _yearsOfExperienceCtrl.dispose();
     _desiredJobTitleCtrl.dispose();
     _salaryMinCtrl.dispose();
     _salaryMaxCtrl.dispose();
@@ -246,7 +244,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _selectedGender,
           (v) => setState(() => _selectedGender = v),
         ),
-        _buildTextField('Địa chỉ', _addressCtrl),
+        _buildTextField(
+          'Giới thiệu bản thân (Bio)',
+          _bioCtrl,
+          maxLines: 4,
+        ),
+        _buildTextField(
+          'Số năm kinh nghiệm',
+          _yearsOfExperienceCtrl,
+          keyboardType: TextInputType.number,
+        ),
         Consumer<ProfileProvider>(
           builder: (context, provider, _) {
             if (provider.isLoadingProvinces) {
@@ -263,13 +270,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
             );
           },
         ),
-        _buildDropdown(
-          'Trình độ học vấn',
-          educationLevels,
-          _selectedEducation,
-          (v) => setState(() => _selectedEducation = v),
-        ),
-        _buildTextField('Vị trí hiện tại', _currentJobTitleCtrl),
         _buildTextField('Vị trí mong muốn', _desiredJobTitleCtrl),
         Row(
           children: [
@@ -692,12 +692,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     TextEditingController ctrl, {
     bool required = false,
     TextInputType? keyboardType,
+    int maxLines = 1,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: ctrl,
         keyboardType: keyboardType,
+        maxLines: maxLines,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -1488,14 +1490,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       candidateId: profile.candidateId,
       dateOfBirth: profile.dateOfBirth,
       gender: _selectedGender,
-      address: _addressCtrl.text.isEmpty ? null : _addressCtrl.text,
+      bio: _bioCtrl.text.isEmpty ? null : _bioCtrl.text,
       cityName: profile.cityName, // Retain original if needed, or null
       provinceId: _selectedProvinceId,
-      educationLevel: _selectedEducation,
-      yearsOfExperience: profile.yearsOfExperience,
-      currentJobTitle: _currentJobTitleCtrl.text.isEmpty
-          ? null
-          : _currentJobTitleCtrl.text,
+      educationLevel: profile.educationLevel, // Maintain original state
+      yearsOfExperience: int.tryParse(_yearsOfExperienceCtrl.text) ?? 0,
+      currentJobTitle: profile.currentJobTitle, // Maintain original state
       desiredJobTitle: _desiredJobTitleCtrl.text.isEmpty
           ? null
           : _desiredJobTitleCtrl.text,

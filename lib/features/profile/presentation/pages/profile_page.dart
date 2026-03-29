@@ -403,8 +403,11 @@ class _ProfilePageState extends State<ProfilePage> {
           _infoRow('Email', authProvider.user?.email ?? profile.email),
           _infoRow('Điện thoại', profile.phone ?? 'Chưa cập nhật'),
           _infoRow('Giới tính', profile.gender ?? 'Chưa cập nhật'),
-          _infoRow('Địa chỉ', provider.getProvinceName(profile.provinceId) ?? profile.cityName ?? profile.address ?? 'Chưa cập nhật'),
-          _infoRow('Trình độ', profile.educationLevel ?? 'Chưa cập nhật'),
+          _infoRow(
+            'Kinh nghiệm',
+            '${profile.yearsOfExperience} năm',
+          ),
+          _infoRow('Giới thiệu', profile.bio ?? 'Chưa cập nhật'),
           _infoRow(
             'Vị trí mong muốn',
             profile.desiredJobTitle ?? 'Chưa cập nhật',
