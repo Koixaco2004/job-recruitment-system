@@ -23,9 +23,9 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Thêm token vào header nếu có
+          // Thêm token vào header nếu chưa có
           final token = await authLocalDataSource.getToken();
-          if (token != null && token.isNotEmpty) {
+          if (token != null && token.isNotEmpty && !options.headers.containsKey('Authorization')) {
             options.headers['Authorization'] = 'Bearer $token';
           }
           return handler.next(options);

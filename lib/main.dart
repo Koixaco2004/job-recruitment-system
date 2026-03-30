@@ -7,6 +7,7 @@ import 'features/companies/presentation/providers/company_provider.dart';
 import 'features/jobs/presentation/providers/job_provider.dart';
 import 'features/jobs/presentation/providers/my_jobs_provider.dart';
 import 'features/profile/presentation/providers/profile_provider.dart';
+import 'features/employer/presentation/providers/employer_provider.dart';
 import 'injection_container.dart' as di;
 
 void main() async {
@@ -35,6 +36,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<CompanyProvider>()),
         // Profile Provider
         ChangeNotifierProvider(create: (_) => di.sl<ProfileProvider>()),
+        // Employer Provider
+        ChangeNotifierProvider(create: (_) => di.sl<EmployerProvider>()),
       ],
       child: MaterialApp(
         title: 'Recruitment App',

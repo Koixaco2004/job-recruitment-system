@@ -69,8 +69,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             throw ServerException('Không thể lấy thông tin đăng nhập: Status Code ${statusResponse.statusCode}');
           }
         } catch (e) {
-          debugPrint('DEBUG: Error during status check: $e');
-          // Không fallback cứng sang candidate nữa, báo lỗi để dễ debug
+          debugPrint('DEBUG: Error during status check for token: $token');
+          debugPrint('DEBUG: Error details: $e');
+          if (e is ServerException || e is AuthenticationException) rethrow;
           throw ServerException('Lỗi khi lấy trạng thái tài khoản: $e');
         }
       } else {
@@ -82,7 +83,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
-      if (e is AuthenticationException) rethrow;
+      if (e is AuthenticationException || e is ServerException) rethrow;
       throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
     }
   }
@@ -121,7 +122,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
-      if (e is AuthenticationException) rethrow;
+      if (e is AuthenticationException || e is ServerException) rethrow;
       throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
     }
   }
@@ -152,7 +153,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
-      if (e is AuthenticationException) rethrow;
+      if (e is AuthenticationException || e is ServerException) rethrow;
       throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
     }
   }

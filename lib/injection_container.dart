@@ -42,6 +42,12 @@ import 'features/metadata/data/datasources/metadata_remote_datasource.dart';
 import 'features/metadata/data/repositories/metadata_repository_impl.dart';
 import 'features/metadata/domain/repositories/metadata_repository.dart';
 import 'features/metadata/domain/usecases/get_provinces_usecase.dart';
+import 'features/metadata/domain/usecases/get_job_categories_usecase.dart';
+import 'features/employer/data/datasources/employer_remote_datasource.dart';
+import 'features/employer/data/repositories/employer_repository_impl.dart';
+import 'features/employer/domain/repositories/employer_repository.dart';
+import 'features/employer/domain/usecases/employer_usecases.dart';
+import 'features/employer/presentation/providers/employer_provider.dart';
 
 final sl = GetIt.instance; // Service Locator
 
@@ -183,6 +189,7 @@ Future<void> init() async {
 
   // Use cases
   sl.registerLazySingleton(() => GetProvincesUseCase(sl()));
+  sl.registerLazySingleton(() => GetJobCategoriesUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<MetadataRepository>(
@@ -206,4 +213,30 @@ Future<void> init() async {
 
   // Cloudinary Service
   sl.registerLazySingleton(() => CloudinaryService());
+
+  // ========================
+  // Features - Employer
+  // ========================
+
+  // Providers
+  sl.registerFactory(
+    () => EmployerProvider(
+      getEmployerProfileUseCase: sl(),
+      setupCompanyUseCase: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetEmployerProfileUseCase(sl()));
+  sl.registerLazySingleton(() => SetupCompanyUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<EmployerRepository>(
+    () => EmployerRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<EmployerRemoteDataSource>(
+    () => EmployerRemoteDataSourceImpl(apiClient: sl()),
+  );
 }

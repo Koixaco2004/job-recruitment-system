@@ -39,7 +39,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
+      return Left(ServerFailure('Lỗi hệ thống: ${e.toString()}'));
     }
   }
 
@@ -74,7 +74,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
+      return Left(ServerFailure('Lỗi hệ thống: ${e.toString()}'));
     }
   }
 
@@ -101,7 +101,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
+      return Left(ServerFailure('Lỗi hệ thống: ${e.toString()}'));
     }
   }
 

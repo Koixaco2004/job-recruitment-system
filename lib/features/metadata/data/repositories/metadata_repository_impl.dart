@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/province_entity.dart';
+import '../../domain/entities/job_category_entity.dart';
 import '../../domain/repositories/metadata_repository.dart';
 import '../datasources/metadata_remote_datasource.dart';
 
@@ -19,6 +20,18 @@ class MetadataRepositoryImpl implements MetadataRepository {
       return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Lỗi truy xuất tỉnh thành: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<JobCategoryEntity>>> getJobCategories() async {
+    try {
+      final categories = await remoteDataSource.getJobCategories();
+      return Right(categories);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi truy xuất ngành nghề: ${e.toString()}'));
     }
   }
 }
