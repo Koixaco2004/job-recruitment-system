@@ -22,6 +22,8 @@ class CompanyEntity extends Equatable {
   final DateTime? verifiedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final List<String>? images;
+  final List<String>? employers;
 
   const CompanyEntity({
     required this.id,
@@ -45,6 +47,8 @@ class CompanyEntity extends Equatable {
     this.verifiedAt,
     required this.createdAt,
     required this.updatedAt,
+    this.images,
+    this.employers,
   });
 
   @override
@@ -70,5 +74,7 @@ class CompanyEntity extends Equatable {
         verifiedAt,
         createdAt,
         updatedAt,
+        images,
+        employers,
       ];
 }

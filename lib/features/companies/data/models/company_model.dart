@@ -5,52 +5,90 @@ class CompanyModel extends CompanyEntity {
   const CompanyModel({
     required super.employerId,
     required super.companyName,
+    super.userCreatorId,
+    super.categoryId,
+    super.emailContact,
+    super.phoneContact,
+    super.address,
+    super.provinceId,
+    super.cityName,
     super.logoUrl,
     super.coverImageUrl,
     super.industryName,
     super.companySize,
     super.website,
+    super.facebookUrl,
+    super.linkedinUrl,
     super.description,
-    super.address,
-    super.cityName,
+    super.content,
     super.benefits,
     super.foundedYear,
     super.jobCount,
+    super.isVerified,
+    super.images,
   });
 
   factory CompanyModel.fromJson(Map<String, dynamic> json) {
+    int _asInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return CompanyModel(
-      employerId: json['employer_id'] as int,
-      companyName: json['company_name'] as String,
-      logoUrl: json['logo_url'] as String?,
-      coverImageUrl: json['cover_image_url'] as String?,
-      industryName: json['industry_name'] as String?,
-      companySize: json['company_size'] as String?,
-      website: json['website'] as String?,
-      description: json['description'] as String?,
+      employerId: _asInt(json['id'] ?? json['employer_id'] ?? json['employerId']),
+      companyName: (json['name'] ?? json['company_name'] ?? json['companyName'] ?? '') as String,
+      userCreatorId: _asInt(json['userCreatorId']),
+      categoryId: _asInt(json['categoryId']),
+      emailContact: json['emailContact'] as String?,
+      phoneContact: json['phoneContact'] as String?,
       address: json['address'] as String?,
-      cityName: json['city_name'] as String?,
+      provinceId: _asInt(json['provinceId']),
+      cityName: json['cityName'] as String?,
+      logoUrl: json['logoUrl'] ?? json['logo_url'] as String?,
+      coverImageUrl: json['bannerUrl'] ?? json['banner_url'] ?? json['cover_image_url'] as String?,
+      industryName: json['industryName'] as String?,
+      companySize: json['companySize'] ?? json['company_size'] as String?,
+      website: json['websiteUrl'] ?? json['website_url'] ?? json['website'] as String?,
+      facebookUrl: json['facebookUrl'] as String?,
+      linkedinUrl: json['linkedinUrl'] as String?,
+      description: json['description'] as String?,
+      content: json['content'] as String?,
       benefits: json['benefits'] as String?,
-      foundedYear: json['founded_year'] as int?,
-      jobCount: json['job_count'] as int? ?? 0,
+      foundedYear: _asInt(json['founded_year'] ?? json['foundedYear']),
+      jobCount: _asInt(json['job_count'] ?? json['jobCount']),
+      isVerified: json['isVerified'] ?? false,
+      images: json['images'] != null 
+          ? (json['images'] as List).map((e) {
+              if (e is String) return e;
+              if (e is Map && e.containsKey('imageUrl')) return e['imageUrl'] as String;
+              return '';
+            }).where((url) => url.isNotEmpty).toList()
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'employer_id': employerId,
-      'company_name': companyName,
-      'logo_url': logoUrl,
-      'cover_image_url': coverImageUrl,
-      'industry_name': industryName,
-      'company_size': companySize,
-      'website': website,
-      'description': description,
+      'id': employerId,
+      'name': companyName,
+      'userCreatorId': userCreatorId,
+      'categoryId': categoryId,
+      'emailContact': emailContact,
+      'phoneContact': phoneContact,
       'address': address,
-      'city_name': cityName,
-      'benefits': benefits,
-      'founded_year': foundedYear,
-      'job_count': jobCount,
+      'provinceId': provinceId,
+      'logoUrl': logoUrl,
+      'bannerUrl': coverImageUrl,
+      'companySize': companySize,
+      'websiteUrl': website,
+      'facebookUrl': facebookUrl,
+      'linkedinUrl': linkedinUrl,
+      'description': description,
+      'content': content,
+      'isVerified': isVerified,
     };
   }
 }

@@ -31,6 +31,36 @@ class EmployerEntity extends Equatable {
     this.company,
   });
 
+  EmployerEntity copyWith({
+    int? id,
+    int? userId,
+    int? companyId,
+    String? fullName,
+    String? phoneContact,
+    String? avatarUrl,
+    bool? isAdminCompany,
+    String? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    UserEntity? user,
+    CompanyEntity? company,
+  }) {
+    return EmployerEntity(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      companyId: companyId ?? this.companyId,
+      fullName: fullName ?? this.fullName,
+      phoneContact: phoneContact ?? this.phoneContact,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      isAdminCompany: isAdminCompany ?? this.isAdminCompany,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      user: user ?? this.user,
+      company: company ?? this.company,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id,

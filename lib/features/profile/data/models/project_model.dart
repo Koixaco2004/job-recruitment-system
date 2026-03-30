@@ -10,8 +10,15 @@ class ProjectModel extends ProjectEntity {
   });
 
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
+    int? _asIntNullable(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
     return ProjectModel(
-      id: json['id'] as int?,
+      id: _asIntNullable(json['id']),
       name: (json['name'] ?? '') as String,
       startDate: json['startDate'] != null
           ? DateTime.parse(json['startDate'] as String)

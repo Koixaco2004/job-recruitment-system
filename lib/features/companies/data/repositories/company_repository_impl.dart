@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
@@ -67,6 +68,89 @@ class CompanyRepositoryImpl implements CompanyRepository {
       return Left(
         ServerFailure('Không thể lấy danh sách việc làm: ${e.toString()}'),
       );
+    }
+  }
+
+  @override
+  Future<Either<Failure, CompanyEntity>> updateCompanyProfile({
+    required String name,
+    String? description,
+    String? content,
+    String? websiteUrl,
+    String? address,
+    int? provinceId,
+    int? categoryId,
+    String? emailContact,
+    String? phoneContact,
+    String? companySize,
+    String? facebookUrl,
+    String? linkedinUrl,
+  }) async {
+    try {
+      final updated = await remoteDataSource.updateCompanyProfile(
+        name: name,
+        description: description,
+        content: content,
+        websiteUrl: websiteUrl,
+        address: address,
+        provinceId: provinceId,
+        categoryId: categoryId,
+        emailContact: emailContact,
+        phoneContact: phoneContact,
+        companySize: companySize,
+        facebookUrl: facebookUrl,
+        linkedinUrl: linkedinUrl,
+      );
+      return Right(updated);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uploadLogo(
+    Uint8List bytes,
+    String fileName,
+  ) async {
+    try {
+      final url = await remoteDataSource.uploadLogo(bytes, fileName);
+      return Right(url);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uploadBanner(
+    Uint8List bytes,
+    String fileName,
+  ) async {
+    try {
+      final url = await remoteDataSource.uploadBanner(bytes, fileName);
+      return Right(url);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uploadGalleryImage(
+    Uint8List bytes,
+    String fileName,
+  ) async {
+    try {
+      final url = await remoteDataSource.uploadGalleryImage(bytes, fileName);
+      return Right(url);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

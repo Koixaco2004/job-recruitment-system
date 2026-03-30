@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:test1/features/auth/presentation/providers/auth_provider.dart';
 import 'package:test1/features/employer/presentation/providers/employer_provider.dart';
 import 'package:test1/features/employer/presentation/pages/company_setup_page.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:test1/features/auth/presentation/pages/login_page.dart';
+import 'package:test1/features/employer/presentation/pages/employer_edit_profile_page.dart';
+import 'package:test1/features/employer/presentation/pages/employer_company_edit_page.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -157,35 +160,68 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
 
   Widget _buildProfileTab(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
+    final employerProvider = context.watch<EmployerProvider>();
+    final employer = employerProvider.employer;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Hồ sơ nhà tuyển dụng')),
+      appBar: AppBar(
+        title: const Text('Hồ sơ nhà tuyển dụng'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+      ),
       body: ListView(
         children: [
           const SizedBox(height: 20),
-          const Center(
+          Center(
             child: CircleAvatar(
               radius: 50,
-              child: Icon(Icons.person, size: 50),
+              backgroundColor: Colors.blue[50],
+              backgroundImage: employer?.avatarUrl != null && employer!.avatarUrl!.isNotEmpty
+                  ? CachedNetworkImageProvider(employer.avatarUrl!)
+                  : null,
+              child: employer?.avatarUrl == null || employer!.avatarUrl!.isEmpty
+                  ? const Icon(Icons.person, size: 50, color: Colors.blue)
+                  : null,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Center(
-            child: Text(authProvider.user?.fullName ?? '-', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            child: Text(
+              employer?.fullName ?? authProvider.user?.fullName ?? '-',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 30),
           ListTile(
-            leading: const Icon(Icons.business_outlined),
-            title: const Text('Thông tin công ty'),
+            leading: Icon(Icons.person_outline, color: Theme.of(context).primaryColor),
+            title: const Text('Chỉnh sửa hồ sơ'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const EmployerEditProfilePage()),
+              );
+            },
           ),
           ListTile(
-            leading: const Icon(Icons.settings),
+            leading: Icon(Icons.business_outlined, color: Theme.of(context).primaryColor),
+            title: const Text('Thông tin công ty'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const EmployerCompanyEditPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.settings_outlined, color: Theme.of(context).primaryColor),
             title: const Text('Cài đặt tài khoản'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            onTap: () {
+              // Future: Link to settings page
+            },
           ),
-          const Divider(),
+          const Divider(indent: 16, endIndent: 16),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),

@@ -15,9 +15,16 @@ class EducationModel extends EducationEntity {
   final bool isStillStudying;
 
   factory EducationModel.fromJson(Map<String, dynamic> json) {
+    int? _asIntNullable(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
     final isStill = json['isStillStudying'] ?? json['is_still_studying'] ?? false;
     return EducationModel(
-      id: json['id'] as int?,
+      id: _asIntNullable(json['id']),
       // API uses 'schoolName', entity uses 'institution'
       institution: (json['schoolName'] ?? json['school_name'] ?? json['institution'] ?? '') as String,
       degree: (json['degree'] ?? '') as String,

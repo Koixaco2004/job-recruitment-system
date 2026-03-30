@@ -23,18 +23,29 @@ class CompanyModel extends CompanyEntity {
     super.verifiedAt,
     required super.createdAt,
     required super.updatedAt,
+    super.images,
+    super.employers,
   });
 
   factory CompanyModel.fromJson(Map<String, dynamic> json) {
+    // Helper to safely parse integers from various types (int, double, string, or null)
+    int? _asInt(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
+
     return CompanyModel(
-      id: json['id'] as int,
-      userCreatorId: json['userCreatorId'] as int,
-      categoryId: json['categoryId'] as int,
-      name: json['name'] as String,
+      id: _asInt(json['id']) ?? 0,
+      userCreatorId: _asInt(json['userCreatorId']) ?? 0,
+      categoryId: _asInt(json['categoryId']) ?? 0,
+      name: json['name'] as String? ?? 'Chưa có tên',
       emailContact: json['emailContact'] as String?,
       phoneContact: json['phoneContact'] as String?,
       address: json['address'] as String?,
-      provinceId: json['provinceId'] as int?,
+      provinceId: _asInt(json['provinceId']),
       logoUrl: json['logoUrl'] as String?,
       bannerUrl: json['bannerUrl'] as String?,
       description: json['description'] as String?,
@@ -48,8 +59,18 @@ class CompanyModel extends CompanyEntity {
       verifiedAt: json['verifiedAt'] != null
           ? DateTime.parse(json['verifiedAt'] as String)
           : null,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : DateTime.now(),
+      images: json['images'] != null 
+          ? (json['images'] as List).map((e) {
+              if (e is String) return e;
+              if (e is Map) {
+                return (e['image_url'] ?? e['imageUrl'] ?? '') as String;
+              }
+              return '';
+            }).where((url) => url.isNotEmpty).toList()
+          : null,
+      employers: json['employers'] != null ? List<String>.from(json['employers'] as List) : null,
     );
   }
 
@@ -76,6 +97,8 @@ class CompanyModel extends CompanyEntity {
       'verifiedAt': verifiedAt?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'images': images,
+      'employers': employers,
     };
   }
 }

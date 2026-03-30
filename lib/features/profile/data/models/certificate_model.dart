@@ -10,8 +10,15 @@ class CertificateModel extends CertificateEntity {
   });
 
   factory CertificateModel.fromJson(Map<String, dynamic> json) {
+    int? _asIntNullable(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
     return CertificateModel(
-      id: json['id'] as int?,
+      id: _asIntNullable(json['id']),
       name: (json['name'] ?? '') as String,
       issueDate: (json['issueDate'] ?? json['issue_date']) != null
           ? DateTime.parse((json['issueDate'] ?? json['issue_date']) as String)

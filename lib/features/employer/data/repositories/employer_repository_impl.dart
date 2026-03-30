@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
@@ -41,6 +42,42 @@ class EmployerRepositoryImpl implements EmployerRepository {
         address: address,
       );
       return const Right(unit);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmployerEntity>> updateProfile({
+    required String fullName,
+    required String phoneContact,
+  }) async {
+    try {
+      final updatedProfile = await remoteDataSource.updateProfile(
+        fullName: fullName,
+        phoneContact: phoneContact,
+      );
+      return Right(updatedProfile);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uploadAvatar({
+    required Uint8List imageBytes,
+    required String fileName,
+  }) async {
+    try {
+      final url = await remoteDataSource.uploadAvatar(
+        imageBytes: imageBytes,
+        fileName: fileName,
+      );
+      return Right(url);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

@@ -19,6 +19,10 @@ import 'features/companies/domain/usecases/get_companies_usecase.dart';
 import 'features/companies/domain/usecases/get_company_by_id_usecase.dart';
 import 'features/companies/domain/usecases/get_company_jobs_usecase.dart';
 import 'features/companies/domain/usecases/search_companies_usecase.dart';
+import 'features/companies/domain/usecases/update_company_usecase.dart';
+import 'features/companies/domain/usecases/upload_company_banner_usecase.dart';
+import 'features/companies/domain/usecases/upload_company_logo_usecase.dart';
+import 'features/companies/domain/usecases/upload_company_gallery_image_usecase.dart';
 import 'features/companies/presentation/providers/company_provider.dart';
 import 'features/jobs/data/datasources/job_remote_datasource.dart';
 import 'features/jobs/data/repositories/job_repository_impl.dart';
@@ -144,6 +148,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetCompanyByIdUseCase(sl()));
   sl.registerLazySingleton(() => SearchCompaniesUseCase(sl()));
   sl.registerLazySingleton(() => GetCompanyJobsUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateCompanyUseCase(sl()));
+  sl.registerLazySingleton(() => UploadCompanyLogoUseCase(sl()));
+  sl.registerLazySingleton(() => UploadCompanyBannerUseCase(sl()));
+  sl.registerLazySingleton(() => UploadCompanyGalleryImageUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<CompanyRepository>(
@@ -152,7 +160,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<CompanyRemoteDataSource>(
-    () => CompanyRemoteDataSourceImpl(jobRemoteDataSource: sl()),
+    () => CompanyRemoteDataSourceImpl(apiClient: sl()),
   );
 
   // ========================
@@ -223,12 +231,20 @@ Future<void> init() async {
     () => EmployerProvider(
       getEmployerProfileUseCase: sl(),
       setupCompanyUseCase: sl(),
+      updateEmployerProfileUseCase: sl(),
+      uploadEmployerAvatarUseCase: sl(),
+      updateCompanyUseCase: sl(),
+      uploadCompanyLogoUseCase: sl(),
+      uploadCompanyBannerUseCase: sl(),
+      uploadCompanyGalleryImageUseCase: sl(),
     ),
   );
 
   // Use cases
   sl.registerLazySingleton(() => GetEmployerProfileUseCase(sl()));
   sl.registerLazySingleton(() => SetupCompanyUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateEmployerProfileUseCase(sl()));
+  sl.registerLazySingleton(() => UploadEmployerAvatarUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<EmployerRepository>(

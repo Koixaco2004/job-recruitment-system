@@ -13,11 +13,11 @@ class SkillModel extends SkillEntity {
 
   factory SkillModel.fromJson(Map<String, dynamic> json) {
     return SkillModel(
-      id: json['id'] as int,
-      canonicalName: json['canonicalName'] as String,
-      slug: json['slug'] as String,
+      id: _parseInt(json['id'], 0),
+      canonicalName: (json['canonicalName'] ?? '') as String,
+      slug: (json['slug'] ?? '') as String,
       aliases: (json['aliases'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
-      type: json['type'] as String,
+      type: (json['type'] ?? '') as String,
       useCount: _parseInt(json['useCount'], 0),
       createdAt: DateTime.parse(json['createdAt']?.toString() ?? DateTime.now().toIso8601String()),
     );
@@ -26,7 +26,7 @@ class SkillModel extends SkillEntity {
   static int _parseInt(dynamic value, int defaultValue) {
     if (value == null) return defaultValue;
     if (value is int) return value;
-    if (value is double) return value.toInt();
+    if (value is num) return value.toInt();
     if (value is String) {
       final parsed = double.tryParse(value);
       return parsed?.toInt() ?? defaultValue;
@@ -56,10 +56,17 @@ class CandidateSkillModel extends CandidateSkillEntity {
   });
 
   factory CandidateSkillModel.fromJson(Map<String, dynamic> json) {
+    int _asInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
     return CandidateSkillModel(
-      id: json['id'] as int,
-      candidateId: json['candidateId'] as int,
-      skillMetadataId: json['skillMetadataId'] as int,
+      id: _asInt(json['id']),
+      candidateId: _asInt(json['candidateId']),
+      skillMetadataId: _asInt(json['skillMetadataId']),
       skillMetadata: json['skillMetadata'] != null
           ? SkillModel.fromJson(json['skillMetadata'] as Map<String, dynamic>)
           : null,

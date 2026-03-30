@@ -19,10 +19,19 @@ class EmployerModel extends EmployerEntity {
   });
 
   factory EmployerModel.fromJson(Map<String, dynamic> json) {
+    // Helper to safely parse integers from various types (int, double, string, or null)
+    int? _asInt(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
+
     return EmployerModel(
-      id: json['id'] as int,
-      userId: json['userId'] as int,
-      companyId: json['companyId'] as int?,
+      id: _asInt(json['id']) ?? 0,
+      userId: _asInt(json['userId']) ?? 0,
+      companyId: _asInt(json['companyId']),
       fullName: (json['fullName'] ?? '') as String,
       phoneContact: (json['phoneContact'] ?? '') as String,
       avatarUrl: json['avatarUrl'] as String?,

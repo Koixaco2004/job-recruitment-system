@@ -22,10 +22,19 @@ class UserModel extends UserEntity {
 
   /// Tạo UserModel từ JSON (response từ API)
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Helper to safely parse integers from various types (int, double, string, or null)
+    int _asInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     // API backend thực tế thường thiết kế dạng camelCase (e.g. userId, fullName)
     // Nhưng data mock đang dùng snake_case nên ta phải fallback qua lại:
     return UserModel(
-      userId: json['user_id'] ?? json['id'] ?? json['userId'] ?? 0,
+      userId: _asInt(json['user_id'] ?? json['id'] ?? json['userId']),
       email: json['email'] as String,
       phone: json['phone'] as String?,
       fullName: json['full_name'] ?? json['fullName'] ?? '${json['lastName'] ?? ''} ${json['firstName'] ?? ''}'.trim(),

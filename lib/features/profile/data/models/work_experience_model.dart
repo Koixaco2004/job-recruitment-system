@@ -12,12 +12,19 @@ class WorkExperienceModel extends WorkExperienceEntity {
   });
 
   factory WorkExperienceModel.fromJson(Map<String, dynamic> json) {
+    int? _asIntNullable(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
     final isWorking = json['isWorkingHere'] ??
         json['is_working_here'] ??
         json['is_current_job'] ??
         false;
     return WorkExperienceModel(
-      id: json['id'] as int?,
+      id: _asIntNullable(json['id']),
       companyName: (json['companyName'] ?? json['company_name'] ?? '') as String,
       position: (json['position'] ?? '') as String,
       startDate: json['startDate'] != null || json['start_date'] != null

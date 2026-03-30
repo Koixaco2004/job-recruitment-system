@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../entities/employer_entity.dart';
@@ -12,5 +13,15 @@ abstract class EmployerRepository {
     required int categoryId,
     int? provinceId,
     String? address,
+  });
+
+  Future<Either<Failure, EmployerEntity>> updateProfile({
+    required String fullName,
+    required String phoneContact,
+  });
+
+  Future<Either<Failure, String>> uploadAvatar({
+    required Uint8List imageBytes,
+    required String fileName,
   });
 }

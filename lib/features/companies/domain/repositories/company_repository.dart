@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../jobs/domain/entities/job_post_entity.dart';
@@ -16,4 +17,27 @@ abstract class CompanyRepository {
 
   /// Lấy danh sách việc làm của công ty
   Future<Either<Failure, List<JobPostEntity>>> getCompanyJobs(int employerId);
+
+  // Employer - Company Profile Management
+  Future<Either<Failure, CompanyEntity>> updateCompanyProfile({
+    required String name,
+    String? description,
+    String? content,
+    String? websiteUrl,
+    String? address,
+    int? provinceId,
+    int? categoryId,
+    String? emailContact,
+    String? phoneContact,
+    String? companySize,
+    String? facebookUrl,
+    String? linkedinUrl,
+  });
+
+  Future<Either<Failure, String>> uploadLogo(Uint8List bytes, String fileName);
+  Future<Either<Failure, String>> uploadBanner(Uint8List bytes, String fileName);
+  Future<Either<Failure, String>> uploadGalleryImage(
+    Uint8List bytes,
+    String fileName,
+  );
 }
