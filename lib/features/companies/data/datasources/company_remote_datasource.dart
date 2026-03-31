@@ -30,6 +30,7 @@ abstract class CompanyRemoteDataSource {
   Future<String> uploadLogo(Uint8List bytes, String fileName);
   Future<String> uploadBanner(Uint8List bytes, String fileName);
   Future<String> uploadGalleryImage(Uint8List bytes, String fileName);
+  Future<String> uploadBusinessLicense(Uint8List bytes, String fileName);
 }
 
 /// Real implementation using ApiClient
@@ -159,6 +160,11 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   Future<String> uploadGalleryImage(Uint8List bytes, String fileName) async {
     // Backend expects 'files' array for gallery
     return _uploadFile('/api/companies/images', bytes, fileName, 'files', isArray: true);
+  }
+
+  @override
+  Future<String> uploadBusinessLicense(Uint8List bytes, String fileName) async {
+    return _uploadFile('/api/companies/business-license', bytes, fileName, 'file');
   }
 
   Future<String> _uploadFile(String url, Uint8List bytes, String fileName, String fieldName, {bool isArray = false}) async {

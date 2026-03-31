@@ -106,6 +106,34 @@
                 ]
             }
         },
+        "/api/auth/admin/login": {
+            "post": {
+                "operationId": "AuthController_adminLogin",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Đăng nhập thành công"
+                    },
+                    "401": {
+                        "description": "Không có quyền truy cập hoặc sai thông tin"
+                    }
+                },
+                "summary": "Đăng nhập Quản trị viên (Dedicated Endpoint)",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
         "/api/auth/status": {
             "get": {
                 "operationId": "AuthController_getStatus",
@@ -235,6 +263,56 @@
                     }
                 ],
                 "summary": "Upload CV (PDF) Ứng viên",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Profile"
+                ]
+            }
+        },
+        "/api/candidates/avatar": {
+            "post": {
+                "operationId": "CandidatesController_uploadAvatar",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Ảnh đại diện (jpg, jpeg, png)"
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Upload avatar thành công"
+                    },
+                    "201": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "File không hợp lệ"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Upload ảnh đại diện (Avatar) Ứng viên",
                 "tags": [
                     "Candidates",
                     "Candidates - Profile"
@@ -1568,6 +1646,635 @@
                     "Companies - Quản lý hồ sơ doanh nghiệp"
                 ]
             }
+        },
+        "/api/companies/business-license": {
+            "post": {
+                "operationId": "CompaniesController_uploadBusinessLicense",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Upload Giấy phép kinh doanh để xác thực công ty",
+                "tags": [
+                    "Companies - Quản lý hồ sơ doanh nghiệp"
+                ]
+            }
+        },
+        "/api/admin/companies/pending-verification": {
+            "get": {
+                "operationId": "AdminCompaniesController_getPendingVerifications",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách công ty"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách doanh nghiệp đang chờ xác thực",
+                "tags": [
+                    "Admin - Quản lý Doanh nghiệp"
+                ]
+            }
+        },
+        "/api/admin/companies/{id}/verify": {
+            "patch": {
+                "operationId": "AdminCompaniesController_verifyCompany",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Phê duyệt xác thực doanh nghiệp",
+                "tags": [
+                    "Admin - Quản lý Doanh nghiệp"
+                ]
+            }
+        },
+        "/api/admin/companies/{id}/reject-verification": {
+            "patch": {
+                "operationId": "AdminCompaniesController_rejectVerification",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectJobDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Từ chối xác thực doanh nghiệp",
+                "tags": [
+                    "Admin - Quản lý Doanh nghiệp"
+                ]
+            }
+        },
+        "/api/jobs/public": {
+            "get": {
+                "operationId": "JobsController_getPublicJobs",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "schema": {
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số bản ghi trên trang",
+                        "schema": {
+                            "default": 10,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "keyword",
+                        "required": false,
+                        "in": "query",
+                        "description": "Từ khóa tìm kiếm (theo tên job)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "provinceId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo ID tỉnh/thành phố",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "categoryId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo danh mục ngành nghề",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "jobTypeId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo hình thức (Full-time, Part-time)",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo status (dùng cho nội bộ HR)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách công việc"
+                    }
+                },
+                "summary": "Lấy danh sách các công việc đang mở (Cho ứng viên tìm kiếm)",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Public"
+                ]
+            }
+        },
+        "/api/jobs/public/{id}": {
+            "get": {
+                "operationId": "JobsController_getJobDetail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID Job",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chi tiết bài đăng tuyển"
+                    }
+                },
+                "summary": "Lấy chi tiết 1 bài đăng tuyển dụng",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Public"
+                ]
+            }
+        },
+        "/api/jobs": {
+            "post": {
+                "operationId": "JobsController_createJob",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateJobDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Tạo mới một tin tuyển dụng (Lưu nháp)",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Quản lý Nhàn Tuyển Dụng"
+                ]
+            },
+            "get": {
+                "operationId": "JobsController_getEmployerJobs",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "schema": {
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số bản ghi trên trang",
+                        "schema": {
+                            "default": 10,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "keyword",
+                        "required": false,
+                        "in": "query",
+                        "description": "Từ khóa tìm kiếm (theo tên job)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "provinceId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo ID tỉnh/thành phố",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "categoryId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo danh mục ngành nghề",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "jobTypeId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo hình thức (Full-time, Part-time)",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo status (dùng cho nội bộ HR)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách tin tuyển dụng cá nhân tạo ra",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Quản lý Nhàn Tuyển Dụng"
+                ]
+            }
+        },
+        "/api/jobs/{id}": {
+            "put": {
+                "operationId": "JobsController_updateJob",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateJobDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật tin tuyển dụng",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Quản lý Nhàn Tuyển Dụng"
+                ]
+            }
+        },
+        "/api/jobs/admin/{id}/approve": {
+            "patch": {
+                "operationId": "JobsController_approveJob",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Duyệt tin tuyển dụng (Admin)",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Quản trị Hệ thống"
+                ]
+            }
+        },
+        "/api/jobs/admin/{id}/reject": {
+            "patch": {
+                "operationId": "JobsController_rejectJob",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectJobDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Từ chối tin tuyển dụng (Admin)",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Quản trị Hệ thống"
+                ]
+            }
+        },
+        "/api/jobs/admin/all": {
+            "get": {
+                "operationId": "JobsController_getAdminJobs",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "schema": {
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số bản ghi trên trang",
+                        "schema": {
+                            "default": 10,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "keyword",
+                        "required": false,
+                        "in": "query",
+                        "description": "Từ khóa tìm kiếm (theo tên job)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "provinceId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo ID tỉnh/thành phố",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "categoryId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo danh mục ngành nghề",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "jobTypeId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo hình thức (Full-time, Part-time)",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo status (dùng cho nội bộ HR)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy tất cả tin tuyển dụng trong hệ thống (Admin)",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Quản trị Hệ thống"
+                ]
+            }
         }
     },
     "info": {
@@ -2824,6 +3531,220 @@
                             }
                         ],
                         "x-nestjs_zod-empty-type": true
+                    }
+                }
+            },
+            "RejectJobDto": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1000,
+                        "description": "Lý do bài đăng bị từ chối"
+                    }
+                },
+                "required": [
+                    "reason"
+                ]
+            },
+            "CreateJobDto": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Tiêu đề công việc"
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Mô tả công việc (HTML/Richtext)"
+                    },
+                    "requirements": {
+                        "type": "string",
+                        "description": "Yêu cầu ứng viên (HTML/Richtext)"
+                    },
+                    "benefits": {
+                        "type": "string",
+                        "description": "Quyền lợi (HTML/Richtext)"
+                    },
+                    "salaryMin": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Lương tối thiểu"
+                    },
+                    "salaryMax": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Lương tối đa"
+                    },
+                    "currency": {
+                        "default": "VND",
+                        "type": "string",
+                        "maxLength": 10,
+                        "description": "Loại tiền tệ"
+                    },
+                    "yearsOfExperience": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Năm kinh nghiệm"
+                    },
+                    "provinceId": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "ID Tỉnh thành"
+                    },
+                    "categoryId": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "ID Danh mục nghề nghiệp"
+                    },
+                    "jobTypeId": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "ID Hình thức (Full-time, Part-time)"
+                    },
+                    "slots": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Số điểm cần tuyển"
+                    },
+                    "deadline": {
+                        "format": "date-time",
+                        "type": "string",
+                        "description": "Hạn chót nộp hồ sơ (YYYY-MM-DD)"
+                    },
+                    "skills": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "skillId": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                "tagText": {
+                                    "type": "string",
+                                    "maxLength": 100
+                                }
+                            }
+                        },
+                        "description": "Danh sách kỹ năng (tag chữ hoặc metadata ID)",
+                        "example": [
+                            {
+                                "skillId": 1
+                            },
+                            {
+                                "tagText": "NestJS"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "title",
+                    "description"
+                ]
+            },
+            "UpdateJobDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "pending",
+                            "published",
+                            "rejected",
+                            "closed"
+                        ],
+                        "description": "Trạng thái bài vêt: draft | published | closed"
+                    },
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "requirements": {
+                        "type": "string"
+                    },
+                    "benefits": {
+                        "type": "string"
+                    },
+                    "salaryMin": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "salaryMax": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "currency": {
+                        "type": "string",
+                        "default": "VND",
+                        "maxLength": 10
+                    },
+                    "yearsOfExperience": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "provinceId": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "categoryId": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "jobTypeId": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "slots": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "deadline": {
+                        "type": "string"
+                    },
+                    "skills": {
+                        "type": "array",
+                        "default": [],
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "skillId": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                "tagText": {
+                                    "type": "string",
+                                    "maxLength": 100
+                                }
+                            }
+                        }
                     }
                 }
             }

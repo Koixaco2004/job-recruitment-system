@@ -23,6 +23,7 @@ import 'features/companies/domain/usecases/update_company_usecase.dart';
 import 'features/companies/domain/usecases/upload_company_banner_usecase.dart';
 import 'features/companies/domain/usecases/upload_company_logo_usecase.dart';
 import 'features/companies/domain/usecases/upload_company_gallery_image_usecase.dart';
+import 'features/companies/domain/usecases/upload_company_business_license_usecase.dart';
 import 'features/companies/presentation/providers/company_provider.dart';
 import 'features/jobs/data/datasources/job_remote_datasource.dart';
 import 'features/jobs/data/repositories/job_repository_impl.dart';
@@ -152,6 +153,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UploadCompanyLogoUseCase(sl()));
   sl.registerLazySingleton(() => UploadCompanyBannerUseCase(sl()));
   sl.registerLazySingleton(() => UploadCompanyGalleryImageUseCase(sl()));
+  sl.registerLazySingleton(() => UploadCompanyBusinessLicenseUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<CompanyRepository>(
@@ -237,6 +239,7 @@ Future<void> init() async {
       uploadCompanyLogoUseCase: sl(),
       uploadCompanyBannerUseCase: sl(),
       uploadCompanyGalleryImageUseCase: sl(),
+      uploadCompanyBusinessLicenseUseCase: sl(),
     ),
   );
 

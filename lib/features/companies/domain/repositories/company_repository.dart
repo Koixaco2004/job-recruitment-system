@@ -40,4 +40,8 @@ abstract class CompanyRepository {
     Uint8List bytes,
     String fileName,
   );
+  Future<Either<Failure, String>> uploadBusinessLicense(
+    Uint8List bytes,
+    String fileName,
+  );
 }

@@ -214,6 +214,88 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
                           maxLines: 8,
                         ),
                         const SizedBox(height: 32),
+
+                        // Business License Section
+                        const Text(
+                          'Giấy phép kinh doanh',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.verified_user, color: Colors.blue),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      (company.businessLicenseUrl != null && company.businessLicenseUrl!.isNotEmpty)
+                                          ? 'Đã tải lên: ${company.businessLicenseUrl!.split('/').last}'
+                                          : 'Chưa có giấy phép kinh doanh',
+                                      style: TextStyle(
+                                        color: (company.businessLicenseUrl != null && company.businessLicenseUrl!.isNotEmpty)
+                                            ? Colors.black87
+                                            : Colors.grey,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (provider.isUploadingBusinessLicense)
+                                    const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                  else
+                                    IconButton(
+                                      icon: const Icon(Icons.upload_file, color: Colors.blue),
+                                      onPressed: provider.pickAndUploadBusinessLicense,
+                                    ),
+                                ],
+                              ),
+                              if (company.businessLicenseUrl != null && company.businessLicenseUrl!.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    company.businessLicenseUrl!.startsWith('http') 
+                                        ? company.businessLicenseUrl! 
+                                        : '${sl<ApiClient>().dio.options.baseUrl}${company.businessLicenseUrl}',
+                                    width: double.infinity,
+                                    height: 200,
+                                    fit: BoxFit.contain,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        height: 200,
+                                        color: Colors.grey[100],
+                                        child: const Center(child: CircularProgressIndicator()),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) => Container(
+                                      height: 100,
+                                      width: double.infinity,
+                                      color: Colors.grey[100],
+                                      child: const Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.insert_drive_file, color: Colors.grey, size: 40),
+                                          SizedBox(height: 8),
+                                          Text('Tệp đính kèm (không thể xem trước)', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
                         
                         // Gallery Section
                         Row(

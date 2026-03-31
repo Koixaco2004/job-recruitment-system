@@ -9,6 +9,7 @@ import '../../../companies/domain/usecases/update_company_usecase.dart';
 import '../../../companies/domain/usecases/upload_company_logo_usecase.dart';
 import '../../../companies/domain/usecases/upload_company_banner_usecase.dart';
 import '../../../companies/domain/usecases/upload_company_gallery_image_usecase.dart';
+import '../../../companies/domain/usecases/upload_company_business_license_usecase.dart';
 
 class EmployerProvider extends ChangeNotifier {
   final GetEmployerProfileUseCase getEmployerProfileUseCase;
@@ -21,6 +22,7 @@ class EmployerProvider extends ChangeNotifier {
   final UploadCompanyLogoUseCase uploadCompanyLogoUseCase;
   final UploadCompanyBannerUseCase uploadCompanyBannerUseCase;
   final UploadCompanyGalleryImageUseCase uploadCompanyGalleryImageUseCase;
+  final UploadCompanyBusinessLicenseUseCase uploadCompanyBusinessLicenseUseCase;
 
   EmployerProvider({
     required this.getEmployerProfileUseCase,
@@ -31,6 +33,7 @@ class EmployerProvider extends ChangeNotifier {
     required this.uploadCompanyLogoUseCase,
     required this.uploadCompanyBannerUseCase,
     required this.uploadCompanyGalleryImageUseCase,
+    required this.uploadCompanyBusinessLicenseUseCase,
   });
 
   EmployerEntity? _employer;
@@ -57,6 +60,9 @@ class EmployerProvider extends ChangeNotifier {
   bool _isUploadingGallery = false;
   bool get isUploadingGallery => _isUploadingGallery;
 
+  bool _isUploadingBusinessLicense = false;
+  bool get isUploadingBusinessLicense => _isUploadingBusinessLicense;
+
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
@@ -74,6 +80,7 @@ class EmployerProvider extends ChangeNotifier {
     _isUploadingLogo = false;
     _isUploadingBanner = false;
     _isUploadingGallery = false;
+    _isUploadingBusinessLicense = false;
     notifyListeners();
   }
 
@@ -299,6 +306,14 @@ class EmployerProvider extends ChangeNotifier {
       setLoading: (val) => _isUploadingGallery = val,
       uploadFunc: uploadCompanyGalleryImageUseCase.call,
       successMsg: 'Đã thêm ảnh vào bộ sưu tập!',
+    );
+  }
+
+  Future<void> pickAndUploadBusinessLicense() async {
+    await _pickAndUploadImage(
+      setLoading: (val) => _isUploadingBusinessLicense = val,
+      uploadFunc: uploadCompanyBusinessLicenseUseCase.call,
+      successMsg: 'Tải lên Giấy phép kinh doanh thành công!',
     );
   }
 

@@ -153,4 +153,19 @@ class CompanyRepositoryImpl implements CompanyRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, String>> uploadBusinessLicense(
+    Uint8List bytes,
+    String fileName,
+  ) async {
+    try {
+      final url = await remoteDataSource.uploadBusinessLicense(bytes, fileName);
+      return Right(url);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }
