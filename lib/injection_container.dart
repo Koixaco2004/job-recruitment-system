@@ -38,6 +38,7 @@ import 'features/jobs/domain/usecases/unsave_job_by_post_id_usecase.dart';
 import 'features/jobs/domain/usecases/create_job_usecase.dart';
 import 'features/jobs/domain/usecases/update_job_usecase.dart';
 import 'features/jobs/domain/usecases/get_employer_jobs_usecase.dart';
+import 'features/jobs/domain/usecases/get_job_detail_usecase.dart';
 import 'features/jobs/presentation/providers/job_provider.dart';
 import 'features/jobs/presentation/providers/my_jobs_provider.dart';
 import 'features/profile/data/datasources/profile_remote_datasource.dart';
@@ -107,6 +108,7 @@ Future<void> init() async {
       createJobUseCase: sl(),
       updateJobUseCase: sl(),
       getEmployerJobsUseCase: sl(),
+      getJobDetailUseCase: sl(),
     ),
   );
 
@@ -131,6 +133,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CreateJobUseCase(sl()));
   sl.registerLazySingleton(() => UpdateJobUseCase(sl()));
   sl.registerLazySingleton(() => GetEmployerJobsUseCase(sl()));
+  sl.registerLazySingleton(() => GetJobDetailUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<JobRepository>(

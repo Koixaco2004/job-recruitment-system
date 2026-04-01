@@ -6,6 +6,7 @@ import '../../domain/usecases/submit_application_usecase.dart';
 import '../../domain/usecases/create_job_usecase.dart';
 import '../../domain/usecases/update_job_usecase.dart';
 import '../../domain/usecases/get_employer_jobs_usecase.dart';
+import '../../domain/usecases/get_job_detail_usecase.dart';
 
 /// Provider quản lý state cho Jobs
 class JobProvider extends ChangeNotifier {
@@ -14,6 +15,7 @@ class JobProvider extends ChangeNotifier {
   final CreateJobUseCase createJobUseCase;
   final UpdateJobUseCase updateJobUseCase;
   final GetEmployerJobsUseCase getEmployerJobsUseCase;
+  final GetJobDetailUseCase getJobDetailUseCase;
 
   JobProvider({
     required this.getJobsUseCase,
@@ -21,14 +23,18 @@ class JobProvider extends ChangeNotifier {
     required this.createJobUseCase,
     required this.updateJobUseCase,
     required this.getEmployerJobsUseCase,
+    required this.getJobDetailUseCase,
   });
 
   // State
+  // State (Candidate Public Jobs)
   bool _isLoading = false;
-  List<JobPostEntity> _allJobs = []; // Tất cả jobs từ API
-  List<JobPostEntity> _filteredJobs = []; // Jobs sau khi filter
+  List<JobPostEntity> _allJobs = []; // List hiện tại
+  int _totalPublicJobs = 0;
+  int _currentPublicPage = 1;
   String? _errorMessage;
   JobFilterModel _filter = const JobFilterModel();
+  JobPostEntity? _currentJobDetail;
 
   // Apply state
   bool _isApplying = false;
@@ -49,11 +55,15 @@ class JobProvider extends ChangeNotifier {
 
   // Getters
   bool get isLoading => _isLoading;
-  List<JobPostEntity> get jobs => _filteredJobs;
+  List<JobPostEntity> get jobs => _allJobs;
   List<JobPostEntity> get allJobs => _allJobs;
+  int get totalPublicJobs => _totalPublicJobs;
+  int get currentPublicPage => _currentPublicPage;
   String? get errorMessage => _errorMessage;
-  bool get hasJobs => _filteredJobs.isNotEmpty;
+  bool get hasMoreJobs => _allJobs.length < _totalPublicJobs;
+  bool get hasJobs => _allJobs.isNotEmpty;
   JobFilterModel get filter => _filter;
+  JobPostEntity? get currentJobDetail => _currentJobDetail;
   bool get isApplying => _isApplying;
   bool get applySuccess => _applySuccess;
   String? get applyError => _applyError;
@@ -75,27 +85,83 @@ class JobProvider extends ChangeNotifier {
   bool get saveJobSuccess => _saveJobSuccess;
   String? get saveJobError => _saveJobError;
 
-  /// Fetch jobs
-  Future<void> fetchJobs() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+  /// Fetch jobs (Public API)
+  Future<void> fetchJobs({bool refresh = true}) async {
+    await fetchPublicJobs(
+      page: refresh ? 1 : _currentPublicPage + 1,
+      refresh: refresh,
+    );
+  }
 
-    final result = await getJobsUseCase();
+  /// Fetch public jobs with filters and pagination
+  Future<void> fetchPublicJobs({
+    int page = 1,
+    int limit = 10,
+    bool refresh = true,
+    String? keyword,
+    int? provinceId,
+    int? categoryId,
+    int? jobTypeId,
+  }) async {
+    _currentPublicPage = refresh ? 1 : _currentPublicPage;
+    _totalPublicJobs = refresh ? 0 : _totalPublicJobs;
+    if (refresh) {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+    }
+
+    final result = await getJobsUseCase(
+      page: refresh ? 1 : page,
+      limit: limit,
+      keyword: keyword ?? _filter.keyword,
+      provinceId: provinceId ?? _filter.provinceId, 
+      categoryId: categoryId ?? _filter.categoryId,
+      jobTypeId: jobTypeId ?? _filter.jobTypeId,
+    );
 
     result.fold(
       (failure) {
-        // Fetch thất bại
         _isLoading = false;
         _errorMessage = failure.message;
         notifyListeners();
       },
-      (jobs) {
-        // Fetch thành công
+      (data) {
         _isLoading = false;
-        _allJobs = jobs;
-        _applyFilter(); // Apply current filter
+        final newJobs = data['jobs'] as List<JobPostEntity>;
+        
+        if (!refresh) {
+          _allJobs.addAll(newJobs);
+        } else {
+          _allJobs = List.from(newJobs);
+        }
+
+        _totalPublicJobs = data['total'] as int;
+        _currentPublicPage = data['currentPage'] as int;
         _errorMessage = null;
+        notifyListeners();
+      },
+    );
+  }
+
+  /// Lấy chi tiết công việc
+  Future<void> fetchJobDetail(int jobId) async {
+    _isLoading = true;
+    _currentJobDetail = null;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await getJobDetailUseCase(jobId);
+
+    result.fold(
+      (failure) {
+        _isLoading = false;
+        _errorMessage = failure.message;
+        notifyListeners();
+      },
+      (job) {
+        _isLoading = false;
+        _currentJobDetail = job;
         notifyListeners();
       },
     );
@@ -104,92 +170,15 @@ class JobProvider extends ChangeNotifier {
   /// Update filter and apply
   void updateFilter(JobFilterModel newFilter) {
     _filter = newFilter;
-    _applyFilter();
+    fetchPublicJobs(refresh: true); // Re-fetch from API with new filter
     notifyListeners();
   }
 
   /// Clear all filters
   void clearFilter() {
     _filter = const JobFilterModel();
-    _applyFilter();
+    fetchPublicJobs(refresh: true);
     notifyListeners();
-  }
-
-  /// Apply filter to jobs
-  void _applyFilter() {
-    _filteredJobs = _allJobs.where((job) {
-      // 1. Keyword search (title or company name)
-      if (_filter.keyword.isNotEmpty) {
-        final keyword = _filter.keyword.toLowerCase();
-        final matchesTitle = job.title.toLowerCase().contains(keyword);
-        final matchesCompany = job.companyName.toLowerCase().contains(keyword);
-        if (!matchesTitle && !matchesCompany) return false;
-      }
-
-      // 2. Cities filter
-      if (_filter.cities.isNotEmpty) {
-        if (!_filter.cities.contains(job.cityName)) return false;
-      }
-
-      // 3. Salary range filter
-      if (_filter.salaryRange != SalaryRange.all) {
-        if (!_matchesSalaryRange(job)) return false;
-      }
-
-      // 4. Job types filter
-      if (_filter.jobTypes.isNotEmpty) {
-        if (!_filter.jobTypes.contains(job.jobType)) return false;
-      }
-
-      // 5. Job levels filter
-      if (_filter.jobLevels.isNotEmpty) {
-        if (!_filter.jobLevels.contains(job.jobLevel)) return false;
-      }
-
-      // 6. Education levels filter
-      if (_filter.educationLevels.isNotEmpty) {
-        if (!_matchesEducation(job)) return false;
-      }
-
-      // 7. Industries filter
-      if (_filter.industries.isNotEmpty) {
-        if (!_filter.industries.contains(job.industryName)) return false;
-      }
-
-      return true;
-    }).toList();
-  }
-
-  /// Check if job matches salary range
-  bool _matchesSalaryRange(JobPostEntity job) {
-    switch (_filter.salaryRange) {
-      case SalaryRange.under10:
-        return job.salaryMax != null && job.salaryMax! < 10000000;
-      case SalaryRange.from10To20:
-        return (job.salaryMin != null && job.salaryMin! >= 10000000) &&
-            (job.salaryMax != null && job.salaryMax! <= 20000000);
-      case SalaryRange.from20To50:
-        return (job.salaryMin != null && job.salaryMin! >= 20000000) &&
-            (job.salaryMax != null && job.salaryMax! <= 50000000);
-      case SalaryRange.above50:
-        return job.salaryMin != null && job.salaryMin! > 50000000;
-      case SalaryRange.negotiable:
-        return job.salaryType == 'negotiable';
-      case SalaryRange.all:
-        return true;
-    }
-  }
-
-  /// Check if job matches education requirement
-  bool _matchesEducation(JobPostEntity job) {
-    final education = job.educationRequired?.toLowerCase() ?? '';
-
-    for (final level in _filter.educationLevels) {
-      if (level == 'Không yêu cầu' && education.isEmpty) return true;
-      if (education.contains(level.toLowerCase())) return true;
-    }
-
-    return false;
   }
 
   /// Gửi đơn ứng tuyển

@@ -6,13 +6,20 @@ import '../entities/saved_job_entity.dart';
 
 /// Abstract repository cho Jobs
 abstract class JobRepository {
-  /// Lấy danh sách tất cả job posts
-  Future<Either<Failure, List<JobPostEntity>>> getJobs();
+  /// Lấy danh sách jobs (Công khai cho ứng viên)
+  Future<Either<Failure, Map<String, dynamic>>> getJobs({
+    int page = 1,
+    int limit = 10,
+    String? keyword,
+    int? provinceId,
+    int? categoryId,
+    int? jobTypeId,
+  });
 
   /// Lấy job post theo ID
   Future<Either<Failure, JobPostEntity>> getJobById(int jobId);
 
-  /// Tìm kiếm jobs theo keyword
+  /// Tìm kiếm jobs theo keyword (Có thể dùng getJobs thay thế)
   Future<Either<Failure, List<JobPostEntity>>> searchJobs(String keyword);
 
   /// Gửi đơn ứng tuyển

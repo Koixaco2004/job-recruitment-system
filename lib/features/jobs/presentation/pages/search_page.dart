@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../domain/models/job_filter_model.dart';
 import '../providers/job_provider.dart';
+import '../../../profile/data/models/job_category_model.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/job_card.dart';
+import 'job_detail_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -236,10 +238,10 @@ class _SearchPageState extends State<SearchPage> {
                     return JobCard(
                       job: job,
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Xem chi tiết: ${job.title}'),
-                            duration: const Duration(seconds: 1),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => JobDetailPage(job: job),
                           ),
                         );
                       },
@@ -257,78 +259,59 @@ class _SearchPageState extends State<SearchPage> {
   List<Widget> _buildActiveFilterChips(JobProvider provider) {
     final chips = <Widget>[];
     final filter = provider.filter;
+    final profileProvider = context.read<ProfileProvider>();
 
-    // Cities
-    for (final city in filter.cities) {
-      chips.add(
-        Chip(
-          label: Text(city),
-          onDeleted: () {
-            final newCities = List<String>.from(filter.cities)..remove(city);
-            provider.updateFilter(filter.copyWith(cities: newCities));
-          },
-          deleteIcon: const Icon(Icons.close, size: 16),
-        ),
-      );
+    // Province
+    if (filter.provinceId != null) {
+      final name = profileProvider.getProvinceName(filter.provinceId);
+      if (name != null) {
+        chips.add(
+          _buildFilterChip(name, () {
+            provider.updateFilter(filter.clearField(province: true));
+          }),
+        );
+      }
     }
 
-    // Salary range
-    if (filter.salaryRange != SalaryRange.all) {
-      final salaryLabels = {
-        SalaryRange.under10: '< 10tr',
-        SalaryRange.from10To20: '10-20tr',
-        SalaryRange.from20To50: '20-50tr',
-        SalaryRange.above50: '> 50tr',
-        SalaryRange.negotiable: 'Thỏa thuận',
-      };
-      chips.add(
-        Chip(
-          label: Text(salaryLabels[filter.salaryRange] ?? ''),
-          onDeleted: () {
-            provider.updateFilter(
-              filter.copyWith(salaryRange: SalaryRange.all),
-            );
-          },
-          deleteIcon: const Icon(Icons.close, size: 16),
-        ),
+    // Category
+    if (filter.categoryId != null) {
+      final category = profileProvider.allJobCategories.firstWhere(
+        (c) => c.id == filter.categoryId,
+        orElse: () => const JobCategoryModel(id: -1, name: ''),
       );
+      if (category.id != -1) {
+        chips.add(
+          _buildFilterChip(category.name, () {
+            provider.updateFilter(filter.clearField(category: true));
+          }),
+        );
+      }
     }
 
-    // Job types
-    for (final type in filter.jobTypes) {
-      final typeLabels = {
-        'fulltime': 'Full-time',
-        'parttime': 'Part-time',
-        'remote': 'Remote',
-        'freelance': 'Freelance',
-      };
-      chips.add(
-        Chip(
-          label: Text(typeLabels[type] ?? type),
-          onDeleted: () {
-            final newTypes = List<String>.from(filter.jobTypes)..remove(type);
-            provider.updateFilter(filter.copyWith(jobTypes: newTypes));
-          },
-          deleteIcon: const Icon(Icons.close, size: 16),
-        ),
-      );
-    }
-
-    // Job levels
-    for (final level in filter.jobLevels) {
-      chips.add(
-        Chip(
-          label: Text(level),
-          onDeleted: () {
-            final newLevels = List<String>.from(filter.jobLevels)
-              ..remove(level);
-            provider.updateFilter(filter.copyWith(jobLevels: newLevels));
-          },
-          deleteIcon: const Icon(Icons.close, size: 16),
-        ),
-      );
+    // Job Type
+    if (filter.jobTypeId != null) {
+      final name = profileProvider.getJobTypeName(filter.jobTypeId);
+      if (name != null) {
+        chips.add(
+          _buildFilterChip(name, () {
+            provider.updateFilter(filter.clearField(jobType: true));
+          }),
+        );
+      }
     }
 
     return chips;
+  }
+
+  Widget _buildFilterChip(String label, VoidCallback onDeleted) {
+    return Chip(
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+      onDeleted: onDeleted,
+      deleteIcon: const Icon(Icons.close, size: 14),
+      backgroundColor: Colors.blue.withValues(alpha: 0.1),
+      side: BorderSide.none,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      visualDensity: VisualDensity.compact,
+    );
   }
 }

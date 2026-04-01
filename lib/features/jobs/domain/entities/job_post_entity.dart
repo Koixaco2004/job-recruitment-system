@@ -9,14 +9,11 @@ class JobPostEntity extends Equatable {
   final String requirements;
   final String benefits;
   final String jobType; // 'fulltime', 'parttime', 'remote', 'freelance'
-  final String
-  jobLevel; // 'intern', 'fresher', 'junior', 'middle', 'senior', 'leader', 'manager'
   final int? salaryMin;
   final int? salaryMax;
   final String salaryType; // 'VND', 'USD', 'negotiable'
   final int numberOfPositions;
   final int experienceRequired;
-  final String? educationRequired;
   final DateTime deadline;
   final String status; // 'pending', 'approved', 'rejected', 'closed', 'expired'
   final bool isPriority;
@@ -48,13 +45,11 @@ class JobPostEntity extends Equatable {
     required this.requirements,
     required this.benefits,
     required this.jobType,
-    required this.jobLevel,
     this.salaryMin,
     this.salaryMax,
     required this.salaryType,
     required this.numberOfPositions,
     required this.experienceRequired,
-    this.educationRequired,
     required this.deadline,
     required this.status,
     required this.isPriority,
@@ -81,13 +76,11 @@ class JobPostEntity extends Equatable {
     requirements,
     benefits,
     jobType,
-    jobLevel,
     salaryMin,
     salaryMax,
     salaryType,
     numberOfPositions,
     experienceRequired,
-    educationRequired,
     deadline,
     status,
     isPriority,

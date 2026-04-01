@@ -12,16 +12,28 @@ class JobCard extends StatelessWidget {
 
   const JobCard({super.key, required this.job, this.onTap});
 
+  String _formatPriceValue(int? value) {
+    if (value == null) return '';
+    if (value >= 1000000) {
+      final double result = value / 1000000;
+      return result == result.toInt() 
+          ? '${result.toInt()} triệu' 
+          : '${result.toStringAsFixed(1).replaceAll('.0', '')} triệu';
+    } else if (value >= 1000) {
+      return '${value ~/ 1000} ngàn';
+    }
+    return value.toString();
+  }
+
   String _formatSalary() {
-    if (job.salaryType == 'negotiable') {
+    if (job.salaryType == 'negotiable' || (job.salaryMin == null && job.salaryMax == null)) {
       return 'Thỏa thuận';
     }
 
-    final formatter = NumberFormat('#,###', 'vi_VN');
     if (job.salaryMin != null && job.salaryMax != null) {
-      return '${formatter.format(job.salaryMin! ~/ 1000000)}-${formatter.format(job.salaryMax! ~/ 1000000)} triệu';
+      return '${_formatPriceValue(job.salaryMin!)}-${_formatPriceValue(job.salaryMax!)}';
     } else if (job.salaryMin != null) {
-      return 'Từ ${formatter.format(job.salaryMin! ~/ 1000000)} triệu';
+      return 'Từ ${_formatPriceValue(job.salaryMin!)}';
     }
     return 'Thỏa thuận';
   }
@@ -41,26 +53,6 @@ class JobCard extends StatelessWidget {
     }
   }
 
-  String _formatJobLevel() {
-    switch (job.jobLevel) {
-      case 'intern':
-        return 'Thực tập';
-      case 'fresher':
-        return 'Fresher';
-      case 'junior':
-        return 'Junior';
-      case 'middle':
-        return 'Middle';
-      case 'senior':
-        return 'Senior';
-      case 'leader':
-        return 'Leader';
-      case 'manager':
-        return 'Manager';
-      default:
-        return job.jobLevel;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,15 +135,35 @@ class JobCard extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.location_on,
-                              size: 14,
-                              color: Colors.grey[600],
+                              size: 15,
+                              color: Theme.of(context).primaryColor,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               job.cityName,
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Icon(
+                              Icons.category,
+                              size: 15,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                job.industryName,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -231,11 +243,6 @@ class JobCard extends StatelessWidget {
                 children: [
                   _buildChip(Icons.attach_money, _formatSalary(), Colors.green),
                   _buildChip(Icons.work_outline, _formatJobType(), Colors.blue),
-                  _buildChip(
-                    Icons.trending_up,
-                    _formatJobLevel(),
-                    Colors.purple,
-                  ),
                 ],
               ),
               const SizedBox(height: 12),

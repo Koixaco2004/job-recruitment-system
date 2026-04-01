@@ -16,9 +16,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Fetch jobs khi màn hình load
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<JobProvider>().fetchJobs();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final jobProvider = context.read<JobProvider>();
+      // Luôn load tất cả việc làm công khai khi vào trang (Bỏ phần gợi ý theo hồ sơ)
+      await jobProvider.fetchPublicJobs(refresh: true);
     });
   }
 
@@ -122,7 +123,7 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Tìm thấy ${jobProvider.jobs.length} việc làm',
+                        'Tìm thấy ${jobProvider.totalPublicJobs} việc làm',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -139,24 +140,68 @@ class _HomePageState extends State<HomePage> {
                 ),
                 // Job list
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(top: 8, bottom: 16),
-                    itemCount: jobProvider.jobs.length,
-                    itemBuilder: (context, index) {
-                      final job = jobProvider.jobs[index];
-                      return JobCard(
-                        job: job,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => JobDetailPage(job: job),
+                  child: RefreshIndicator(
+                  onRefresh: () => jobProvider.fetchPublicJobs(refresh: true),
+                  child: jobProvider.jobs.isEmpty && !jobProvider.isLoading
+                    ? ListView(
+                        children: [
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                          const Center(
+                            child: Column(
+                              children: [
+                                Icon(Icons.work_off_outlined, size: 80, color: Colors.grey),
+                                SizedBox(height: 16),
+                                const Text(
+                                  'Không có việc làm nào',
+                                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                                ),
+                              ],
                             ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(top: 8, bottom: 16),
+                        itemCount: jobProvider.jobs.length + (jobProvider.hasMoreJobs ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == jobProvider.jobs.length) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: OutlinedButton(
+                                onPressed: jobProvider.isLoading 
+                                    ? null 
+                                    : () => jobProvider.fetchPublicJobs(refresh: false),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  side: BorderSide(color: Theme.of(context).primaryColor),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: jobProvider.isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Text('Xem thêm việc làm'),
+                              ),
+                            );
+                          }
+                          
+                          final job = jobProvider.jobs[index];
+                          return JobCard(
+                            job: job,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => JobDetailPage(job: job),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                ),
                 ),
               ],
             ),

@@ -14,26 +14,36 @@ class JobRepositoryImpl implements JobRepository {
   JobRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<JobPostEntity>>> getJobs() async {
+  Future<Either<Failure, Map<String, dynamic>>> getJobs({
+    int page = 1,
+    int limit = 10,
+    String? keyword,
+    int? provinceId,
+    int? categoryId,
+    int? jobTypeId,
+  }) async {
     try {
-      final jobs = await remoteDataSource.getJobs();
-      return Right(jobs);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      final result = await remoteDataSource.getJobs(
+        page: page,
+        limit: limit,
+        keyword: keyword,
+        provinceId: provinceId,
+        categoryId: categoryId,
+        jobTypeId: jobTypeId,
+      );
+      return Right(result);
     } catch (e) {
-      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
+      return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
   Future<Either<Failure, JobPostEntity>> getJobById(int jobId) async {
     try {
-      final job = await remoteDataSource.getJobById(jobId);
-      return Right(job);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      final remoteJob = await remoteDataSource.getJobById(jobId);
+      return Right(remoteJob);
     } catch (e) {
-      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -42,19 +52,10 @@ class JobRepositoryImpl implements JobRepository {
     String keyword,
   ) async {
     try {
-      final jobs = await remoteDataSource.getJobs();
-      final filteredJobs = jobs
-          .where(
-            (job) =>
-                job.title.toLowerCase().contains(keyword.toLowerCase()) ||
-                job.companyName.toLowerCase().contains(keyword.toLowerCase()),
-          )
-          .toList();
-      return Right(filteredJobs);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
+      final result = await remoteDataSource.getJobs(keyword: keyword, limit: 50);
+      return Right(result['jobs'] as List<JobPostEntity>);
     } catch (e) {
-      return Left(ServerFailure('Đã xảy ra lỗi: ${e.toString()}'));
+      return Left(ServerFailure(e.toString()));
     }
   }
 

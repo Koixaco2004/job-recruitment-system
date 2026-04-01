@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../domain/models/job_filter_model.dart';
 import '../providers/job_provider.dart';
 
-/// Bottom sheet cho bộ lọc nâng cao
+/// Bottom sheet cho bộ lọc nâng cao theo tiêu chuẩn mới (ID-based dropdowns)
 class FilterBottomSheet extends StatefulWidget {
   const FilterBottomSheet({super.key});
 
@@ -19,12 +20,25 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     super.initState();
     // Copy current filter
     _tempFilter = context.read<JobProvider>().filter;
+    
+    // Load metadata if not loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileProvider = context.read<ProfileProvider>();
+      profileProvider.fetchProvincesIfEmpty();
+      profileProvider.fetchJobTypesIfEmpty();
+      profileProvider.fetchJobCategoriesMetadata();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final profileProvider = context.watch<ProfileProvider>();
+    final isMetadataLoading = profileProvider.isLoadingProvinces || 
+                             profileProvider.isLoadingJobCategories || 
+                             profileProvider.isLoadingJobTypes;
+
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.8,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -33,17 +47,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: Theme.of(context).primaryColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Row(
               children: [
                 const Text(
-                  'Bộ lọc nâng cao',
+                  'Bộ lọc tìm kiếm',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -61,26 +73,96 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
           // Filter content
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCityFilter(),
-                  const SizedBox(height: 24),
-                  _buildSalaryFilter(),
-                  const SizedBox(height: 24),
-                  _buildJobTypeFilter(),
-                  const SizedBox(height: 24),
-                  _buildJobLevelFilter(),
-                  const SizedBox(height: 24),
-                  _buildEducationFilter(),
-                  const SizedBox(height: 24),
-                  _buildIndustryFilter(),
-                  const SizedBox(height: 80), // Space for buttons
-                ],
-              ),
-            ),
+            child: isMetadataLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // --- Province Dropdown ---
+                        _buildDropdownSection(
+                          title: 'Tỉnh / Thành phố',
+                          icon: Icons.location_on_outlined,
+                          child: DropdownButtonFormField<int>(
+                            value: _tempFilter.provinceId,
+                            isExpanded: true,
+                            decoration: _dropdownDecoration('Chọn tỉnh/thành phố'),
+                            items: [
+                              const DropdownMenuItem<int>(
+                                value: null,
+                                child: Text('Tất cả tỉnh thành'),
+                              ),
+                              ...profileProvider.provinces.map((p) => DropdownMenuItem<int>(
+                                value: p.id,
+                                child: Text(p.name),
+                              )),
+                            ],
+                            onChanged: (val) {
+                              setState(() {
+                                _tempFilter = _tempFilter.copyWith(provinceId: val);
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Category Dropdown ---
+                        _buildDropdownSection(
+                          title: 'Ngành nghề',
+                          icon: Icons.work_outline,
+                          child: DropdownButtonFormField<int>(
+                            value: _tempFilter.categoryId,
+                            isExpanded: true,
+                            decoration: _dropdownDecoration('Chọn ngành nghề'),
+                            items: [
+                              const DropdownMenuItem<int>(
+                                value: null,
+                                child: Text('Tất cả ngành nghề'),
+                              ),
+                              ...profileProvider.allJobCategories.map((c) => DropdownMenuItem<int>(
+                                value: c.id,
+                                child: Text(c.name),
+                              )),
+                            ],
+                            onChanged: (val) {
+                              setState(() {
+                                _tempFilter = _tempFilter.copyWith(categoryId: val);
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Job Type Dropdown ---
+                        _buildDropdownSection(
+                          title: 'Hình thức làm việc',
+                          icon: Icons.access_time,
+                          child: DropdownButtonFormField<int>(
+                            value: _tempFilter.jobTypeId,
+                            isExpanded: true,
+                            decoration: _dropdownDecoration('Chọn hình thức'),
+                            items: [
+                              const DropdownMenuItem<int>(
+                                value: null,
+                                child: Text('Tất cả hình thức'),
+                              ),
+                              ...profileProvider.jobTypes.map((jt) => DropdownMenuItem<int>(
+                                value: jt.id,
+                                child: Text(jt.name),
+                              )),
+                            ],
+                            onChanged: (val) {
+                              setState(() {
+                                _tempFilter = _tempFilter.copyWith(jobTypeId: val);
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
           ),
 
           // Bottom buttons
@@ -90,7 +172,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.2),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -102,13 +184,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   child: OutlinedButton(
                     onPressed: () {
                       setState(() {
-                        _tempFilter = const JobFilterModel();
+                        _tempFilter = const JobFilterModel(keyword: '');
                       });
                     },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: Colors.grey[300]!),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: const Text('Xóa bộ lọc'),
+                    child: const Text('Xóa bộ lọc', style: TextStyle(color: Colors.black87)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -123,8 +207,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
                     ),
-                    child: const Text('Áp dụng'),
+                    child: const Text('Áp dụng', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -135,267 +221,48 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
+  Widget _buildDropdownSection({required String title, required IconData icon, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 18, color: Colors.grey[600]),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        child,
+      ],
+    );
+  }
+
+  InputDecoration _dropdownDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey[300]!),
       ),
-    );
-  }
-
-  Widget _buildCityFilter() {
-    final cities = ['Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng', 'Remote', 'Khác'];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Địa điểm'),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: cities.map((city) {
-            final isSelected = _tempFilter.cities.contains(city);
-            return FilterChip(
-              label: Text(city),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  final newCities = List<String>.from(_tempFilter.cities);
-                  if (selected) {
-                    newCities.add(city);
-                  } else {
-                    newCities.remove(city);
-                  }
-                  _tempFilter = _tempFilter.copyWith(cities: newCities);
-                });
-              },
-              selectedColor: Theme.of(
-                context,
-              ).primaryColor.withValues(alpha: 0.2),
-              checkmarkColor: Theme.of(context).primaryColor,
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSalaryFilter() {
-    final salaryRanges = {
-      SalaryRange.all: 'Tất cả',
-      SalaryRange.under10: '< 10 triệu',
-      SalaryRange.from10To20: '10-20 triệu',
-      SalaryRange.from20To50: '20-50 triệu',
-      SalaryRange.above50: '> 50 triệu',
-      SalaryRange.negotiable: 'Thỏa thuận',
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Mức lương'),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: salaryRanges.entries.map((entry) {
-            final isSelected = _tempFilter.salaryRange == entry.key;
-            return ChoiceChip(
-              label: Text(entry.value),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  _tempFilter = _tempFilter.copyWith(salaryRange: entry.key);
-                });
-              },
-              selectedColor: Theme.of(
-                context,
-              ).primaryColor.withValues(alpha: 0.2),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildJobTypeFilter() {
-    final jobTypes = {
-      'fulltime': 'Full-time',
-      'parttime': 'Part-time',
-      'remote': 'Remote',
-      'freelance': 'Freelance',
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Hình thức làm việc'),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: jobTypes.entries.map((entry) {
-            final isSelected = _tempFilter.jobTypes.contains(entry.key);
-            return FilterChip(
-              label: Text(entry.value),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  final newTypes = List<String>.from(_tempFilter.jobTypes);
-                  if (selected) {
-                    newTypes.add(entry.key);
-                  } else {
-                    newTypes.remove(entry.key);
-                  }
-                  _tempFilter = _tempFilter.copyWith(jobTypes: newTypes);
-                });
-              },
-              selectedColor: Theme.of(
-                context,
-              ).primaryColor.withValues(alpha: 0.2),
-              checkmarkColor: Theme.of(context).primaryColor,
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildJobLevelFilter() {
-    final jobLevels = {
-      'intern': 'Thực tập',
-      'fresher': 'Fresher',
-      'junior': 'Junior',
-      'middle': 'Middle',
-      'senior': 'Senior',
-      'leader': 'Leader',
-      'manager': 'Manager',
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Cấp bậc'),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: jobLevels.entries.map((entry) {
-            final isSelected = _tempFilter.jobLevels.contains(entry.key);
-            return FilterChip(
-              label: Text(entry.value),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  final newLevels = List<String>.from(_tempFilter.jobLevels);
-                  if (selected) {
-                    newLevels.add(entry.key);
-                  } else {
-                    newLevels.remove(entry.key);
-                  }
-                  _tempFilter = _tempFilter.copyWith(jobLevels: newLevels);
-                });
-              },
-              selectedColor: Theme.of(
-                context,
-              ).primaryColor.withValues(alpha: 0.2),
-              checkmarkColor: Theme.of(context).primaryColor,
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEducationFilter() {
-    final educationLevels = ['Đại học', 'Cao đẳng', 'Thạc sĩ', 'Không yêu cầu'];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Trình độ học vấn'),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: educationLevels.map((level) {
-            final isSelected = _tempFilter.educationLevels.contains(level);
-            return FilterChip(
-              label: Text(level),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  final newLevels = List<String>.from(
-                    _tempFilter.educationLevels,
-                  );
-                  if (selected) {
-                    newLevels.add(level);
-                  } else {
-                    newLevels.remove(level);
-                  }
-                  _tempFilter = _tempFilter.copyWith(
-                    educationLevels: newLevels,
-                  );
-                });
-              },
-              selectedColor: Theme.of(
-                context,
-              ).primaryColor.withValues(alpha: 0.2),
-              checkmarkColor: Theme.of(context).primaryColor,
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildIndustryFilter() {
-    final industries = [
-      'Công nghệ thông tin',
-      'Fintech',
-      'Thương mại điện tử',
-      'Công nghệ - Logistics',
-      'Ngân hàng - Tài chính',
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Ngành nghề'),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: industries.map((industry) {
-            final isSelected = _tempFilter.industries.contains(industry);
-            return FilterChip(
-              label: Text(industry),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  final newIndustries = List<String>.from(
-                    _tempFilter.industries,
-                  );
-                  if (selected) {
-                    newIndustries.add(industry);
-                  } else {
-                    newIndustries.remove(industry);
-                  }
-                  _tempFilter = _tempFilter.copyWith(industries: newIndustries);
-                });
-              },
-              selectedColor: Theme.of(
-                context,
-              ).primaryColor.withValues(alpha: 0.2),
-              checkmarkColor: Theme.of(context).primaryColor,
-            );
-          }).toList(),
-        ),
-      ],
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Theme.of(context).primaryColor),
+      ),
+      filled: true,
+      fillColor: Colors.grey[50],
     );
   }
 }

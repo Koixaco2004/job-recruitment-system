@@ -10,13 +10,11 @@ class JobPostModel extends JobPostEntity {
     required super.requirements,
     required super.benefits,
     required super.jobType,
-    required super.jobLevel,
     super.salaryMin,
     super.salaryMax,
     required super.salaryType,
     required super.numberOfPositions,
     required super.experienceRequired,
-    super.educationRequired,
     required super.deadline,
     required super.status,
     required super.isPriority,
@@ -43,34 +41,32 @@ class JobPostModel extends JobPostEntity {
       description: json['description'] as String? ?? '',
       requirements: json['requirements'] as String? ?? '',
       benefits: json['benefits'] as String? ?? '',
-      jobType: json['job_type'] as String? ?? json['jobType'] as String? ?? 'fulltime',
-      jobLevel: json['job_level'] as String? ?? json['jobLevel'] as String? ?? 'junior',
+      jobType: _asString(json['job_type'] ?? (json['jobType'] is Map ? json['jobType']['name'] : json['jobType'])) ?? 'fulltime',
       salaryMin: _asInt(json['salary_min'] ?? json['salaryMin']),
       salaryMax: _asInt(json['salary_max'] ?? json['salaryMax']),
-      salaryType: json['salary_type'] as String? ?? json['currency'] as String? ?? 'VND',
+      salaryType: _asString(json['salary_type'] ?? json['currency']) ?? 'VND',
       numberOfPositions: _asInt(json['number_of_positions'] ?? json['slots']),
       experienceRequired: _asInt(json['experience_required'] ?? json['yearsOfExperience']),
-      educationRequired: json['education_required'] as String? ?? json['education'] as String?,
       deadline: json['deadline'] != null 
           ? DateTime.parse(json['deadline'] as String)
           : DateTime.now(),
-      status: json['status'] as String? ?? 'pending',
+      status: _asString(json['status']) ?? 'pending',
       isPriority: json['is_priority'] == true || json['isPriority'] == true,
       viewCount: _asInt(json['view_count'] ?? json['viewCount']),
       applicationCount: _asInt(json['application_count'] ?? json['applicationCount']),
-      createdAt: json['created_at'] != null
+      createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at'] as String)
-          : DateTime.now(),
+          : (json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now()),
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
-          : DateTime.now(),
-      companyName: json['company_name'] as String? ?? json['companyName'] as String? ?? 'Không rõ công ty',
-      companyLogo: json['company_logo'] as String? ?? json['companyLogo'] as String?,
-      cityName: json['city_name'] as String? ?? json['cityName'] as String? ?? 'Không rõ địa điểm',
-      industryName: json['industry_name'] as String? ?? json['industryName'] as String? ?? 'Chưa xác định',
-      provinceId: _asInt(json['province_id'] ?? json['provinceId']),
-      categoryId: _asInt(json['category_id'] ?? json['categoryId']),
-      jobTypeId: _asInt(json['job_type_id'] ?? json['jobTypeId']),
+          : (json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : DateTime.now()),
+      companyName: _asString(json['company_name'] ?? json['companyName'] ?? (json['company'] is Map ? (json['company'] as Map)['name'] : null)) ?? 'Không rõ công ty',
+      companyLogo: _asString(json['company_logo'] ?? json['companyLogo'] ?? (json['company'] is Map ? (json['company'] as Map)['logoUrl'] : null)),
+      cityName: _asString(json['city_name'] ?? json['cityName'] ?? (json['province'] is Map ? (json['province'] as Map)['name'] : null)) ?? 'Không rõ địa điểm',
+      industryName: _asString(json['industry_name'] ?? json['industryName'] ?? (json['category'] is Map ? (json['category'] as Map)['name'] : null)) ?? 'Chưa xác định',
+      provinceId: _asInt(json['province_id'] ?? json['provinceId'] ?? (json['province'] is Map ? (json['province'] as Map)['id'] : null)),
+      categoryId: _asInt(json['category_id'] ?? json['categoryId'] ?? (json['category'] is Map ? (json['category'] as Map)['id'] : null)),
+      jobTypeId: _asInt(json['job_type_id'] ?? json['jobTypeId'] ?? (json['jobType'] is Map ? (json['jobType'] as Map)['id'] : null)),
       skills: json['skills'] as List?,
     );
   }
@@ -83,6 +79,12 @@ class JobPostModel extends JobPostEntity {
     return 0;
   }
 
+  static String? _asString(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    return value.toString();
+  }
+
   /// Chuyển JobPostModel thành JSON
   Map<String, dynamic> toJson() {
     return {
@@ -93,13 +95,11 @@ class JobPostModel extends JobPostEntity {
       'requirements': requirements,
       'benefits': benefits,
       'job_type': jobType,
-      'job_level': jobLevel,
       'salary_min': salaryMin,
       'salary_max': salaryMax,
       'salary_type': salaryType,
       'number_of_positions': numberOfPositions,
       'experience_required': experienceRequired,
-      'education_required': educationRequired,
       'deadline': deadline.toIso8601String(),
       'status': status,
       'is_priority': isPriority,

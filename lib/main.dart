@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF6366F1), // Indigo color
+            seedColor: const Color(0xFF0EA5E9), // Sky Blue
           ),
           useMaterial3: true,
           fontFamily: 'Roboto',
