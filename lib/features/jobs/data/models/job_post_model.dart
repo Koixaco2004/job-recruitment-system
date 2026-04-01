@@ -17,7 +17,6 @@ class JobPostModel extends JobPostEntity {
     required super.numberOfPositions,
     required super.experienceRequired,
     super.educationRequired,
-    super.address,
     required super.deadline,
     required super.status,
     required super.isPriority,
@@ -29,38 +28,57 @@ class JobPostModel extends JobPostEntity {
     super.companyLogo,
     required super.cityName,
     required super.industryName,
+    super.provinceId,
+    super.categoryId,
+    super.jobTypeId,
   });
 
   /// Tạo JobPostModel từ JSON
   factory JobPostModel.fromJson(Map<String, dynamic> json) {
     return JobPostModel(
-      jobPostId: json['job_post_id'] as int,
-      employerId: json['employer_id'] as int,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      requirements: json['requirements'] as String,
-      benefits: json['benefits'] as String,
-      jobType: json['job_type'] as String,
-      jobLevel: json['job_level'] as String,
-      salaryMin: json['salary_min'] as int?,
-      salaryMax: json['salary_max'] as int?,
-      salaryType: json['salary_type'] as String,
-      numberOfPositions: json['number_of_positions'] as int,
-      experienceRequired: json['experience_required'] as int,
-      educationRequired: json['education_required'] as String?,
-      address: json['address'] as String?,
-      deadline: DateTime.parse(json['deadline'] as String),
-      status: json['status'] as String,
-      isPriority: json['is_priority'] as bool,
-      viewCount: json['view_count'] as int,
-      applicationCount: json['application_count'] as int,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      companyName: json['company_name'] as String,
-      companyLogo: json['company_logo'] as String?,
-      cityName: json['city_name'] as String,
-      industryName: json['industry_name'] as String,
+      jobPostId: _asInt(json['job_post_id'] ?? json['id'] ?? json['jobPostId']),
+      employerId: _asInt(json['employer_id'] ?? json['employerId']),
+      title: json['title'] as String? ?? 'Không có tiêu đề',
+      description: json['description'] as String? ?? '',
+      requirements: json['requirements'] as String? ?? '',
+      benefits: json['benefits'] as String? ?? '',
+      jobType: json['job_type'] as String? ?? json['jobType'] as String? ?? 'fulltime',
+      jobLevel: json['job_level'] as String? ?? json['jobLevel'] as String? ?? 'junior',
+      salaryMin: _asInt(json['salary_min'] ?? json['salaryMin']),
+      salaryMax: _asInt(json['salary_max'] ?? json['salaryMax']),
+      salaryType: json['salary_type'] as String? ?? json['currency'] as String? ?? 'VND',
+      numberOfPositions: _asInt(json['number_of_positions'] ?? json['slots']),
+      experienceRequired: _asInt(json['experience_required'] ?? json['yearsOfExperience']),
+      educationRequired: json['education_required'] as String? ?? json['education'] as String?,
+      deadline: json['deadline'] != null 
+          ? DateTime.parse(json['deadline'] as String)
+          : DateTime.now(),
+      status: json['status'] as String? ?? 'pending',
+      isPriority: json['is_priority'] == true || json['isPriority'] == true,
+      viewCount: _asInt(json['view_count'] ?? json['viewCount']),
+      applicationCount: _asInt(json['application_count'] ?? json['applicationCount']),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now(),
+      companyName: json['company_name'] as String? ?? json['companyName'] as String? ?? 'Không rõ công ty',
+      companyLogo: json['company_logo'] as String? ?? json['companyLogo'] as String?,
+      cityName: json['city_name'] as String? ?? json['cityName'] as String? ?? 'Không rõ địa điểm',
+      industryName: json['industry_name'] as String? ?? json['industryName'] as String? ?? 'Chưa xác định',
+      provinceId: _asInt(json['province_id'] ?? json['provinceId']),
+      categoryId: _asInt(json['category_id'] ?? json['categoryId']),
+      jobTypeId: _asInt(json['job_type_id'] ?? json['jobTypeId']),
     );
+  }
+
+  static int _asInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
   }
 
   /// Chuyển JobPostModel thành JSON
@@ -80,7 +98,6 @@ class JobPostModel extends JobPostEntity {
       'number_of_positions': numberOfPositions,
       'experience_required': experienceRequired,
       'education_required': educationRequired,
-      'address': address,
       'deadline': deadline.toIso8601String(),
       'status': status,
       'is_priority': isPriority,
@@ -92,6 +109,9 @@ class JobPostModel extends JobPostEntity {
       'company_logo': companyLogo,
       'city_name': cityName,
       'industry_name': industryName,
+      'province_id': provinceId,
+      'category_id': categoryId,
+      'job_type_id': jobTypeId,
     };
   }
 }

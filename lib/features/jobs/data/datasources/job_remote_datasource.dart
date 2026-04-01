@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/application_model.dart';
 import '../models/job_post_model.dart';
@@ -42,10 +44,29 @@ abstract class JobRemoteDataSource {
 
   /// Kiểm tra job đã được lưu chưa
   Future<bool> isJobSaved({required int candidateId, required int jobPostId});
+
+  // --- Employer - Job Management ---
+  
+  /// Tạo mới tin tuyển dụng (Draft)
+  Future<JobPostModel> createJob(Map<String, dynamic> data);
+
+  /// Cập nhật tin tuyển dụng (bao gồm Publish)
+  Future<JobPostModel> updateJob(int jobId, Map<String, dynamic> data);
+
+  /// Lấy danh sách tin tuyển dụng của trang chủ HR
+  Future<Map<String, dynamic>> getMyJobsForEmployer({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  });
 }
 
-/// Implementation với Mock Data
+/// Implementation với API thật (và một số mock cho candidate)
 class JobRemoteDataSourceImpl implements JobRemoteDataSource {
+  final ApiClient apiClient;
+
+  JobRemoteDataSourceImpl({required this.apiClient});
+
   @override
   Future<List<JobPostModel>> getJobs() async {
     // Giả lập delay 1 giây như gọi API thật
@@ -71,7 +92,6 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
         'number_of_positions': 2,
         'experience_required': 3,
         'education_required': 'Đại học',
-        'address': '123 Nguyễn Huệ, Quận 1',
         'deadline': DateTime.now()
             .add(const Duration(days: 30))
             .toIso8601String(),
@@ -104,7 +124,6 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
         'number_of_positions': 3,
         'experience_required': 2,
         'education_required': 'Đại học',
-        'address': null,
         'deadline': DateTime.now()
             .add(const Duration(days: 25))
             .toIso8601String(),
@@ -524,5 +543,73 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
     return _mockSavedJobs.any(
       (s) => s.candidateId == candidateId && s.jobPostId == jobPostId,
     );
+  }
+
+  // --- Employer API Implementation ---
+
+  @override
+  Future<JobPostModel> createJob(Map<String, dynamic> data) async {
+    try {
+      final response = await apiClient.dio.post('/api/jobs', data: data);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final jobData = response.data['data'] ?? response.data;
+        return JobPostModel.fromJson(jobData);
+      }
+      throw const ServerException('Tạo tin tuyển dụng thất bại');
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<JobPostModel> updateJob(int jobId, Map<String, dynamic> data) async {
+    try {
+      final response = await apiClient.dio.put('/api/jobs/$jobId', data: data);
+      if (response.statusCode == 200) {
+        final jobData = response.data['data'] ?? response.data;
+        return JobPostModel.fromJson(jobData);
+      }
+      throw const ServerException('Cập nhật tin tuyển dụng thất bại');
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getMyJobsForEmployer({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  }) async {
+    try {
+      final queryParams = {
+        'page': page,
+        'limit': limit,
+        if (status != null) 'status': status,
+      };
+      
+      final response = await apiClient.dio.get('/api/jobs', queryParameters: queryParams);
+      
+      if (response.statusCode == 200) {
+        final data = response.data;
+        // Linh hoạt xử lý nếu data['data'] null
+        final List jobsList = (data is List) ? data : (data['data'] ?? []);
+        
+        return {
+          'jobs': jobsList.map((e) => JobPostModel.fromJson(e)).toList(),
+          'total': (data is Map) ? (data['total'] ?? jobsList.length) : jobsList.length,
+          'currentPage': (data is Map) ? (data['page'] ?? page) : page,
+        };
+      }
+      throw const ServerException('Lấy danh sách tin tuyển dụng thất bại');
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
   }
 }

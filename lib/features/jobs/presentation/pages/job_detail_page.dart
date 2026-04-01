@@ -141,7 +141,7 @@ class JobDetailPage extends StatelessWidget {
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
-                                      job.address ?? job.cityName,
+                                      job.cityName,
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 13,

@@ -17,7 +17,6 @@ class JobPostEntity extends Equatable {
   final int numberOfPositions;
   final int experienceRequired;
   final String? educationRequired;
-  final String? address;
   final DateTime deadline;
   final String status; // 'pending', 'approved', 'rejected', 'closed', 'expired'
   final bool isPriority;
@@ -36,6 +35,10 @@ class JobPostEntity extends Equatable {
   // Thông tin ngành nghề (từ join với INDUSTRIES)
   final String industryName;
 
+  final int? provinceId;
+  final int? categoryId;
+  final int? jobTypeId;
+
   const JobPostEntity({
     required this.jobPostId,
     required this.employerId,
@@ -51,7 +54,6 @@ class JobPostEntity extends Equatable {
     required this.numberOfPositions,
     required this.experienceRequired,
     this.educationRequired,
-    this.address,
     required this.deadline,
     required this.status,
     required this.isPriority,
@@ -63,6 +65,9 @@ class JobPostEntity extends Equatable {
     this.companyLogo,
     required this.cityName,
     required this.industryName,
+    this.provinceId,
+    this.categoryId,
+    this.jobTypeId,
   });
 
   @override
@@ -81,7 +86,6 @@ class JobPostEntity extends Equatable {
     numberOfPositions,
     experienceRequired,
     educationRequired,
-    address,
     deadline,
     status,
     isPriority,
@@ -93,5 +97,8 @@ class JobPostEntity extends Equatable {
     companyLogo,
     cityName,
     industryName,
+    provinceId,
+    categoryId,
+    jobTypeId,
   ];
 }

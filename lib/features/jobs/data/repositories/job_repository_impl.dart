@@ -183,4 +183,59 @@ class JobRepositoryImpl implements JobRepository {
       );
     }
   }
+
+  // --- Employer - Job Management ---
+
+  @override
+  Future<Either<Failure, JobPostEntity>> createJob(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final job = await remoteDataSource.createJob(data);
+      return Right(job);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Không thể tạo tin tuyển dụng: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, JobPostEntity>> updateJob(
+    int jobId,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final job = await remoteDataSource.updateJob(jobId, data);
+      return Right(job);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(
+        ServerFailure('Không thể cập nhật tin tuyển dụng: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getMyJobsForEmployer({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  }) async {
+    try {
+      final result = await remoteDataSource.getMyJobsForEmployer(
+        page: page,
+        limit: limit,
+        status: status,
+      );
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(
+        ServerFailure('Không thể lấy danh sách tin tuyển dụng: ${e.toString()}'),
+      );
+    }
+  }
 }

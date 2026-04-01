@@ -51,4 +51,19 @@ abstract class JobRepository {
     required int candidateId,
     required int jobPostId,
   });
+
+  // --- Employer - Job Management ---
+
+  /// Tạo mới tin tuyển dụng (Draft)
+  Future<Either<Failure, JobPostEntity>> createJob(Map<String, dynamic> data);
+
+  /// Cập nhật tin tuyển dụng (bao gồm Publish)
+  Future<Either<Failure, JobPostEntity>> updateJob(int jobId, Map<String, dynamic> data);
+
+  /// Lấy danh sách tin tuyển dụng của HR
+  Future<Either<Failure, Map<String, dynamic>>> getMyJobsForEmployer({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  });
 }

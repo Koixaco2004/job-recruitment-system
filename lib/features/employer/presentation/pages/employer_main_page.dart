@@ -7,6 +7,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:test1/features/auth/presentation/pages/login_page.dart';
 import 'package:test1/features/employer/presentation/pages/employer_edit_profile_page.dart';
 import 'package:test1/features/employer/presentation/pages/employer_company_edit_page.dart';
+import 'package:test1/features/jobs/presentation/providers/job_provider.dart';
+import 'package:test1/features/jobs/presentation/pages/my_jobs_page.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -29,6 +31,11 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
   Future<void> _checkStatus() async {
     final employerProvider = context.read<EmployerProvider>();
     await employerProvider.getProfile();
+    
+    // Fetch job stats
+    if (mounted) {
+      context.read<JobProvider>().fetchEmployerJobs(status: 'published');
+    }
     
     if (mounted) {
       if (employerProvider.employer?.companyId == null) {
@@ -61,7 +68,7 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
 
     final List<Widget> pages = [
       _buildDashboardTab(employer),
-      const Center(child: Text('Quản lý tin tuyển dụng (Sắp ra mắt)')),
+      const MyJobsPage(),
       _buildProfileTab(context),
     ];
 
@@ -81,6 +88,7 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
   }
 
   Widget _buildDashboardTab(dynamic employer) {
+    final jobProvider = context.watch<JobProvider>();
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard')),
       body: SingleChildScrollView(
@@ -128,7 +136,13 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
               children: [
-                _buildStatCard('Tin đã đăng', '0', Icons.post_add, Colors.blue),
+                _buildStatCard(
+                    'Tin đã đăng', 
+                    jobProvider.getEmployerJobsByStatus('published').length.toString(), 
+                    Icons.post_add, 
+                    Colors.blue, 
+                    onTap: () => _onItemTapped(1)
+                ),
                 _buildStatCard('Ứng viên mới', '0', Icons.people, Colors.green),
                 _buildStatCard('Phỏng vấn', '0', Icons.event_available, Colors.orange),
                 _buildStatCard('Thông báo', '0', Icons.notifications, Colors.purple),
@@ -140,19 +154,23 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
     );
   }
 
-  Widget _buildStatCard(String title, String count, IconData icon, Color color) {
+  Widget _buildStatCard(String title, String count, IconData icon, Color color, {VoidCallback? onTap}) {
     return Card(
       elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 30),
-            const SizedBox(height: 8),
-            Text(count, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          ],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 30),
+              const SizedBox(height: 8),
+              Text(count, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            ],
+          ),
         ),
       ),
     );

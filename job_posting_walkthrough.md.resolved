@@ -1,0 +1,80 @@
+# Hướng dẫn chi tiết: Luồng Đăng tin Tuyển dụng (Job Posting Flow)
+
+Tài liệu này dành riêng cho đội Front-End để triển khai tính năng quản lý bài đăng của Nhà tuyển dụng.
+
+---
+
+## 1. Chuẩn bị (Lookup Metadata)
+Trước khi hiển thị Form đăng tin, cần gọi các API Metadata để lấy ID cho các trường chọn (Select Box):
+- **Tỉnh thành**: `GET /provinces` -> lấy `provinceId`
+- **Ngành nghề**: `GET /job-categories` -> lấy `categoryId`
+- **Hình thức**: `GET /job-types` -> lấy `jobTypeId`
+- **Kỹ năng**: `GET /skills-metadata` -> lấy `skillId`
+
+---
+
+## 2. Bước 1: Tạo bản nháp (Draft)
+Khi Nhà tuyển dụng nhấn "Lưu nháp" hoặc bắt đầu tạo tin:
+- **Endpoint**: `POST /jobs`
+- **Quyền**: `EMPLOYER` (và phải là HR Admin của công ty).
+- **Body Sample**:
+```json
+{
+  "title": "Senior NestJS Developer",
+  "description": "...",
+  "salaryMin": 1500,
+  "salaryMax": 2500,
+  "currency": "USD",
+  "provinceId": 1,
+  "categoryId": 5,
+  "jobTypeId": 1,
+  "skills": [
+    { "skillId": 10, "tagText": "NodeJS" },
+    { "tagText": "PostgreSQL" }
+  ]
+}
+```
+> [!NOTE]
+> Mọi bản ghi tạo mới qua `POST /jobs` ban đầu luôn ở trạng thái `draft`.
+
+---
+
+## 3. Bước 2: Gửi bài để Đăng (Publish)
+Khi Nhà tuyển dụng nhấn nút "Đăng tin":
+- **Endpoint**: `PUT /jobs/:id` (với `:id` là ID của bản nháp vừa tạo).
+- **Body**:
+```json
+{
+  "status": "published"
+}
+```
+
+### ⚠️ Lưu ý quan trọng về trạng thái:
+Hệ thống sẽ dựa vào trạng thái xác thực của Công ty (`isVerified`) để quyết định:
+1.  **Nếu Công ty ĐÃ ĐƯỢC Admin xác thực**: Tin sẽ chuyển thẳng sang `published` (Công khai ngay).
+2.  **Nếu Công ty CHƯA xác thực**: Tin sẽ tự động chuyển sang `pending` (Chờ Admin duyệt). FE nên hiển thị thông báo: *"Tin đã được gửi duyệt. Vui lòng chờ Admin xác nhận."*
+
+---
+
+## 4. Bước 3: Xem kết quả Duyệt/Từ chối
+Nhà tuyển dụng theo dõi trạng thái tại danh sách tin của mình:
+- **Endpoint**: `GET /jobs`
+- **Các trạng thái bài đăng**:
+    - `draft`: Đang soạn.
+    - `pending`: Đang chờ Admin duyệt.
+    - `published`: Đang hiển thị công khai.
+    - `rejected`: Bị từ chối. (Lúc này FE cần hiển thị nội dung trường `rejectionReason` cho người dùng biết lý do).
+    - `closed`: Tin đã đóng.
+
+---
+
+## 5. Quản lý Kỹ năng (Skills Tags)
+- Mảng `skills` trong request hỗ trợ cả ID có sẵn (`skillId`) và kỹ năng tự nhập (`tagText`).
+- **Lưu ý**: Mỗi khi gọi API `PUT /jobs/:id` với mảng `skills`, Backend sẽ xóa hết tag cũ và ghi đè bằng danh sách mới.
+
+---
+
+## 6. API Admin (Dành cho trang Quản trị)
+Nếu bạn đang làm trang Admin Dashboard để duyệt tin:
+- **Duyệt tin**: `PATCH /jobs/admin/:id/approve`
+- **Từ chối tin**: `PATCH /jobs/admin/:id/reject` (Body: `{ "reason": "..." }`)
