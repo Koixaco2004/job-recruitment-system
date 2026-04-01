@@ -192,47 +192,6 @@ class _LoginPageState extends State<LoginPage> {
                   },
                 ),
                 const SizedBox(height: 24),
-                // Mock credentials info
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue[200]!),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.info_outline, color: Colors.blue[700]),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Tài khoản demo',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '• Ứng viên: candidate@test.com',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                      const Text(
-                        '• Nhà tuyển dụng: employer@test.com',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                      const Text(
-                        '• Mật khẩu: bất kỳ',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
                 // Register link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
