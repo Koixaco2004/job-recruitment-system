@@ -665,19 +665,78 @@ class _EditProfilePageState extends State<EditProfilePage> {
             if (provider.allJobCategories.isEmpty) {
               return const Text('Không có dữ liệu ngành nghề');
             }
-            return Wrap(
-              spacing: 8,
-              runSpacing: 0,
-              children: provider.allJobCategories.map((cat) {
-                final isSelected = provider.selectedJobCategoryIds.contains(cat.id);
-                return FilterChip(
-                  label: Text(cat.name),
-                  selected: isSelected,
-                  onSelected: (_) => provider.toggleJobCategory(cat.id),
-                  selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
-                  checkmarkColor: Theme.of(context).primaryColor,
-                );
-              }).toList(),
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dropdown to pick/add a category
+                DropdownButtonFormField<int>(
+                  key: ValueKey('category_dropdown_${provider.selectedJobCategoryIds.length}'),
+                  value: null,
+                  hint: const Text('Thêm ngành nghề quan tâm...'),
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                  items: provider.allJobCategories
+                      .where((cat) => !provider.selectedJobCategoryIds.contains(cat.id))
+                      .map((cat) {
+                    return DropdownMenuItem<int>(
+                      value: cat.id,
+                      child: Text(cat.name),
+                    );
+                  }).toList(),
+                  onChanged: (id) {
+                    if (id != null) {
+                      provider.toggleJobCategory(id);
+                      // UI will refresh via Consumer/notifyListeners
+                    }
+                  },
+                ),
+                
+                if (provider.selectedJobCategoryIds.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Ngành nghề đã chọn:',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 0,
+                    children: provider.allJobCategories
+                        .where((cat) => provider.selectedJobCategoryIds.contains(cat.id))
+                        .map((cat) {
+                      return Chip(
+                        label: Text(cat.name),
+                        onDeleted: () => provider.toggleJobCategory(cat.id),
+                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.08),
+                        deleteIconColor: Colors.red[400],
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      );
+                    }).toList(),
+                  ),
+                ],
+                
+                if (provider.jobCategoryError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      provider.jobCategoryError!,
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
+              ],
             );
           },
         ),

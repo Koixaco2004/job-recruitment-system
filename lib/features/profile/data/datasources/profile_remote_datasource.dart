@@ -58,6 +58,7 @@ abstract class ProfileRemoteDataSource {
   Future<List<CandidateSkillModel>> getCandidateSkills();
   Future<void> addCandidateSkills(List<dynamic> skills);
   Future<void> deleteCandidateSkill(int mappingId);
+  Future<String?> uploadAvatar(Uint8List bytes, String fileName);
 }
 
 /// Implementation gọi API thật
@@ -683,6 +684,36 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException('Xóa kỹ năng thất bại');
       }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<String?> uploadAvatar(Uint8List bytes, String fileName) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: fileName),
+      });
+
+      final response = await apiClient.dio.post(
+        '/api/candidates/avatar',
+        data: formData,
+      );
+
+      print('Avatar Upload Response: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        // Trả về url để cập nhật local state, ưu tiên các trường common
+        final String? url = data['url'] ?? data['data']?['url'] ?? data['avatarUrl'] ?? data['data']?['avatarUrl'];
+        return url;
+      }
+      throw ServerException('Upload avatar thất bại');
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');

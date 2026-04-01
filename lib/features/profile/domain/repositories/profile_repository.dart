@@ -14,6 +14,7 @@ abstract class ProfileRepository {
   Future<Either<Failure, CandidateProfileEntity>> getProfile();
   Future<Either<Failure, CandidateProfileEntity>> updateProfile(CandidateProfileEntity profile);
   Future<Either<Failure, String>> uploadCV(Uint8List bytes, String fileName);
+  Future<Either<Failure, String?>> uploadAvatar(Uint8List bytes, String fileName);
 
   // Work Experiences
   Future<Either<Failure, List<WorkExperienceEntity>>> getWorkExperiences();

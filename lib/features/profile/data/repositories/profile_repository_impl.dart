@@ -71,6 +71,22 @@ class ProfileRepositoryImpl implements ProfileRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, String?>> uploadAvatar(
+    Uint8List bytes,
+    String fileName,
+  ) async {
+    try {
+      final url = await remoteDataSource.uploadAvatar(bytes, fileName);
+      return Right(url);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Không thể upload avatar: $e'));
+    }
+  }
+
+
   // ─── Work Experiences ──────────────────────────────────────────
 
   @override

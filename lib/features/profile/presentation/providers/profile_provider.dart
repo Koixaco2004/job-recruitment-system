@@ -542,7 +542,7 @@ class ProfileProvider extends ChangeNotifier {
       _uploadError = null;
       notifyListeners();
 
-      final uploadResult = await profileRepository.uploadCV(bytes, fileName);
+      final uploadResult = await profileRepository.uploadAvatar(bytes, fileName);
       String? uploadedUrl;
 
       uploadResult.fold(

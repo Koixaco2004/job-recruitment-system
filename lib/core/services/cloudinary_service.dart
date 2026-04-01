@@ -18,7 +18,7 @@ class CloudinaryService {
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(bytes, filename: fileName),
       'upload_preset': _uploadPreset,
-      'resource_type': 'image',
+      'resource_type': 'auto',
     });
 
     try {

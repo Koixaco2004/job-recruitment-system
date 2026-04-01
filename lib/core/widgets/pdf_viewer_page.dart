@@ -49,22 +49,24 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
   void initState() {
     super.initState();
 
-    // URL dùng Google Docs Viewer để render PDF
-    final viewerUrl =
-        'https://docs.google.com/gview?embedded=true&url=${Uri.encodeComponent(widget.pdfUrl)}';
+    final pdfUrl = widget.pdfUrl.trim();
+    print('DEBUG: Loading PDF URL: "$pdfUrl"');
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (_) {
+          onPageStarted: (url) {
+            print('DEBUG: WebPage started loading: $url');
             if (mounted) setState(() => _isLoading = true);
           },
-          onPageFinished: (_) {
+          onPageFinished: (url) {
+            print('DEBUG: WebPage finished loading: $url');
             if (mounted) setState(() => _isLoading = false);
           },
           onWebResourceError: (error) {
             debugPrint('WebView error: ${error.description}');
+            print('DEBUG: WebResource error: ${error.errorCode} - ${error.description}');
             if (mounted) {
               setState(() {
                 _isLoading = false;
@@ -73,8 +75,22 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
             }
           },
         ),
-      )
-      ..loadRequest(Uri.parse(viewerUrl));
+      );
+
+    if (pdfUrl.isEmpty) {
+      print('ERROR: PDF URL is empty!');
+      _isLoading = false;
+      _hasError = true;
+      _controller.loadRequest(Uri.parse('about:blank'));
+      return;
+    }
+
+    // URL dùng Google Docs Viewer để render PDF
+    final viewerUrl =
+        'https://docs.google.com/gview?embedded=true&url=${Uri.encodeComponent(pdfUrl)}';
+    
+    print('DEBUG: Viewer URL: $viewerUrl');
+    _controller.loadRequest(Uri.parse(viewerUrl));
   }
 
   @override

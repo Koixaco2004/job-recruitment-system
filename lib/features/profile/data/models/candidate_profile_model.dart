@@ -69,11 +69,16 @@ class CandidateProfileModel extends CandidateProfileEntity {
 
   static String? _parseStringNullable(dynamic value) {
     if (value == null) return null;
-    if (value is String) return value;
-    if (value is Map && value.containsKey('name')) {
-      return value['name']?.toString();
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
     }
-    return value.toString();
+    if (value is Map && value.containsKey('name')) {
+      final name = value['name']?.toString().trim();
+      return (name == null || name.isEmpty) ? null : name;
+    }
+    final str = value.toString().trim();
+    return str.isEmpty ? null : str;
   }
 
   factory CandidateProfileModel.fromJson(Map<String, dynamic> json) {
