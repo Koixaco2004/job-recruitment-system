@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
+import '../../../profile/domain/entities/skill_entity.dart';
 import '../../domain/entities/job_post_entity.dart';
 import '../providers/job_provider.dart';
 
@@ -27,6 +28,9 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   final _salaryMaxController = TextEditingController();
   final _slotsController = TextEditingController();
   final _expController = TextEditingController();
+  final _skillSearchController = TextEditingController();
+  
+  final List<dynamic> _selectedJobSkills = [];
 
   int? _selectedProvinceId;
   int? _selectedCategoryId;
@@ -77,6 +81,11 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       _selectedProvinceId = job.provinceId;
       _selectedCategoryId = job.categoryId;
       _selectedJobTypeId = job.jobTypeId;
+      
+      if (job.skills != null) {
+        _selectedJobSkills.clear();
+        _selectedJobSkills.addAll(job.skills!);
+      }
     } catch (_) {}
   }
 
@@ -88,8 +97,8 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     _benefitsController.dispose();
     _salaryMinController.dispose();
     _salaryMaxController.dispose();
-    _slotsController.dispose();
     _expController.dispose();
+    _skillSearchController.dispose();
     super.dispose();
   }
 
@@ -122,7 +131,16 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       'jobTypeId': _selectedJobTypeId,
       'slots': int.tryParse(_slotsController.text) ?? 1,
       'deadline': _selectedDeadline?.toUtc().toIso8601String(),
-      'skills': [],
+      'skills': _selectedJobSkills.map((s) {
+        if (s is SkillEntity) return {'skillId': s.id};
+        if (s is String) return {'tagText': s};
+        if (s is Map<String, dynamic>) {
+          if (s.containsKey('skill_metadata_id')) return {'skillId': s['skill_metadata_id']};
+          if (s.containsKey('skillId')) return {'skillId': s['skillId']};
+          if (s.containsKey('tagText')) return {'tagText': s['tagText']};
+        }
+        return null;
+      }).where((s) => s != null).toList(),
     };
   }
 
@@ -246,6 +264,9 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                     icon: Icons.location_city,
                   ),
                   const SizedBox(height: 16),
+                  
+                  _buildSkillSelector(profileProvider),
+                  const SizedBox(height: 16),
 
                   _buildTextField(_slotsController, 'Số lượng tuyển', Icons.people, isNumber: true),
 
@@ -303,31 +324,147 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Text(
-        title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          color: Colors.blue[900],
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }
 
-  Widget _buildTextField(
-    TextEditingController controller, 
-    String label, 
-    IconData icon, 
-    {bool isNumber = false, int maxLines = 1, bool required = false}
-  ) {
+  Widget _buildSkillSelector(ProfileProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Kỹ năng yêu cầu', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+        const SizedBox(height: 8),
+        _buildSkillChips(),
+        TextField(
+          controller: _skillSearchController,
+          decoration: InputDecoration(
+            hintText: 'Tìm kỹ năng hoặc nhập tag mới...',
+            prefixIcon: const Icon(Icons.search, size: 20),
+            hintStyle: const TextStyle(fontSize: 13),
+            suffixIcon: _skillSearchController.text.isNotEmpty 
+              ? IconButton(
+                  icon: const Icon(Icons.check, color: Colors.green),
+                  onPressed: () {
+                    final text = _skillSearchController.text.trim();
+                    if (text.isNotEmpty) {
+                      setState(() {
+                        if (!_selectedJobSkills.any((s) => s.toString().toLowerCase() == text.toLowerCase())) {
+                          _selectedJobSkills.add(text);
+                        }
+                        _skillSearchController.clear();
+                      });
+                    }
+                  },
+                )
+              : null,
+            filled: true,
+            fillColor: Colors.grey[100],
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          ),
+          style: const TextStyle(fontSize: 13),
+          onChanged: (val) => provider.searchSkills(val),
+          onSubmitted: (val) {
+            if (val.trim().isNotEmpty) {
+              setState(() {
+                if (!_selectedJobSkills.any((s) => s.toString().toLowerCase() == val.trim().toLowerCase())) {
+                  _selectedJobSkills.add(val.trim());
+                }
+                _skillSearchController.clear();
+              });
+            }
+          },
+        ),
+        if (provider.isLoadingSkills)
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
+        if (provider.skillSearchResults.isNotEmpty && _skillSearchController.text.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))],
+            ),
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: provider.skillSearchResults.length,
+              itemBuilder: (context, index) {
+                final skill = provider.skillSearchResults[index];
+                return ListTile(
+                  title: Text(skill.canonicalName, style: const TextStyle(fontSize: 13)),
+                  dense: true,
+                  onTap: () {
+                    setState(() {
+                      if (!_selectedJobSkills.any((s) => s is SkillEntity && s.id == skill.id)) {
+                        _selectedJobSkills.add(skill);
+                      }
+                      _skillSearchController.clear();
+                      provider.searchSkills('');
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSkillChips() {
+    if (_selectedJobSkills.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: _selectedJobSkills.map((skill) {
+          String name = '';
+          if (skill is SkillEntity) name = skill.canonicalName;
+          else if (skill is String) name = skill;
+          else if (skill is Map<String, dynamic>) {
+            name = skill['tagText'] ?? (skill['skillMetadata']?['canonicalName'] ?? 'Skill');
+          }
+          
+          return Chip(
+            label: Text(name, style: const TextStyle(fontSize: 12)),
+            deleteIcon: const Icon(Icons.close, size: 14),
+            onDeleted: () => setState(() => _selectedJobSkills.remove(skill)),
+            backgroundColor: Colors.blue[50],
+            side: BorderSide(color: Colors.blue[100]!),
+            padding: EdgeInsets.zero,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon,
+      {bool isNumber = false, int maxLines = 1, bool required = false}) {
     return TextFormField(
       controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.multiline,
-      maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(icon, color: Colors.blue),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.grey[50],
       ),
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      maxLines: maxLines,
       validator: (value) {
         if (required && (value == null || value.isEmpty)) {
           return 'Vui lòng nhập $label';
@@ -350,12 +487,12 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(icon, color: Colors.blue),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.grey[50],
       ),
-      validator: (val) => val == null ? 'Bắt buộc' : null,
+      validator: (val) => val == null ? 'Vui lòng chọn $label' : null,
     );
   }
 }
