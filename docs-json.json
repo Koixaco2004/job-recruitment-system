@@ -1812,6 +1812,51 @@
                 ]
             }
         },
+        "/api/admin/companies/{id}/history": {
+            "get": {
+                "operationId": "AdminCompaniesController_getCompanyHistory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CompanyStatusHistoryEntity"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem lịch sử duyệt doanh nghiệp (Admin)",
+                "tags": [
+                    "Admin - Quản lý Doanh nghiệp"
+                ]
+            }
+        },
         "/api/jobs/public": {
             "get": {
                 "operationId": "JobsController_getPublicJobs",
@@ -2101,6 +2146,52 @@
                 ]
             }
         },
+        "/api/jobs/{id}/history": {
+            "get": {
+                "operationId": "JobsController_getEmployerJobHistory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/JobStatusHistoryEntity"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem lịch sử thay đổi trạng thái của tin (Nhà tuyển dụng)",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Quản lý Nhàn Tuyển Dụng"
+                ]
+            }
+        },
         "/api/jobs/admin/{id}/approve": {
             "patch": {
                 "operationId": "JobsController_approveJob",
@@ -2270,6 +2361,52 @@
                     }
                 ],
                 "summary": "Lấy tất cả tin tuyển dụng trong hệ thống (Admin)",
+                "tags": [
+                    "Jobs",
+                    "Jobs - Quản trị Hệ thống"
+                ]
+            }
+        },
+        "/api/jobs/admin/{id}/history": {
+            "get": {
+                "operationId": "JobsController_getAdminJobHistory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/JobStatusHistoryEntity"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem lịch sử thay đổi trạng thái của tin (Admin)",
                 "tags": [
                     "Jobs",
                     "Jobs - Quản trị Hệ thống"
@@ -3381,8 +3518,18 @@
                     "businessLicenseUrl": {
                         "type": "string"
                     },
-                    "isVerified": {
-                        "type": "boolean"
+                    "status": {
+                        "enum": [
+                            "idle",
+                            "pending",
+                            "approved",
+                            "rejected"
+                        ],
+                        "type": "string"
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true
                     },
                     "verifiedAt": {
                         "format": "date-time",
@@ -3427,7 +3574,8 @@
                     "facebookUrl",
                     "linkedinUrl",
                     "businessLicenseUrl",
-                    "isVerified",
+                    "status",
+                    "rejectionReason",
                     "verifiedAt",
                     "createdAt",
                     "updatedAt",
@@ -3546,6 +3694,46 @@
                 },
                 "required": [
                     "reason"
+                ]
+            },
+            "CompanyStatusHistoryEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "companyId": {
+                        "type": "number"
+                    },
+                    "oldStatus": {
+                        "type": "string"
+                    },
+                    "newStatus": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "changedById": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/CompanyEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "companyId",
+                    "oldStatus",
+                    "newStatus",
+                    "reason",
+                    "changedById",
+                    "createdAt",
+                    "company"
                 ]
             },
             "CreateJobDto": {
@@ -3747,6 +3935,219 @@
                         }
                     }
                 }
+            },
+            "ProvinceMetadataEntity": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code",
+                    "name",
+                    "slug",
+                    "createdAt"
+                ]
+            },
+            "JobSkillTagEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "jobId": {
+                        "type": "number"
+                    },
+                    "skillId": {
+                        "type": "number"
+                    },
+                    "tagText": {
+                        "type": "string"
+                    },
+                    "job": {
+                        "$ref": "#/components/schemas/JobEntity"
+                    },
+                    "skillMetadata": {
+                        "$ref": "#/components/schemas/SkillMetadataEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "jobId",
+                    "skillId",
+                    "tagText",
+                    "job",
+                    "skillMetadata"
+                ]
+            },
+            "JobEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "companyId": {
+                        "type": "number"
+                    },
+                    "employerId": {
+                        "type": "number"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "requirements": {
+                        "type": "string"
+                    },
+                    "benefits": {
+                        "type": "string"
+                    },
+                    "salaryMin": {
+                        "type": "number"
+                    },
+                    "salaryMax": {
+                        "type": "number"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "yearsOfExperience": {
+                        "type": "number"
+                    },
+                    "provinceId": {
+                        "type": "number"
+                    },
+                    "categoryId": {
+                        "type": "number"
+                    },
+                    "jobTypeId": {
+                        "type": "number"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "slots": {
+                        "type": "number"
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "deadline": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/CompanyEntity"
+                    },
+                    "employer": {
+                        "$ref": "#/components/schemas/EmployerEntity"
+                    },
+                    "province": {
+                        "$ref": "#/components/schemas/ProvinceMetadataEntity"
+                    },
+                    "category": {
+                        "$ref": "#/components/schemas/JobCategoryMetadataEntity"
+                    },
+                    "jobType": {
+                        "$ref": "#/components/schemas/JobTypeMetadataEntity"
+                    },
+                    "skills": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/JobSkillTagEntity"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "companyId",
+                    "employerId",
+                    "title",
+                    "description",
+                    "requirements",
+                    "benefits",
+                    "salaryMin",
+                    "salaryMax",
+                    "currency",
+                    "yearsOfExperience",
+                    "provinceId",
+                    "categoryId",
+                    "jobTypeId",
+                    "status",
+                    "slots",
+                    "rejectionReason",
+                    "deadline",
+                    "createdAt",
+                    "updatedAt",
+                    "company",
+                    "employer",
+                    "province",
+                    "category",
+                    "jobType",
+                    "skills"
+                ]
+            },
+            "JobStatusHistoryEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "jobId": {
+                        "type": "number"
+                    },
+                    "oldStatus": {
+                        "type": "string"
+                    },
+                    "newStatus": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "changedById": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "job": {
+                        "$ref": "#/components/schemas/JobEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "jobId",
+                    "oldStatus",
+                    "newStatus",
+                    "reason",
+                    "changedById",
+                    "createdAt",
+                    "job"
+                ]
             }
         }
     }

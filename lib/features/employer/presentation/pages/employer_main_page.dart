@@ -54,6 +54,10 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
     setState(() {
       _selectedIndex = index;
     });
+    // Reload dashboard status when switching to the first tab
+    if (index == 0) {
+      _checkStatus();
+    }
   }
 
   @override
@@ -91,67 +95,269 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
     final jobProvider = context.watch<JobProvider>();
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+      body: RefreshIndicator(
+        onRefresh: _checkStatus,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+               Card(
+                color: Colors.blue[50],
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.blue[100],
+                        child: const Icon(Icons.business, size: 30, color: Colors.blue),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              employer?.company?.name ?? 'Chưa thiết lập công ty',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            Text(employer?.fullName ?? 'HR'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildVerificationStatusCard(employer),
+              const SizedBox(height: 24),
+              const Text('Chào mừng bạn quay lại!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              const Text('Quản lý các hoạt động tuyển dụng của bạn ngay tại đây.'),
+              const SizedBox(height: 32),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: [
+                  _buildStatCard(
+                      'Tin đã đăng', 
+                      jobProvider.getEmployerJobsByStatus('published').length.toString(), 
+                      Icons.post_add, 
+                      Colors.blue, 
+                      onTap: () => _onItemTapped(1)
+                  ),
+                  _buildStatCard('Ứng viên mới', '0', Icons.people, Colors.green),
+                  _buildStatCard('Phỏng vấn', '0', Icons.event_available, Colors.orange),
+                  _buildStatCard('Thông báo', '0', Icons.notifications, Colors.purple),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerificationStatusCard(dynamic employer) {
+    if (employer?.company == null) return const SizedBox.shrink();
+
+    final status = employer.company!.status;
+    final reason = employer.company!.rejectionReason;
+
+    if (status == 'approved') {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.green[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green[100]!),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.verified, color: Colors.green, size: 40),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Công ty đã xác thực thành công!',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const Text(
+                    'Tài khoản của bạn đã có đầy đủ quyền hạn đăng tin.',
+                    style: TextStyle(color: Colors.black54, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (status == 'rejected') {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.red[100]!),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             Card(
-              color: Colors.blue[50],
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.blue[100],
-                      child: const Icon(Icons.business, size: 30, color: Colors.blue),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            employer?.company?.name ?? 'Chưa thiết lập công ty',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Text(employer?.fullName ?? 'HR'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text('Chào mừng bạn quay lại!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            const Text('Quản lý các hoạt động tuyển dụng của bạn ngay tại đây.'),
-            const SizedBox(height: 32),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+            Row(
               children: [
-                _buildStatCard(
-                    'Tin đã đăng', 
-                    jobProvider.getEmployerJobsByStatus('published').length.toString(), 
-                    Icons.post_add, 
-                    Colors.blue, 
-                    onTap: () => _onItemTapped(1)
+                const Icon(Icons.error_outline, color: Colors.red, size: 40),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Hồ sơ công ty bị từ chối',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        reason ?? 'Thông tin cung cấp chưa đạt yêu cầu.',
+                        style: const TextStyle(color: Colors.black87, fontSize: 14),
+                      ),
+                    ],
+                  ),
                 ),
-                _buildStatCard('Ứng viên mới', '0', Icons.people, Colors.green),
-                _buildStatCard('Phỏng vấn', '0', Icons.event_available, Colors.orange),
-                _buildStatCard('Thông báo', '0', Icons.notifications, Colors.purple),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const EmployerCompanyEditPage()),
+                      );
+                    },
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('Cập nhật hồ sơ'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
               ],
             ),
           ],
         ),
-      ),
-    );
+      );
+    }
+
+    if (status == 'pending') {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.blue[100]!),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Đang chờ xác duyệt hồ sơ...',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Admin sẽ phản hồi yêu cầu của bạn trong vòng 24h.',
+                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (status == 'idle' || status == '') {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.orange[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange[100]!),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline, color: Colors.orange, size: 40),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Công ty chưa được xác thực',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const Text(
+                    'Bạn cần tải lên giấy phép kinh doanh để được duyệt đăng tin.',
+                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const EmployerCompanyEditPage()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: const Text('Bắt đầu xác thực ngay'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
   Widget _buildStatCard(String title, String count, IconData icon, Color color, {VoidCallback? onTap}) {

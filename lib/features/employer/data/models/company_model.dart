@@ -19,7 +19,8 @@ class CompanyModel extends CompanyEntity {
     super.facebookUrl,
     super.linkedinUrl,
     super.businessLicenseUrl,
-    required super.isVerified,
+    required super.status,
+    super.rejectionReason,
     super.verifiedAt,
     required super.createdAt,
     required super.updatedAt,
@@ -55,7 +56,9 @@ class CompanyModel extends CompanyEntity {
       facebookUrl: json['facebookUrl'] as String?,
       linkedinUrl: json['linkedinUrl'] as String?,
       businessLicenseUrl: json['businessLicenseUrl'] as String?,
-      isVerified: json['isVerified'] as bool? ?? false,
+      status: json['status'] as String? ?? 
+          (json['isVerified'] == true ? 'approved' : 'idle'),
+      rejectionReason: json['rejectionReason'] as String?,
       verifiedAt: json['verifiedAt'] != null
           ? DateTime.parse(json['verifiedAt'] as String)
           : null,
@@ -93,7 +96,8 @@ class CompanyModel extends CompanyEntity {
       'facebookUrl': facebookUrl,
       'linkedinUrl': linkedinUrl,
       'businessLicenseUrl': businessLicenseUrl,
-      'isVerified': isVerified,
+      'status': status,
+      'rejectionReason': rejectionReason,
       'verifiedAt': verifiedAt?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),

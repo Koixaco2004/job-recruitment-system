@@ -4,7 +4,9 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/application_entity.dart';
 import '../../domain/entities/job_post_entity.dart';
 import '../../domain/entities/saved_job_entity.dart';
+import '../../domain/entities/job_status_history_entity.dart';
 import '../../domain/repositories/job_repository.dart';
+import '../../../../core/models/paginated_response.dart';
 import '../datasources/job_remote_datasource.dart';
 
 /// Concrete implementation của JobRepository
@@ -14,7 +16,7 @@ class JobRepositoryImpl implements JobRepository {
   JobRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getJobs({
+  Future<Either<Failure, PaginatedResponse<JobPostEntity>>> getJobs({
     int page = 1,
     int limit = 10,
     String? keyword,
@@ -31,7 +33,13 @@ class JobRepositoryImpl implements JobRepository {
         categoryId: categoryId,
         jobTypeId: jobTypeId,
       );
-      return Right(result);
+      // Map model to entity (PaginatedResponse is covariant on data)
+      return Right(PaginatedResponse<JobPostEntity>(
+        data: result.data,
+        total: result.total,
+        page: result.page,
+        lastPage: result.lastPage,
+      ));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -53,7 +61,7 @@ class JobRepositoryImpl implements JobRepository {
   ) async {
     try {
       final result = await remoteDataSource.getJobs(keyword: keyword, limit: 50);
-      return Right(result['jobs'] as List<JobPostEntity>);
+      return Right(result.data);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -219,7 +227,7 @@ class JobRepositoryImpl implements JobRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getMyJobsForEmployer({
+  Future<Either<Failure, PaginatedResponse<JobPostEntity>>> getMyJobsForEmployer({
     int page = 1,
     int limit = 10,
     String? status,
@@ -230,12 +238,31 @@ class JobRepositoryImpl implements JobRepository {
         limit: limit,
         status: status,
       );
-      return Right(result);
+      return Right(PaginatedResponse<JobPostEntity>(
+        data: result.data,
+        total: result.total,
+        page: result.page,
+        lastPage: result.lastPage,
+      ));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(
         ServerFailure('Không thể lấy danh sách tin tuyển dụng: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<JobStatusHistoryEntity>>> getJobHistory(int jobId) async {
+    try {
+      final history = await remoteDataSource.getJobHistory(jobId);
+      return Right(history);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(
+        ServerFailure('Không thể lấy lịch sử tin tuyển dụng: ${e.toString()}'),
       );
     }
   }

@@ -163,6 +163,8 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _buildVerificationStatusAlert(company),
+                        const SizedBox(height: 24),
                         const Text(
                           'Thông tin cơ bản',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -417,6 +419,73 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
                     ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerificationStatusAlert(dynamic company) {
+    final status = company.status;
+    final reason = company.rejectionReason;
+
+    Color bgColor;
+    Color textColor;
+    IconData icon;
+    String title;
+    String description;
+
+    if (status == 'approved') {
+      bgColor = Colors.green[50]!;
+      textColor = Colors.green[700]!;
+      icon = Icons.verified;
+      title = 'Công ty đã được xác thực';
+      description = 'Hồ sơ của bạn đã được phê duyệt bởi hệ thống.';
+    } else if (status == 'rejected') {
+      bgColor = Colors.red[50]!;
+      textColor = Colors.red[700]!;
+      icon = Icons.error_outline;
+      title = 'Hồ sơ bị từ chối';
+      description = reason ?? 'Vui lòng cập nhật lại thông tin để được duyệt.';
+    } else if (status == 'pending') {
+      bgColor = Colors.blue[50]!;
+      textColor = Colors.blue[700]!;
+      icon = Icons.hourglass_empty;
+      title = 'Đang chờ phê duyệt';
+      description = 'Admin đang xem xét hồ sơ của bạn.';
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: textColor.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: textColor, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: TextStyle(color: textColor.withValues(alpha: 0.8), fontSize: 12),
+                ),
+              ],
             ),
           ),
         ],

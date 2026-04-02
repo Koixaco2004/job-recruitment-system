@@ -18,7 +18,8 @@ class CompanyEntity extends Equatable {
   final String? facebookUrl;
   final String? linkedinUrl;
   final String? businessLicenseUrl;
-  final bool isVerified;
+  final String status;
+  final String? rejectionReason;
   final DateTime? verifiedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -43,7 +44,8 @@ class CompanyEntity extends Equatable {
     this.facebookUrl,
     this.linkedinUrl,
     this.businessLicenseUrl,
-    required this.isVerified,
+    required this.status,
+    this.rejectionReason,
     this.verifiedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -70,7 +72,8 @@ class CompanyEntity extends Equatable {
         facebookUrl,
         linkedinUrl,
         businessLicenseUrl,
-        isVerified,
+        status,
+        rejectionReason,
         verifiedAt,
         createdAt,
         updatedAt,

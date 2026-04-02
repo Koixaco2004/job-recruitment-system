@@ -3,11 +3,13 @@ import '../../../../core/error/failures.dart';
 import '../entities/application_entity.dart';
 import '../entities/job_post_entity.dart';
 import '../entities/saved_job_entity.dart';
+import '../entities/job_status_history_entity.dart';
+import '../../../../core/models/paginated_response.dart';
 
 /// Abstract repository cho Jobs
 abstract class JobRepository {
   /// Lấy danh sách jobs (Công khai cho ứng viên)
-  Future<Either<Failure, Map<String, dynamic>>> getJobs({
+  Future<Either<Failure, PaginatedResponse<JobPostEntity>>> getJobs({
     int page = 1,
     int limit = 10,
     String? keyword,
@@ -68,9 +70,12 @@ abstract class JobRepository {
   Future<Either<Failure, JobPostEntity>> updateJob(int jobId, Map<String, dynamic> data);
 
   /// Lấy danh sách tin tuyển dụng của HR
-  Future<Either<Failure, Map<String, dynamic>>> getMyJobsForEmployer({
+  Future<Either<Failure, PaginatedResponse<JobPostEntity>>> getMyJobsForEmployer({
     int page = 1,
     int limit = 10,
     String? status,
   });
+
+  /// Lấy lịch sử thay đổi trạng thái của tin tuyển dụng
+  Future<Either<Failure, List<JobStatusHistoryEntity>>> getJobHistory(int jobId);
 }

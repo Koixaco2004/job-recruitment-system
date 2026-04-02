@@ -16,18 +16,31 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     // Initialize with current keyword
     _searchController.text = context.read<JobProvider>().filter.keyword;
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      final provider = context.read<JobProvider>();
+      if (!provider.isLoading && provider.hasMoreJobs) {
+        provider.fetchJobs(refresh: false);
+      }
+    }
   }
 
   void _onSearchChanged(String keyword) {
@@ -231,9 +244,19 @@ class _SearchPageState extends State<SearchPage> {
                 }
 
                 return ListView.builder(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.only(top: 8, bottom: 16),
-                  itemCount: provider.jobs.length,
+                  itemCount: provider.jobs.length + (provider.hasMoreJobs ? 1 : 0),
                   itemBuilder: (context, index) {
+                    if (index == provider.jobs.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
                     final job = provider.jobs[index];
                     return JobCard(
                       job: job,

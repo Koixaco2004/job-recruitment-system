@@ -4,11 +4,13 @@ import '../../../../core/error/exceptions.dart';
 import '../models/application_model.dart';
 import '../models/job_post_model.dart';
 import '../models/saved_job_model.dart';
+import '../models/job_status_history_model.dart';
+import '../../../../core/models/paginated_response.dart';
 
 /// Abstract interface cho Remote Data Source
 abstract class JobRemoteDataSource {
   /// Lấy danh sách jobs từ API (Công khai cho ứng viên)
-  Future<Map<String, dynamic>> getJobs({
+  Future<PaginatedResponse<JobPostModel>> getJobs({
     int page = 1,
     int limit = 10,
     String? keyword,
@@ -61,11 +63,14 @@ abstract class JobRemoteDataSource {
   Future<JobPostModel> updateJob(int jobId, Map<String, dynamic> data);
 
   /// Lấy danh sách tin tuyển dụng của trang chủ HR
-  Future<Map<String, dynamic>> getMyJobsForEmployer({
+  Future<PaginatedResponse<JobPostModel>> getMyJobsForEmployer({
     int page = 1,
     int limit = 10,
     String? status,
   });
+
+  /// Lấy lịch sử thay đổi trạng thái của tin tuyển dụng
+  Future<List<JobStatusHistoryModel>> getJobHistory(int jobId);
 }
 
 /// Implementation với API thật (và một số mock cho candidate)
@@ -75,7 +80,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
   JobRemoteDataSourceImpl({required this.apiClient});
 
   @override
-  Future<Map<String, dynamic>> getJobs({
+  Future<PaginatedResponse<JobPostModel>> getJobs({
     int page = 1,
     int limit = 10,
     String? keyword,
@@ -96,14 +101,10 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       final response = await apiClient.dio.get('/api/jobs/public', queryParameters: queryParams);
       
       if (response.statusCode == 200) {
-        final data = response.data;
-        final List jobsList = (data is List) ? data : (data['data'] ?? []);
-        
-        return {
-          'jobs': jobsList.map((e) => JobPostModel.fromJson(e)).toList(),
-          'total': (data is Map) ? (data['total'] ?? jobsList.length) : jobsList.length,
-          'currentPage': (data is Map) ? (data['page'] ?? page) : page,
-        };
+        return PaginatedResponse.fromJson(
+          response.data,
+          (json) => JobPostModel.fromJson(json as Map<String, dynamic>),
+        );
       }
       throw const ServerException('Lấy danh sách công việc thất bại');
     } on DioException catch (e) {
@@ -241,7 +242,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> getMyJobsForEmployer({
+  Future<PaginatedResponse<JobPostModel>> getMyJobsForEmployer({
     int page = 1,
     int limit = 10,
     String? status,
@@ -256,16 +257,38 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       final response = await apiClient.dio.get('/api/jobs', queryParameters: queryParams);
       
       if (response.statusCode == 200) {
-        final data = response.data;
-        final List jobsList = (data is List) ? data : (data['data'] ?? []);
-        
-        return {
-          'jobs': jobsList.map((e) => JobPostModel.fromJson(e)).toList(),
-          'total': (data is Map) ? (data['total'] ?? jobsList.length) : jobsList.length,
-          'currentPage': (data is Map) ? (data['page'] ?? page) : page,
-        };
+        return PaginatedResponse.fromJson(
+          response.data,
+          (json) => JobPostModel.fromJson(json as Map<String, dynamic>),
+        );
       }
       throw const ServerException('Lấy danh sách tin tuyển dụng thất bại');
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<JobStatusHistoryModel>> getJobHistory(int jobId) async {
+    try {
+      final response = await apiClient.dio.get('/api/jobs/$jobId/history');
+      if (response.statusCode == 200) {
+        final dynamic rawData = response.data;
+        List data;
+        
+        if (rawData is Map && rawData.containsKey('data')) {
+          data = rawData['data'];
+        } else if (rawData is List) {
+          data = rawData;
+        } else {
+          data = [];
+        }
+        
+        return data.map((e) => JobStatusHistoryModel.fromJson(e)).toList();
+      }
+      throw const ServerException('Lấy lịch sử tin tuyển dụng thất bại');
     } on DioException catch (e) {
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {

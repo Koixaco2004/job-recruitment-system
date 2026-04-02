@@ -8,6 +8,7 @@ import '../providers/my_jobs_provider.dart';
 import '../pages/employer_job_edit_page.dart';
 import '../widgets/saved_job_card.dart';
 import '../widgets/applied_job_card.dart';
+import '../widgets/audit_log_modal.dart';
 import '../pages/job_detail_page.dart';
 
 /// Màn hình "Việc của tôi" với 2 tabs: Đã lưu & Đã ứng tuyển
@@ -21,6 +22,7 @@ class MyJobsPage extends StatefulWidget {
 class _MyJobsPageState extends State<MyJobsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -32,6 +34,7 @@ class _MyJobsPageState extends State<MyJobsPage>
     
     if (user?.userType == 'employer') {
       _tabController.addListener(_handleTabSelection);
+      _scrollController.addListener(_onScroll);
     }
 
     // Fetch data khi load
@@ -79,10 +82,25 @@ class _MyJobsPageState extends State<MyJobsPage>
     return null;
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      final provider = context.read<JobProvider>();
+      if (!provider.isLoadingEmployerJobs && provider.hasMoreEmployerJobs) {
+        final status = _getStatusFromIndex(_tabController.index);
+        provider.fetchEmployerJobs(
+          page: provider.currentEmployerPage + 1,
+          status: status,
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _tabController.removeListener(_handleTabSelection);
+    _scrollController.removeListener(_onScroll);
     _tabController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -302,9 +320,19 @@ class _MyJobsPageState extends State<MyJobsPage>
         return RefreshIndicator(
           onRefresh: () => provider.fetchEmployerJobs(status: status),
           child: ListView.builder(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: jobs.length,
+            itemCount: jobs.length + (provider.hasMoreEmployerJobs ? 1 : 0),
             itemBuilder: (context, index) {
+              if (index == jobs.length) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
               final job = jobs[index];
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -345,8 +373,49 @@ class _MyJobsPageState extends State<MyJobsPage>
                               ),
                             ),
                             _buildStatusBadge(job.status),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) => AuditLogModal(
+                                    jobId: job.jobPostId,
+                                    jobTitle: job.title,
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.history, size: 20),
+                              tooltip: 'Xem lịch sử duyệt',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              color: Colors.grey[600],
+                            ),
                           ],
                         ),
+                        if (job.status == 'rejected' && job.rejectionReason != null && job.rejectionReason!.isNotEmpty)
+                          Container(
+                            margin: const EdgeInsets.only(top: 12),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.red[50],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red[100]!),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.error_outline, size: 16, color: Colors.red[700]),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Lý do: ${job.rejectionReason}',
+                                    style: TextStyle(fontSize: 13, color: Colors.red[700]),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -416,9 +485,9 @@ class _MyJobsPageState extends State<MyJobsPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         text,

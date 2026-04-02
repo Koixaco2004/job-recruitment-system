@@ -1,0 +1,97 @@
+# Hướng dẫn tích hợp Frontend (Toàn bộ nâng cấp 02/04/2026)
+
+Tài liệu này tổng hợp tất cả các thay đổi quan trọng về Backend để Team Frontend cập nhật giao diện.
+
+---
+
+## 1. Hệ thống Phân trang thống nhất (Unified Pagination)
+
+Backend hiện đã áp dụng hàm helper trung tâm để đảm bảo mọi danh sách đều trả về cùng một cấu trúc.
+
+**Endpoints ảnh hưởng:**
+- `GET /api/jobs/public`
+- `GET /api/jobs` (Nhà tuyển dụng)
+- `GET /api/jobs/admin/all` (Admin)
+- `GET /api/admin/companies/pending` (Admin)
+
+**Cấu trúc JSON phản hồi:**
+```json
+{
+  "data": [...],      // Mảng chứa các bản ghi
+  "total": 120,    // Tổng số lượng bản ghi thỏa mãn filter
+  "page": 1,       // Trang hiện tại
+  "lastPage": 12   // Tổng số trang (dựa trên limit mặc định là 10)
+}
+```
+
+---
+
+## 2. Chuẩn hóa Kỹ năng bằng AI (AI-Powered Skill Normalization)
+
+Backend sử dụng Gemini AI để tự động "làm sạch" dữ liệu kỹ năng mà Nhà tuyển dụng nhập thủ công.
+
+**Thay đổi hành vi:**
+- FE vẫn gửi mảng string kỹ năng như cũ (`["reactjs", "node js"]`).
+- Khi lưu, BE sẽ chuẩn hóa thành chuẩn công nghiệp (`["React", "Node.js"]`).
+- **Giao diện:** Khi load chi tiết bài đăng, FE sẽ thấy thông tin kỹ năng có thể được map với `skillMetadata`. Các bạn nên ưu tiên hiển thị `skillMetadata.canonicalName` nếu có.
+
+---
+
+## 3. Trạng thái tự động: Hết hạn (CLOSED Status)
+
+Hệ thống chạy Cron Job mỗi giờ để tự động đóng các bài tuyển dụng đã qua `deadline`.
+
+**Thay đổi:**
+- **Status mới:** `"closed"`.
+- **Logic:** Các bài có status `closed` sẽ **không** được trả về trong API Public. 
+- **FE:** Cần bổ sung Badge/Label "Hết hạn" trong màn hình quản lý tin của Nhà tuyển dụng. Tránh cho phép ứng viên ứng tuyển vào các bài có trạng thái này.
+
+---
+
+## 4. Hệ thống Lịch sử Duyệt (Rejection History & Audit Log)
+
+Đây là nâng cấp lớn nhất để giải quyết việc lưu trữ nhiều lý do từ chối khác nhau qua các lần duyệt.
+
+### A. Dữ liệu Lịch sử (Endpoints mới)
+Khi người dùng muốn xem chi tiết quá trình duyệt, FE gọi các API sau:
+
+- **Admin xem lịch sử Công ty:** `GET /api/admin/companies/:id/history`
+- **Admin xem lịch sử Tin tuyển dụng:** `GET /api/jobs/admin/:id/history`
+- **Nhà tuyển dụng xem lịch sử Tin của mình:** `GET /api/jobs/:id/history`
+
+### B. Cấu trúc dữ liệu trả về (Array)
+Bản ghi mới nhất luôn nằm ở đầu mảng (`DESC` theo thời gian).
+```json
+[
+  {
+    "oldStatus": "pending",
+    "newStatus": "rejected",
+    "reason": "Lý do mới nhất: Ảnh mờ",
+    "createdAt": "2026-04-02T10:40:00Z"
+  },
+  {
+    "oldStatus": "idle",
+    "newStatus": "pending",
+    "reason": null,
+    "createdAt": "2026-04-02T10:30:00Z"
+  }
+]
+```
+
+### C. Khuyến nghị hiển thị (UI Implementation)
+- **Thông báo nhanh:** Trên màn hình danh sách, hãy hiển thị trường `rejectionReason` (có sẵn trong object Job/Company) để người dùng thấy ngay lý do bị từ chối cuối cùng.
+- **Chi tiết nhật ký:** Bổ sung nút **"Xem nhật ký duyệt"** để mở modal hiển thị danh sách từ API history ở trên. Điều này giúp Nhà tuyển dụng thấy được họ đã sửa gì và Admin đã phản hồi những gì trong quá khứ.
+
+---
+
+## 5. Danh sách Enum trạng thái chuẩn
+
+| Hệ thống | Status Enum |
+| :--- | :--- |
+| **Công ty** | `idle`, `pending`, `approved`, `rejected` |
+| **Tin tuyển dụng**| `draft`, `pending`, `published`, `rejected`, `closed` |
+
+---
+
+> [!IMPORTANT]
+> **Lưu ý về Token:** Mọi API `/admin/*` đều yêu cầu `role: ADMIN`. API `/jobs/:id/history` yêu cầu `role: EMPLOYER` (Nhà tuyển dụng chỉ xem được lịch sử tin của chính mình).

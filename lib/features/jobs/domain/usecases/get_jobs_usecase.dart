@@ -1,6 +1,8 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
+import '../entities/job_post_entity.dart';
 import '../repositories/job_repository.dart';
+import '../../../../core/models/paginated_response.dart';
 
 /// Use case để lấy danh sách jobs
 class GetJobsUseCase {
@@ -9,7 +11,7 @@ class GetJobsUseCase {
   GetJobsUseCase(this.repository);
 
   /// Execute - lấy danh sách jobs với phân trang và lọc
-  Future<Either<Failure, Map<String, dynamic>>> call({
+  Future<Either<Failure, PaginatedResponse<JobPostEntity>>> call({
     int page = 1,
     int limit = 10,
     String? keyword,

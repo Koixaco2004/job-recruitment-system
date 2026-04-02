@@ -30,6 +30,7 @@ class JobPostModel extends JobPostEntity {
     super.categoryId,
     super.jobTypeId,
     super.skills,
+    super.rejectionReason,
   });
 
   /// Tạo JobPostModel từ JSON
@@ -68,6 +69,7 @@ class JobPostModel extends JobPostEntity {
       categoryId: _asInt(json['category_id'] ?? json['categoryId'] ?? (json['category'] is Map ? (json['category'] as Map)['id'] : null)),
       jobTypeId: _asInt(json['job_type_id'] ?? json['jobTypeId'] ?? (json['jobType'] is Map ? (json['jobType'] as Map)['id'] : null)),
       skills: json['skills'] as List?,
+      rejectionReason: _asString(json['rejection_reason'] ?? json['rejectionReason'] ?? json['reason']),
     );
   }
 
@@ -115,6 +117,7 @@ class JobPostModel extends JobPostEntity {
       'category_id': categoryId,
       'job_type_id': jobTypeId,
       'skills': skills,
+      'rejection_reason': rejectionReason,
     };
   }
 }

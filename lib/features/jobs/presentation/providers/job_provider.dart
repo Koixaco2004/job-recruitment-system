@@ -7,6 +7,8 @@ import '../../domain/usecases/create_job_usecase.dart';
 import '../../domain/usecases/update_job_usecase.dart';
 import '../../domain/usecases/get_employer_jobs_usecase.dart';
 import '../../domain/usecases/get_job_detail_usecase.dart';
+import '../../domain/usecases/get_job_history_usecase.dart';
+import '../../domain/entities/job_status_history_entity.dart';
 
 /// Provider quản lý state cho Jobs
 class JobProvider extends ChangeNotifier {
@@ -16,6 +18,7 @@ class JobProvider extends ChangeNotifier {
   final UpdateJobUseCase updateJobUseCase;
   final GetEmployerJobsUseCase getEmployerJobsUseCase;
   final GetJobDetailUseCase getJobDetailUseCase;
+  final GetJobHistoryUseCase getJobHistoryUseCase;
 
   JobProvider({
     required this.getJobsUseCase,
@@ -24,6 +27,7 @@ class JobProvider extends ChangeNotifier {
     required this.updateJobUseCase,
     required this.getEmployerJobsUseCase,
     required this.getJobDetailUseCase,
+    required this.getJobHistoryUseCase,
   });
 
   // State
@@ -32,6 +36,7 @@ class JobProvider extends ChangeNotifier {
   List<JobPostEntity> _allJobs = []; // List hiện tại
   int _totalPublicJobs = 0;
   int _currentPublicPage = 1;
+  int _lastPublicPage = 1;
   String? _errorMessage;
   JobFilterModel _filter = const JobFilterModel();
   JobPostEntity? _currentJobDetail;
@@ -47,11 +52,17 @@ class JobProvider extends ChangeNotifier {
   List<JobPostEntity> _draftEmployerJobs = [];
   bool _isLoadingEmployerJobs = false;
   int _totalEmployerJobs = 0;
+  int _currentEmployerPage = 1;
+  int _lastEmployerPage = 1;
 
   // Job Management State
   bool _isSavingJob = false;
   bool _saveJobSuccess = false;
   String? _saveJobError;
+
+  // History State
+  List<JobStatusHistoryEntity> _jobHistory = [];
+  bool _isLoadingHistory = false;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -59,8 +70,9 @@ class JobProvider extends ChangeNotifier {
   List<JobPostEntity> get allJobs => _allJobs;
   int get totalPublicJobs => _totalPublicJobs;
   int get currentPublicPage => _currentPublicPage;
+  int get lastPublicPage => _lastPublicPage;
   String? get errorMessage => _errorMessage;
-  bool get hasMoreJobs => _allJobs.length < _totalPublicJobs;
+  bool get hasMoreJobs => _currentPublicPage < _lastPublicPage;
   bool get hasJobs => _allJobs.isNotEmpty;
   JobFilterModel get filter => _filter;
   JobPostEntity? get currentJobDetail => _currentJobDetail;
@@ -81,9 +93,15 @@ class JobProvider extends ChangeNotifier {
 
   bool get isLoadingEmployerJobs => _isLoadingEmployerJobs;
   int get totalEmployerJobs => _totalEmployerJobs;
+  int get currentEmployerPage => _currentEmployerPage;
+  int get lastEmployerPage => _lastEmployerPage;
+  bool get hasMoreEmployerJobs => _currentEmployerPage < _lastEmployerPage;
   bool get isSavingJob => _isSavingJob;
   bool get saveJobSuccess => _saveJobSuccess;
   String? get saveJobError => _saveJobError;
+  
+  List<JobStatusHistoryEntity> get jobHistory => _jobHistory;
+  bool get isLoadingHistory => _isLoadingHistory;
 
   /// Fetch jobs (Public API)
   Future<void> fetchJobs({bool refresh = true}) async {
@@ -126,18 +144,19 @@ class JobProvider extends ChangeNotifier {
         _errorMessage = failure.message;
         notifyListeners();
       },
-      (data) {
+      (paginatedResponse) {
         _isLoading = false;
-        final newJobs = data['jobs'] as List<JobPostEntity>;
+        final newJobs = paginatedResponse.data;
         
-        if (!refresh) {
-          _allJobs.addAll(newJobs);
-        } else {
+        if (refresh) {
           _allJobs = List.from(newJobs);
+        } else {
+          _allJobs.addAll(newJobs);
         }
 
-        _totalPublicJobs = data['total'] as int;
-        _currentPublicPage = data['currentPage'] as int;
+        _totalPublicJobs = paginatedResponse.total;
+        _currentPublicPage = paginatedResponse.page;
+        _lastPublicPage = paginatedResponse.lastPage;
         _errorMessage = null;
         notifyListeners();
       },
@@ -247,19 +266,33 @@ class JobProvider extends ChangeNotifier {
         _errorMessage = failure.message;
         notifyListeners();
       },
-      (data) {
+      (paginatedResponse) {
         _isLoadingEmployerJobs = false;
-        final jobs = data['jobs'] as List<JobPostEntity>;
+        final jobs = paginatedResponse.data;
         
         if (status == 'published') {
-          _publishedEmployerJobs = jobs;
+          if (page == 1) {
+            _publishedEmployerJobs = List.from(jobs);
+          } else {
+            _publishedEmployerJobs.addAll(jobs);
+          }
         } else if (status == 'draft') {
-          _draftEmployerJobs = jobs;
+          if (page == 1) {
+            _draftEmployerJobs = List.from(jobs);
+          } else {
+            _draftEmployerJobs.addAll(jobs);
+          }
         } else {
-          _allEmployerJobs = jobs;
+          if (page == 1) {
+            _allEmployerJobs = List.from(jobs);
+          } else {
+            _allEmployerJobs.addAll(jobs);
+          }
         }
         
-        _totalEmployerJobs = data['total'] as int;
+        _totalEmployerJobs = paginatedResponse.total;
+        _currentEmployerPage = paginatedResponse.page;
+        _lastEmployerPage = paginatedResponse.lastPage;
         notifyListeners();
       },
     );
@@ -323,5 +356,28 @@ class JobProvider extends ChangeNotifier {
     _saveJobSuccess = false;
     _saveJobError = null;
     notifyListeners();
+  }
+
+  /// Lấy lịch sử thay đổi trạng thái
+  Future<void> fetchJobHistory(int jobId) async {
+    _isLoadingHistory = true;
+    _jobHistory = [];
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await getJobHistoryUseCase(jobId);
+
+    result.fold(
+      (failure) {
+        _isLoadingHistory = false;
+        _errorMessage = failure.message;
+        notifyListeners();
+      },
+      (history) {
+        _isLoadingHistory = false;
+        _jobHistory = history;
+        notifyListeners();
+      },
+    );
   }
 }
