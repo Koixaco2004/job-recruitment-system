@@ -85,7 +85,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                           title: 'Tỉnh / Thành phố',
                           icon: Icons.location_on_outlined,
                           child: DropdownButtonFormField<int>(
-                            value: _tempFilter.provinceId,
+                            value: profileProvider.provinces.any((p) => p.id == _tempFilter.provinceId) ? _tempFilter.provinceId : null,
                             isExpanded: true,
                             decoration: _dropdownDecoration('Chọn tỉnh/thành phố'),
                             items: [
@@ -112,7 +112,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                           title: 'Ngành nghề',
                           icon: Icons.work_outline,
                           child: DropdownButtonFormField<int>(
-                            value: _tempFilter.categoryId,
+                            value: profileProvider.allJobCategories.any((c) => c.id == _tempFilter.categoryId) ? _tempFilter.categoryId : null,
                             isExpanded: true,
                             decoration: _dropdownDecoration('Chọn ngành nghề'),
                             items: [
@@ -139,7 +139,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                           title: 'Hình thức làm việc',
                           icon: Icons.access_time,
                           child: DropdownButtonFormField<int>(
-                            value: _tempFilter.jobTypeId,
+                            value: profileProvider.jobTypes.any((jt) => jt.id == _tempFilter.jobTypeId) ? _tempFilter.jobTypeId : null,
                             isExpanded: true,
                             decoration: _dropdownDecoration('Chọn hình thức'),
                             items: [

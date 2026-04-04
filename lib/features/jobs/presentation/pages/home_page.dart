@@ -170,7 +170,7 @@ class _HomePageState extends State<HomePage> {
                               child: OutlinedButton(
                                 onPressed: jobProvider.isLoading 
                                     ? null 
-                                    : () => jobProvider.fetchPublicJobs(refresh: false),
+                                    : () => jobProvider.fetchJobs(refresh: false),
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                   side: BorderSide(color: Theme.of(context).primaryColor),

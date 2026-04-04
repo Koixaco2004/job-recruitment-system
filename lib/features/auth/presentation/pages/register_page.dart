@@ -351,7 +351,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 child: DropdownButton<int>(
                                   isExpanded: true,
                                   hint: const Text('Chọn Tỉnh/Thành phố'),
-                                  value: _selectedProvinceId,
+                                  value: _provinces.any((p) => p.id == _selectedProvinceId) ? _selectedProvinceId : null,
                                   items: _provinces.map((province) {
                                     return DropdownMenuItem<int>(
                                       value: province.id,

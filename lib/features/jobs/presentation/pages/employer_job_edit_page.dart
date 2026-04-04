@@ -78,9 +78,9 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       _expController.text = (job.experienceRequired > 0) ? job.experienceRequired.toString() : '';
       _selectedDeadline = job.deadline;
       
-      _selectedProvinceId = job.provinceId;
-      _selectedCategoryId = job.categoryId;
-      _selectedJobTypeId = job.jobTypeId;
+      _selectedProvinceId = (job.provinceId == 0) ? null : job.provinceId;
+      _selectedCategoryId = (job.categoryId == 0) ? null : job.categoryId;
+      _selectedJobTypeId = (job.jobTypeId == 0) ? null : job.jobTypeId;
       
       if (job.skills != null) {
         _selectedJobSkills.clear();
@@ -481,8 +481,12 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     required ValueChanged<T?> onChanged,
     required IconData icon,
   }) {
+    // Safety check: ensure value exists in items to avoid Flutter assertion error
+    final bool valueExists = items.any((item) => item.value == value);
+    final T? safeValue = valueExists ? value : null;
+
     return DropdownButtonFormField<T>(
-      value: value,
+      value: safeValue,
       items: items,
       onChanged: onChanged,
       decoration: InputDecoration(

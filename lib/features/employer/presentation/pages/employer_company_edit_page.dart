@@ -48,8 +48,8 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
     _facebookUrlController = TextEditingController(text: company?.facebookUrl ?? '');
     _linkedinUrlController = TextEditingController(text: company?.linkedinUrl ?? '');
     _contentController = TextEditingController(text: company?.content ?? company?.description ?? '');
-    _selectedProvinceId = company?.provinceId;
-    _selectedCategoryId = company?.categoryId;
+    _selectedProvinceId = (company?.provinceId == 0) ? null : company?.provinceId;
+    _selectedCategoryId = (company?.categoryId == 0) ? null : company?.categoryId;
     _loadMetadata();
   }
 
@@ -510,8 +510,12 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
   }
 
   Widget _buildDropdown<T>({required String label, required IconData icon, required T? value, required List<DropdownMenuItem<T>> items, required Function(T?) onChanged}) {
+    // Safety check: ensure value exists in items to avoid Flutter assertion error
+    final bool valueExists = items.any((item) => item.value == value);
+    final T? safeValue = valueExists ? value : null;
+
     return DropdownButtonFormField<T>(
-      value: value,
+      value: safeValue,
       items: items,
       onChanged: onChanged,
       decoration: InputDecoration(

@@ -136,7 +136,7 @@ class _CompanySetupPageState extends State<CompanySetupPage> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
-                value: _selectedCategoryId,
+                value: _categories.any((c) => c.id == _selectedCategoryId) ? _selectedCategoryId : null,
                 decoration: const InputDecoration(labelText: 'Lĩnh vực / Ngành nghề', prefixIcon: Icon(Icons.category)),
                 items: _categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
                 onChanged: (val) => setState(() => _selectedCategoryId = val),
@@ -144,7 +144,7 @@ class _CompanySetupPageState extends State<CompanySetupPage> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
-                value: _selectedProvinceId,
+                value: _provinces.any((p) => p.id == _selectedProvinceId) ? _selectedProvinceId : null,
                 decoration: const InputDecoration(labelText: 'Tỉnh / Thành phố', prefixIcon: Icon(Icons.location_on)),
                 items: _provinces.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
                 onChanged: (val) => setState(() => _selectedProvinceId = val),
