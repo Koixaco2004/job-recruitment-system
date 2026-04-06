@@ -1,0 +1,314 @@
+# Walkthrough: Hệ thống Ứng Tuyển (Applications Module)
+
+Tài liệu này là cẩm nang đầy đủ cho **Frontend Team** để tích hợp toàn bộ hệ thống Applications, bao gồm luồng ứng viên, luồng nhà tuyển dụng, Kanban Board và tính năng AI Dual Scoring.
+
+---
+
+## Kiến trúc Tổng Quan
+
+Hệ thống được chia làm **2 phân hệ riêng biệt theo vai trò**. FE nên tổ chức thành 2 route group tương ứng:
+
+| Phân hệ | Base URL | JWT Role |
+|---|---|---|
+| Ứng viên | `POST /api/applications/...` | `CANDIDATE` |
+| Nhà tuyển dụng | `GET/PATCH /api/employer/applications/...` | `EMPLOYER` |
+
+---
+
+## PHẦN 1 — Luồng Ứng Viên (Candidate)
+
+### 1.1 Nộp Đơn Ứng Tuyển
+
+```
+POST /api/applications/:jobId
+Auth: Bearer Token (CANDIDATE)
+Body: { "coverLetter": "..." }  ← Optional
+```
+
+**FE nên làm:**
+- Hiển thị nút **"Ứng tuyển ngay"** trên trang chi tiết Job.
+- Trước khi gọi API, kiểm tra candidate có `cvUrl` chưa. Nếu chưa, redirect sang trang Upload CV.
+- Nút ứng tuyển nên disable và hiện spinner sau lần bấm đầu tiên để tránh double-submit.
+
+**Các lỗi cần xử lý trên UI:**
+
+| HTTP Code | Nguyên nhân | Thông báo gợi ý cho User |
+|---|---|---|
+| `400` | Chưa upload CV | "Bạn cần tải CV lên trước khi ứng tuyển" + Link đến trang Profile |
+| `400` | Job chưa Published hoặc đã đóng | "Tin tuyển dụng này hiện không còn nhận hồ sơ" |
+| `400` | Quá hạn nộp | "Đã hết hạn nộp hồ sơ cho vị trí này" |
+| `409` | Đã nộp trước đó | "Bạn đã ứng tuyển vị trí này rồi" + Link đến trang quản lý đơn |
+
+**Response thành công:**
+```json
+{
+  "message": "Ứng tuyển thành công",
+  "applicationId": 42,
+  "reapplied": false
+}
+```
+> [!NOTE]
+> Nếu `reapplied: true` → Ứng viên đã từng rút đơn và vừa nộp lại. FE nên hiển thị toast khác: *"Đơn ứng tuyển của bạn đã được gửi lại thành công!"*
+
+---
+
+### 1.2 Xem Danh Sách Đơn Của Mình
+
+```
+GET /api/applications/me
+Auth: Bearer Token (CANDIDATE)
+Query: ?page=1&limit=10&status=applied
+```
+
+**Mục đích:** Trang "Quản lý đơn ứng tuyển" trong profile ứng viên.
+
+**Filter `status` hợp lệ:** `applied` | `shortlisted` | `skill_test` | `interview` | `offer` | `hired` | `rejected` | `withdrawn`
+
+> [!IMPORTANT]
+> Backend **validate cứng** giá trị `status` — nếu truyền sai enum sẽ bị `400`. FE phải dùng dropdown/select chứ không cho nhập tay.
+
+**FE nên làm:**
+- Hiển thị dạng danh sách có phân trang (`page`, `lastPage`, `total`).
+- Mỗi dòng hiển thị: Logo công ty, tên Job, trạng thái (dạng Badge màu), ngày nộp.
+- Tab lọc nhanh theo Status ở trên cùng.
+
+---
+
+### 1.3 Xem Chi Tiết 1 Đơn
+
+```
+GET /api/applications/me/:id
+Auth: Bearer Token (CANDIDATE)
+```
+
+**Trả về đầy đủ:** `job`, `job.company`, `job.province`, `job.category`, `job.jobType`, `statusHistory`.
+
+**FE nên làm:**
+- Trang chi tiết hiển thị **Timeline trạng thái** dựa vào trường `statusHistory` — mảng bao gồm `oldStatus`, `newStatus`, `reason`, `createdAt`.
+- Nếu `status === 'rejected'` và có `rejectionReason` → Hiển thị lý do từ chối trong một Callout đỏ nhạt.
+
+---
+
+### 1.4 Rút Đơn Ứng Tuyển
+
+```
+PATCH /api/applications/me/:id/withdraw
+Auth: Bearer Token (CANDIDATE)
+Body: (không cần body)
+```
+
+**Các lỗi cần xử lý:**
+
+| HTTP Code | Nguyên nhân | Thông báo |
+|---|---|---|
+| `400` | Đơn đã rút trước đó | "Đơn này đã được rút từ trước" |
+| `400` | Đang ở trạng thái `OFFER` | "Không thể rút đơn khi đã nhận đề nghị — vui lòng liên hệ HR" |
+
+**FE nên làm:**
+- Hiển thị nút "Rút đơn" kèm **Confirm Dialog** trước khi gọi API.
+- Sau khi rút thành công, cập nhật lại badge trạng thái thành `WITHDRAWN` (xám).
+- Nếu ứng viên muốn nộp lại sau khi rút → chỉ cần gọi lại `POST /applications/:jobId`. Backend tự xử lý Re-apply.
+
+---
+
+## PHẦN 2 — Luồng Nhà Tuyển Dụng (Employer)
+
+### 2.1 Xem Kanban Board *(API Chủ Đạo)*
+
+```
+GET /api/employer/applications/job/:jobId/kanban
+Auth: Bearer Token (EMPLOYER)
+```
+
+**Đây là API cực kỳ được tối ưu.** Backend chỉ thực hiện đúng **2 câu SQL** thay vì 16, trả về cấu trúc đã phân nhóm sẵn theo cột:
+
+```json
+[
+  {
+    "id": "applied",
+    "title": "Mới ứng tuyển",
+    "count": 45,
+    "items": [
+      {
+        "id": 1,
+        "status": "applied",
+        "matchScore": 85,
+        "cvMatchScore": 92,
+        "matchReasoning": "Strong React background...",
+        "cvMatchReasoning": "CV shows 4 years of relevant exp...",
+        "appliedAt": "2025-04-01T10:00:00Z",
+        "candidate": {
+          "fullName": "Nguyen Van A",
+          "avatarUrl": "...",
+          "position": "Frontend Developer",
+          "skills": [
+            { "skillMetadata": { "canonicalName": "React" } },
+            { "skillMetadata": { "canonicalName": "TypeScript" } }
+          ]
+        }
+      }
+    ]
+  }
+]
+```
+
+> [!IMPORTANT]
+> Mỗi cột mặc định chứa **tối đa 10 items** gần nhất. `count` là tổng số thực tế trong DB. Nếu cột có `count > 10`, FE cần implement nút **"Xem thêm"** dùng API 2.2 (list + filter by status) để load trang tiếp.
+
+**FE nên làm:**
+- Gọi API này 1 lần khi vào trang Kanban, lưu vào state.
+- Render 8 cột từ mảng trả về.
+- Mỗi **Kanban Card** hiển thị:
+  - Avatar + Tên ứng viên + Vị trí/Title
+  - **2 Badge điểm AI** (Dual Score):
+    - 👤 `matchScore` — điểm từ DB profile (xanh lá nếu ≥80, vàng nếu ≥50, đỏ nếu dưới)
+    - 📄 `cvMatchScore` — điểm từ đọc file CV (màu xanh dương)
+    - Nếu giá trị là `null` → hiển thị badge xám "Đang chấm..." (AI chưa xong)
+  - Skill Tags từ `candidate.skills`
+  - Ngày nộp dạng "X ngày trước"
+
+---
+
+### 2.2 Xem Danh Sách Ứng Viên (Dạng List)
+
+```
+GET /api/employer/applications/job/:jobId
+Auth: Bearer Token (EMPLOYER)
+Query: ?page=1&limit=20&status=shortlisted
+```
+
+**Mục đích phụ:** Dùng để load thêm khi cột Kanban có nhiều hơn 10 người, hoặc khi HR muốn xem dạng table thay vì board.
+
+---
+
+### 2.3 Xem Chi Tiết Hồ Sơ Ứng Viên (Dữ liệu cho Drawer)
+
+```
+GET /api/employer/applications/:id
+Auth: Bearer Token (EMPLOYER)
+```
+
+**Trả về đầy đủ nhất có thể:** Thông tin ứng viên, kinh nghiệm, học vấn, kỹ năng, chứng chỉ, `matchScore`, `cvMatchScore`, `matchReasoning`, `cvMatchReasoning`, `statusHistory`, `employerNote`.
+
+**FE nên làm:**
+- Gọi API này khi ứng viên **click vào Kanban Card** để mở Drawer bên phải.
+- Trong Drawer, layout chia 2 cột:
+  - **Cột trái (30%):** Hiển thị `statusHistory` dạng Timeline dọc + ô Textarea ghi chú (`employerNote`)
+  - **Cột phải (70%):** 2 Tabs:
+    - **Tab "Smart Profile":** Thông tin hồ sơ + AI Reasoning (`matchReasoning`, `cvMatchReasoning`) dạng blockquote highlight
+    - **Tab "Original CV":** Nhúng `cvUrlSnapshot` vào PDF viewer (iframe/react-pdf)
+
+---
+
+### 2.4 Cập Nhật Trạng Thái (Kéo thả Kanban / Action Button)
+
+```
+PATCH /api/employer/applications/:id/status
+Auth: Bearer Token (EMPLOYER)
+Body: {
+  "status": "interview",
+  "reason": "...",   ← BẮT BUỘC khi status = "rejected"
+  "note": "..."      ← Optional, ghi chú nội bộ
+}
+```
+
+**Trạng thái Employer được phép thay đổi:**
+
+| Được phép ✅ | Bị chặn ❌ |
+|---|---|
+| `shortlisted`, `skill_test`, `interview`, `offer`, `hired`, `rejected` | `applied` (quyền hệ thống), `withdrawn` (quyền ứng viên) |
+
+**Quy tắc nghiệp vụ quan trọng:**
+- Đơn đang là **`WITHDRAWN`** → không thể thay đổi gì (HTTP 400)
+- Đơn đang là **`REJECTED`** → không thể thay đổi ngược lại (HTTP 400)
+- Chuyển sang **`REJECTED`** mà không có `reason` → HTTP 400
+
+**FE nên làm — Xử lý Drag & Drop:**
+
+```
+Kéo thả Card vào cột thường (không phải REJECTED)
+→ Gọi PATCH ngay với { status: "skill_test" }
+→ Nếu 200 OK: cập nhật state local (optimistic update)
+→ Nếu lỗi: hoàn nguyên vị trí card + hiện toast lỗi
+
+Kéo thả Card vào cột REJECTED
+→ KHÔNG gọi API ngay
+→ Hiện Modal: "Nhập lý do từ chối" (Textarea bắt buộc)
+→ Sau khi HR nhập xong và bấm Xác nhận
+→ Gọi PATCH với { status: "rejected", reason: "..." }
+```
+
+> [!TIP]
+> Implement **Optimistic Update**: Cập nhật UI ngay khi drag xong mà không chờ API phản hồi. Nếu API lỗi thì rollback. Cách này giúp Kanban cảm giác mượt như butter.
+
+---
+
+### 2.5 Xem Lịch Sử Thay Đổi Trạng Thái
+
+```
+GET /api/employer/applications/:id/history
+Auth: Bearer Token (EMPLOYER)
+```
+
+**Trả về mảng** `ApplicationStatusHistory` sắp xếp từ mới → cũ:
+
+```json
+[
+  {
+    "id": 5,
+    "oldStatus": "shortlisted",
+    "newStatus": "interview",
+    "reason": null,
+    "changedById": 12,
+    "createdAt": "2025-04-05T09:30:00Z"
+  }
+]
+```
+
+**FE nên làm:** Render dạng Timeline dọc trong cột trái của Drawer. Mỗi mốc hiển thị icon mũi tên `oldStatus → newStatus` + thời gian relative ("3 ngày trước").
+
+> [!NOTE]
+> API này đã được tích hợp sẵn vào response của `GET /employer/applications/:id` qua relation `statusHistory`. Chỉ cần gọi thêm endpoint riêng này nếu cần refresh history độc lập mà không reload toàn bộ drawer.
+
+---
+
+## PHẦN 3 — AI Dual Match Score
+
+Hệ thống AI chạy hoàn toàn **bất đồng bộ (async)** sau khi đơn được nộp. FE không cần chờ.
+
+| Field | Nguồn | Mô tả |
+|---|---|---|
+| `matchScore` | DB Profile (skills, experience...) | Điểm từ dữ liệu có cấu trúc ứng viên đã điền |
+| `matchReasoning` | Gemini AI | Lý do giải thích cho `matchScore` |
+| `cvMatchScore` | OCR file PDF CV | AI đọc trực tiếp file PDF, chấm điểm riêng |
+| `cvMatchReasoning` | Gemini AI | Lý do giải thích cho `cvMatchScore` |
+
+> [!IMPORTANT]
+> Ngay sau khi nộp đơn, **cả 4 field này đều là `null`**. AI cần vài giây đến vài phút để chấm xong rồi ghi vào DB. FE **phải xử lý trường hợp null** — hiển thị skeleton/placeholder thay vì crash.
+
+**Gợi ý UX khi `matchScore === null`:**
+- Badge hiển thị: ⏳ "Đang phân tích..." (màu xám, có animation pulse)
+- Nếu muốn real-time: implement polling mỗi 10s cho đến khi score khác null
+
+---
+
+## PHẦN 4 — Ghi Chú Nội Bộ (Employer Note)
+
+Field `employerNote` trên `JobApplicationEntity` là một **chuỗi text đơn** (không phải mảng). HR có thể cập nhật note bất kỳ lúc nào thông qua API cập nhật trạng thái:
+
+```
+PATCH /api/employer/applications/:id/status
+Body: {
+  "status": "interview",  ← trạng thái có thể giữ nguyên
+  "note": "Ứng viên nói được làm ngay từ tuần sau. Lưu ý deal lương thấp hơn 15%."
+}
+```
+
+> [!WARNING]
+> Ghi chú **KHÔNG hỗ trợ append** — mỗi lần ghi đè toàn bộ nội dung cũ. FE cần fetch nội dung note hiện tại trước, hiển thị trong Textarea, cho HR chỉnh sửa rồi mới save lại toàn bộ.
+
+**FE nên làm — Pattern Ghi Chú trong Drawer:**
+1. Khi mở Drawer: Render `employerNote` vào Textarea (readonly)
+2. HR bấm "Sửa" → Textarea chuyển sang editable
+3. Bấm "Lưu" → Gọi `PATCH /:id/status` với `{ "status": "<status hiện tại>", "note": "<nội dung mới>" }`
+4. Sau khi lưu thành công → Hiện toast xanh "Đã lưu ghi chú"

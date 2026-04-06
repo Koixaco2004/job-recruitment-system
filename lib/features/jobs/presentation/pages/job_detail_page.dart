@@ -3,6 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../domain/entities/job_post_entity.dart';
 import '../providers/job_provider.dart';
+import '../../../../core/pages/main_page.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../applications/presentation/providers/application_provider.dart';
+import '../../../applications/presentation/widgets/apply_dialog.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
+
 
 /// Màn hình chi tiết việc làm
 class JobDetailPage extends StatefulWidget {
@@ -452,101 +458,163 @@ class _JobDetailPageState extends State<JobDetailPage> {
           ),
 
           // === Sticky bottom bar: Apply button (HIDDEN as requested) ===
-          /*
-          bottomNavigationBar: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Row(
+          bottomNavigationBar: _buildBottomBar(context, job),
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomBar(BuildContext context, JobPostEntity job) {
+    final authProvider = context.watch<AuthProvider>();
+    final isCandidate = authProvider.user?.userType.toLowerCase() == 'candidate';
+    
+    // Nếu không phải candidate thì không hiện nút ứng tuyển
+    if (!isCandidate) return const SizedBox.shrink();
+
+    final applicationProvider = context.watch<ApplicationProvider>();
+    final profileProvider = context.watch<ProfileProvider>();
+    
+    // Kiểm tra đã ứng tuyển chưa
+    final isApplied = applicationProvider.myApplications.any(
+      (a) => a.jobId == job.jobPostId && a.status != 'withdrawn'
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            // Deadline badge
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: _daysRemaining(job.deadline) <= 7
+                    ? Colors.red[50]
+                    : Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Deadline badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
+                  Text(
+                    '${_daysRemaining(job.deadline)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                       color: _daysRemaining(job.deadline) <= 7
-                          ? Colors.red[50]
-                          : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${_daysRemaining(job.deadline)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: _daysRemaining(job.deadline) <= 7
-                                ? Colors.red
-                                : Colors.grey[700],
-                          ),
-                        ),
-                        Text(
-                          'ngày',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: _daysRemaining(job.deadline) <= 7
-                                ? Colors.red
-                                : Colors.grey[600],
-                          ),
-                        ),
-                      ],
+                          ? Colors.red
+                          : Colors.grey[700],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // Apply button
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => ApplyBottomSheet(job: job),
-                          );
-                        },
-                        icon: const Icon(Icons.send, size: 20),
-                        label: const Text(
-                          'Ứng tuyển ngay',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                      ),
+                  Text(
+                    'ngày',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: _daysRemaining(job.deadline) <= 7
+                          ? Colors.red
+                          : Colors.grey[600],
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          */
-        );
-      },
+            const SizedBox(width: 12),
+            // Apply button
+            Expanded(
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: isApplied 
+                    ? null 
+                    : () {
+                        // Kiểm tra CV
+                        final hasCv = profileProvider.profile?.cvFileUrl != null && 
+                                     profileProvider.profile!.cvFileUrl!.isNotEmpty;
+                        
+                        if (!hasCv) {
+                          _showCvMissingDialog(context);
+                        } else {
+                          showDialog(
+                            context: context,
+                            builder: (context) => ApplyDialog(job: job),
+                          );
+                        }
+                      },
+                  icon: Icon(isApplied ? Icons.check_circle : Icons.send, size: 20),
+                  label: Text(
+                    isApplied ? 'Đã ứng tuyển' : 'Ứng tuyển ngay',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isApplied ? Colors.grey : Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
+
+  void _showCvMissingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 10),
+            Text('Thiếu CV'),
+          ],
+        ),
+        content: const Text(
+          'Bạn cần cập nhật CV trong hồ sơ cá nhân trước khi ứng tuyển vào công việc này.'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Close JobDetailPage
+              MainPage.switchTab(context, 3); // Switch to Profile Tab
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Cập nhật ngay'),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   // === Widget helpers ===
 

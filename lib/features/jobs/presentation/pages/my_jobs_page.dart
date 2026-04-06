@@ -7,8 +7,10 @@ import '../providers/job_provider.dart';
 import '../providers/my_jobs_provider.dart';
 import '../pages/employer_job_edit_page.dart';
 import '../widgets/saved_job_card.dart';
-import '../widgets/applied_job_card.dart';
+import '../../../applications/presentation/widgets/applied_job_card.dart';
+import '../../../applications/presentation/providers/application_provider.dart';
 import '../widgets/audit_log_modal.dart';
+
 import '../pages/job_detail_page.dart';
 
 /// Màn hình "Việc của tôi" với 2 tabs: Đã lưu & Đã ứng tuyển
@@ -61,7 +63,8 @@ class _MyJobsPageState extends State<MyJobsPage>
         final candidateId = profileProvider.profile?.candidateId ?? 1;
 
         myJobsProvider.fetchSavedJobs(candidateId);
-        myJobsProvider.fetchApplications(candidateId);
+        context.read<ApplicationProvider>().fetchMyApplications();
+
       }
     });
   }
@@ -249,21 +252,19 @@ class _MyJobsPageState extends State<MyJobsPage>
 
   // === Tab Đã ứng tuyển (Candidate) ===
   Widget _buildApplicationsTab() {
-    return Consumer<MyJobsProvider>(
+    return Consumer<ApplicationProvider>(
       builder: (context, provider, child) {
-        if (provider.isLoadingApplications) {
+        if (provider.isLoadingList) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (provider.applicationsError != null) {
-          return _buildErrorView(provider.applicationsError!, () {
-            final candidateId =
-                context.read<ProfileProvider>().profile?.candidateId ?? 1;
-            provider.fetchApplications(candidateId);
+        if (provider.listError != null) {
+          return _buildErrorView(provider.listError!, () {
+            provider.fetchMyApplications();
           });
         }
 
-        if (!provider.hasApplications) {
+        if (provider.myApplications.isEmpty) {
           return _buildEmptyState(
             icon: Icons.work_outline,
             title: 'Chưa ứng tuyển việc nào',
@@ -273,15 +274,13 @@ class _MyJobsPageState extends State<MyJobsPage>
 
         return RefreshIndicator(
           onRefresh: () async {
-            final candidateId =
-                context.read<ProfileProvider>().profile?.candidateId ?? 1;
-            await provider.fetchApplications(candidateId);
+            await provider.fetchMyApplications();
           },
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: provider.applications.length,
+            itemCount: provider.myApplications.length,
             itemBuilder: (context, index) {
-              final application = provider.applications[index];
+              final application = provider.myApplications[index];
               return AppliedJobCard(application: application);
             },
           ),
@@ -289,6 +288,7 @@ class _MyJobsPageState extends State<MyJobsPage>
       },
     );
   }
+
 
   // === Tab Nhà tuyển dụng (Employer) ===
   Widget _buildEmployerJobsTab(String? status) {

@@ -2412,6 +2412,452 @@
                     "Jobs - Quản trị Hệ thống"
                 ]
             }
+        },
+        "/api/applications/{jobId}": {
+            "post": {
+                "operationId": "CandidateApplicationsController_apply",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID tin tuyển dụng",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ApplyJobDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ứng tuyển thành công"
+                    },
+                    "400": {
+                        "description": "Thiếu CV / Job không hợp lệ"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "409": {
+                        "description": "Đã ứng tuyển công việc này"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Ứng tuyển công việc",
+                "tags": [
+                    "Applications - Candidate"
+                ]
+            }
+        },
+        "/api/applications/me": {
+            "get": {
+                "operationId": "CandidateApplicationsController_getMyApplications",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "schema": {
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số bản ghi trên trang",
+                        "schema": {
+                            "default": 10,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo trạng thái (applied, shortlisted, skill_test, interview, offer, hired, rejected, withdrawn)",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "applied",
+                                "shortlisted",
+                                "skill_test",
+                                "interview",
+                                "offer",
+                                "hired",
+                                "rejected",
+                                "withdrawn"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách đơn ứng tuyển"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem danh sách đơn ứng tuyển của mình",
+                "tags": [
+                    "Applications - Candidate"
+                ]
+            }
+        },
+        "/api/applications/me/{id}": {
+            "get": {
+                "operationId": "CandidateApplicationsController_getMyApplicationDetail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chi tiết đơn ứng tuyển"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy đơn"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem chi tiết 1 đơn ứng tuyển",
+                "tags": [
+                    "Applications - Candidate"
+                ]
+            }
+        },
+        "/api/applications/me/{id}/withdraw": {
+            "patch": {
+                "operationId": "CandidateApplicationsController_withdrawApplication",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rút đơn thành công"
+                    },
+                    "400": {
+                        "description": "Đơn không thể rút"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy đơn"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Rút đơn ứng tuyển",
+                "tags": [
+                    "Applications - Candidate"
+                ]
+            }
+        },
+        "/api/employer/applications/job/{jobId}": {
+            "get": {
+                "operationId": "EmployerApplicationsController_getJobApplications",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID tin tuyển dụng",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "schema": {
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số bản ghi trên trang",
+                        "schema": {
+                            "default": 10,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo trạng thái (applied, shortlisted, skill_test, interview, offer, hired, rejected, withdrawn)",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "applied",
+                                "shortlisted",
+                                "skill_test",
+                                "interview",
+                                "offer",
+                                "hired",
+                                "rejected",
+                                "withdrawn"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách ứng viên"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Tin tuyển dụng không tồn tại hoặc không thuộc công ty"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem danh sách ứng viên nộp đơn cho 1 tin tuyển dụng",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/job/{jobId}/kanban": {
+            "get": {
+                "operationId": "EmployerApplicationsController_getKanbanBoard",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID tin tuyển dụng",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cấu trúc Kanban board"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Tin tuyển dụng không tồn tại hoặc không thuộc công ty"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem Kanban Board danh sách ứng viên của 1 tin tuyển dụng",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/{id}": {
+            "get": {
+                "operationId": "EmployerApplicationsController_getApplicationDetail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chi tiết hồ sơ ứng viên"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Đơn ứng tuyển không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem chi tiết hồ sơ ứng viên ứng tuyển",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/{id}/status": {
+            "patch": {
+                "operationId": "EmployerApplicationsController_updateApplicationStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateApplicationStatusDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật thành công"
+                    },
+                    "400": {
+                        "description": "Trạng thái không hợp lệ / Đơn đã bị rút"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Đơn ứng tuyển không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật trạng thái đơn ứng tuyển",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/{id}/history": {
+            "get": {
+                "operationId": "EmployerApplicationsController_getApplicationHistory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lịch sử trạng thái"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Đơn ứng tuyển không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem lịch sử thay đổi trạng thái đơn ứng tuyển",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
         }
     },
     "info": {
@@ -3221,164 +3667,6 @@
                     "skillMetadata"
                 ]
             },
-            "CandidateEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "userId": {
-                        "type": "number"
-                    },
-                    "fullName": {
-                        "type": "string"
-                    },
-                    "gender": {
-                        "type": "string"
-                    },
-                    "phone": {
-                        "type": "string"
-                    },
-                    "avatarUrl": {
-                        "type": "string"
-                    },
-                    "cvUrl": {
-                        "type": "string"
-                    },
-                    "bio": {
-                        "type": "string"
-                    },
-                    "provinceId": {
-                        "type": "number"
-                    },
-                    "position": {
-                        "type": "string"
-                    },
-                    "salaryMin": {
-                        "type": "number"
-                    },
-                    "salaryMax": {
-                        "type": "number"
-                    },
-                    "jobTypeId": {
-                        "type": "number"
-                    },
-                    "jobType": {
-                        "$ref": "#/components/schemas/JobTypeMetadataEntity"
-                    },
-                    "yearWorkingExperience": {
-                        "type": "number"
-                    },
-                    "user": {
-                        "$ref": "#/components/schemas/UserEntity"
-                    },
-                    "certificates": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/CertificateEntity"
-                        }
-                    },
-                    "jobCategories": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/CandidateJobCategoryEntity"
-                        }
-                    },
-                    "workExperiences": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/WorkExperienceEntity"
-                        }
-                    },
-                    "educations": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/EducationEntity"
-                        }
-                    },
-                    "projects": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/ProjectEntity"
-                        }
-                    },
-                    "skills": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/CandidateSkillTagEntity"
-                        }
-                    }
-                },
-                "required": [
-                    "id",
-                    "userId",
-                    "fullName",
-                    "gender",
-                    "phone",
-                    "avatarUrl",
-                    "cvUrl",
-                    "bio",
-                    "provinceId",
-                    "position",
-                    "salaryMin",
-                    "salaryMax",
-                    "jobTypeId",
-                    "jobType",
-                    "yearWorkingExperience",
-                    "user",
-                    "certificates",
-                    "jobCategories",
-                    "workExperiences",
-                    "educations",
-                    "projects",
-                    "skills"
-                ]
-            },
-            "UserEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "password": {
-                        "type": "string"
-                    },
-                    "role": {
-                        "type": "string",
-                        "enum": [
-                            "admin",
-                            "employer",
-                            "candidate"
-                        ]
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "active",
-                            "locked"
-                        ]
-                    },
-                    "created_at": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "candidate": {
-                        "$ref": "#/components/schemas/CandidateEntity"
-                    }
-                },
-                "required": [
-                    "id",
-                    "email",
-                    "password",
-                    "role",
-                    "status",
-                    "created_at",
-                    "candidate"
-                ]
-            },
             "EmployerEntity": {
                 "type": "object",
                 "properties": {
@@ -3581,6 +3869,482 @@
                     "updatedAt",
                     "employers",
                     "images"
+                ]
+            },
+            "ProvinceMetadataEntity": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code",
+                    "name",
+                    "slug",
+                    "createdAt"
+                ]
+            },
+            "JobSkillTagEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "jobId": {
+                        "type": "number"
+                    },
+                    "skillId": {
+                        "type": "number"
+                    },
+                    "tagText": {
+                        "type": "string"
+                    },
+                    "job": {
+                        "$ref": "#/components/schemas/JobEntity"
+                    },
+                    "skillMetadata": {
+                        "$ref": "#/components/schemas/SkillMetadataEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "jobId",
+                    "skillId",
+                    "tagText",
+                    "job",
+                    "skillMetadata"
+                ]
+            },
+            "JobEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "companyId": {
+                        "type": "number"
+                    },
+                    "employerId": {
+                        "type": "number"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "requirements": {
+                        "type": "string"
+                    },
+                    "benefits": {
+                        "type": "string"
+                    },
+                    "salaryMin": {
+                        "type": "number"
+                    },
+                    "salaryMax": {
+                        "type": "number"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "yearsOfExperience": {
+                        "type": "number"
+                    },
+                    "provinceId": {
+                        "type": "number"
+                    },
+                    "categoryId": {
+                        "type": "number"
+                    },
+                    "jobTypeId": {
+                        "type": "number"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "slots": {
+                        "type": "number"
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "deadline": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/CompanyEntity"
+                    },
+                    "employer": {
+                        "$ref": "#/components/schemas/EmployerEntity"
+                    },
+                    "province": {
+                        "$ref": "#/components/schemas/ProvinceMetadataEntity"
+                    },
+                    "category": {
+                        "$ref": "#/components/schemas/JobCategoryMetadataEntity"
+                    },
+                    "jobType": {
+                        "$ref": "#/components/schemas/JobTypeMetadataEntity"
+                    },
+                    "skills": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/JobSkillTagEntity"
+                        }
+                    },
+                    "applications": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/JobApplicationEntity"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "companyId",
+                    "employerId",
+                    "title",
+                    "description",
+                    "requirements",
+                    "benefits",
+                    "salaryMin",
+                    "salaryMax",
+                    "currency",
+                    "yearsOfExperience",
+                    "provinceId",
+                    "categoryId",
+                    "jobTypeId",
+                    "status",
+                    "slots",
+                    "rejectionReason",
+                    "deadline",
+                    "createdAt",
+                    "updatedAt",
+                    "company",
+                    "employer",
+                    "province",
+                    "category",
+                    "jobType",
+                    "skills",
+                    "applications"
+                ]
+            },
+            "ApplicationStatusHistoryEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "applicationId": {
+                        "type": "number"
+                    },
+                    "oldStatus": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "newStatus": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "changedById": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "application": {
+                        "$ref": "#/components/schemas/JobApplicationEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "applicationId",
+                    "oldStatus",
+                    "newStatus",
+                    "reason",
+                    "changedById",
+                    "createdAt",
+                    "application"
+                ]
+            },
+            "JobApplicationEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "jobId": {
+                        "type": "number"
+                    },
+                    "candidateId": {
+                        "type": "number"
+                    },
+                    "cvUrlSnapshot": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "coverLetter": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "employerNote": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "matchScore": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "matchReasoning": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "cvMatchScore": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "cvMatchReasoning": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "appliedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "job": {
+                        "$ref": "#/components/schemas/JobEntity"
+                    },
+                    "candidate": {
+                        "$ref": "#/components/schemas/CandidateEntity"
+                    },
+                    "statusHistory": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ApplicationStatusHistoryEntity"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "jobId",
+                    "candidateId",
+                    "cvUrlSnapshot",
+                    "coverLetter",
+                    "status",
+                    "rejectionReason",
+                    "employerNote",
+                    "matchScore",
+                    "matchReasoning",
+                    "cvMatchScore",
+                    "cvMatchReasoning",
+                    "appliedAt",
+                    "updatedAt",
+                    "job",
+                    "candidate",
+                    "statusHistory"
+                ]
+            },
+            "CandidateEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "userId": {
+                        "type": "number"
+                    },
+                    "fullName": {
+                        "type": "string"
+                    },
+                    "gender": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "cvUrl": {
+                        "type": "string"
+                    },
+                    "bio": {
+                        "type": "string"
+                    },
+                    "provinceId": {
+                        "type": "number"
+                    },
+                    "position": {
+                        "type": "string"
+                    },
+                    "salaryMin": {
+                        "type": "number"
+                    },
+                    "salaryMax": {
+                        "type": "number"
+                    },
+                    "jobTypeId": {
+                        "type": "number"
+                    },
+                    "jobType": {
+                        "$ref": "#/components/schemas/JobTypeMetadataEntity"
+                    },
+                    "yearWorkingExperience": {
+                        "type": "number"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserEntity"
+                    },
+                    "certificates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CertificateEntity"
+                        }
+                    },
+                    "jobCategories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CandidateJobCategoryEntity"
+                        }
+                    },
+                    "workExperiences": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WorkExperienceEntity"
+                        }
+                    },
+                    "educations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EducationEntity"
+                        }
+                    },
+                    "projects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProjectEntity"
+                        }
+                    },
+                    "skills": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CandidateSkillTagEntity"
+                        }
+                    },
+                    "applications": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/JobApplicationEntity"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "userId",
+                    "fullName",
+                    "gender",
+                    "phone",
+                    "avatarUrl",
+                    "cvUrl",
+                    "bio",
+                    "provinceId",
+                    "position",
+                    "salaryMin",
+                    "salaryMax",
+                    "jobTypeId",
+                    "jobType",
+                    "yearWorkingExperience",
+                    "user",
+                    "certificates",
+                    "jobCategories",
+                    "workExperiences",
+                    "educations",
+                    "projects",
+                    "skills",
+                    "applications"
+                ]
+            },
+            "UserEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "admin",
+                            "employer",
+                            "candidate"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "locked"
+                        ]
+                    },
+                    "created_at": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "candidate": {
+                        "$ref": "#/components/schemas/CandidateEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "email",
+                    "password",
+                    "role",
+                    "status",
+                    "created_at",
+                    "candidate"
                 ]
             },
             "UpdateEmployerProfileDto": {
@@ -3936,179 +4700,6 @@
                     }
                 }
             },
-            "ProvinceMetadataEntity": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "slug": {
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "code",
-                    "name",
-                    "slug",
-                    "createdAt"
-                ]
-            },
-            "JobSkillTagEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "jobId": {
-                        "type": "number"
-                    },
-                    "skillId": {
-                        "type": "number"
-                    },
-                    "tagText": {
-                        "type": "string"
-                    },
-                    "job": {
-                        "$ref": "#/components/schemas/JobEntity"
-                    },
-                    "skillMetadata": {
-                        "$ref": "#/components/schemas/SkillMetadataEntity"
-                    }
-                },
-                "required": [
-                    "id",
-                    "jobId",
-                    "skillId",
-                    "tagText",
-                    "job",
-                    "skillMetadata"
-                ]
-            },
-            "JobEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "companyId": {
-                        "type": "number"
-                    },
-                    "employerId": {
-                        "type": "number"
-                    },
-                    "title": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "requirements": {
-                        "type": "string"
-                    },
-                    "benefits": {
-                        "type": "string"
-                    },
-                    "salaryMin": {
-                        "type": "number"
-                    },
-                    "salaryMax": {
-                        "type": "number"
-                    },
-                    "currency": {
-                        "type": "string"
-                    },
-                    "yearsOfExperience": {
-                        "type": "number"
-                    },
-                    "provinceId": {
-                        "type": "number"
-                    },
-                    "categoryId": {
-                        "type": "number"
-                    },
-                    "jobTypeId": {
-                        "type": "number"
-                    },
-                    "status": {
-                        "type": "string"
-                    },
-                    "slots": {
-                        "type": "number"
-                    },
-                    "rejectionReason": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "deadline": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "updatedAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "company": {
-                        "$ref": "#/components/schemas/CompanyEntity"
-                    },
-                    "employer": {
-                        "$ref": "#/components/schemas/EmployerEntity"
-                    },
-                    "province": {
-                        "$ref": "#/components/schemas/ProvinceMetadataEntity"
-                    },
-                    "category": {
-                        "$ref": "#/components/schemas/JobCategoryMetadataEntity"
-                    },
-                    "jobType": {
-                        "$ref": "#/components/schemas/JobTypeMetadataEntity"
-                    },
-                    "skills": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/JobSkillTagEntity"
-                        }
-                    }
-                },
-                "required": [
-                    "id",
-                    "companyId",
-                    "employerId",
-                    "title",
-                    "description",
-                    "requirements",
-                    "benefits",
-                    "salaryMin",
-                    "salaryMax",
-                    "currency",
-                    "yearsOfExperience",
-                    "provinceId",
-                    "categoryId",
-                    "jobTypeId",
-                    "status",
-                    "slots",
-                    "rejectionReason",
-                    "deadline",
-                    "createdAt",
-                    "updatedAt",
-                    "company",
-                    "employer",
-                    "province",
-                    "category",
-                    "jobType",
-                    "skills"
-                ]
-            },
             "JobStatusHistoryEntity": {
                 "type": "object",
                 "properties": {
@@ -4147,6 +4738,49 @@
                     "changedById",
                     "createdAt",
                     "job"
+                ]
+            },
+            "ApplyJobDto": {
+                "type": "object",
+                "properties": {
+                    "coverLetter": {
+                        "type": "string",
+                        "maxLength": 5000,
+                        "description": "Thư xin việc (tùy chọn)"
+                    }
+                }
+            },
+            "UpdateApplicationStatusDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "applied",
+                            "shortlisted",
+                            "skill_test",
+                            "interview",
+                            "offer",
+                            "hired",
+                            "rejected",
+                            "withdrawn"
+                        ],
+                        "description": "Trạng thái mới",
+                        "example": "shortlisted"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "description": "Lý do (bắt buộc khi reject)"
+                    },
+                    "note": {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "description": "Ghi chú nội bộ của nhà tuyển dụng"
+                    }
+                },
+                "required": [
+                    "status"
                 ]
             }
         }

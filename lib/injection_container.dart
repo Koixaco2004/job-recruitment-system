@@ -29,8 +29,9 @@ import 'features/jobs/data/datasources/job_remote_datasource.dart';
 import 'features/jobs/data/repositories/job_repository_impl.dart';
 import 'features/jobs/domain/repositories/job_repository.dart';
 import 'features/jobs/domain/usecases/get_jobs_usecase.dart';
-import 'features/jobs/domain/usecases/get_my_applications_usecase.dart';
+import 'features/jobs/domain/usecases/get_my_applications_usecase.dart' as job_usecase;
 import 'features/jobs/domain/usecases/get_saved_jobs_usecase.dart';
+
 import 'features/jobs/domain/usecases/save_job_usecase.dart';
 import 'features/jobs/domain/usecases/submit_application_usecase.dart';
 import 'features/jobs/domain/usecases/unsave_job_usecase.dart';
@@ -58,6 +59,15 @@ import 'features/employer/data/repositories/employer_repository_impl.dart';
 import 'features/employer/domain/repositories/employer_repository.dart';
 import 'features/employer/domain/usecases/employer_usecases.dart';
 import 'features/employer/presentation/providers/employer_provider.dart';
+import 'features/applications/data/datasources/application_remote_datasource.dart';
+import 'features/applications/data/repositories/application_repository_impl.dart';
+import 'features/applications/domain/repositories/application_repository.dart';
+import 'features/applications/domain/usecases/apply_job_usecase.dart';
+import 'features/applications/domain/usecases/get_my_applications_usecase.dart';
+import 'features/applications/domain/usecases/get_application_detail_usecase.dart';
+import 'features/applications/domain/usecases/withdraw_application_usecase.dart';
+import 'features/applications/presentation/providers/application_provider.dart';
+
 
 final sl = GetIt.instance; // Service Locator
 
@@ -120,7 +130,7 @@ Future<void> init() async {
       saveJobUseCase: sl(),
       unsaveJobUseCase: sl(),
       unsaveJobByPostIdUseCase: sl(),
-      getMyApplicationsUseCase: sl(),
+      getMyApplicationsUseCase: sl<job_usecase.GetMyApplicationsUseCase>(),
     ),
   );
 
@@ -131,7 +141,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SaveJobUseCase(sl()));
   sl.registerLazySingleton(() => UnsaveJobUseCase(sl()));
   sl.registerLazySingleton(() => UnsaveJobByPostIdUseCase(sl()));
-  sl.registerLazySingleton(() => GetMyApplicationsUseCase(sl()));
+  sl.registerLazySingleton(() => job_usecase.GetMyApplicationsUseCase(sl()));
+
   sl.registerLazySingleton(() => CreateJobUseCase(sl()));
   sl.registerLazySingleton(() => UpdateJobUseCase(sl()));
   sl.registerLazySingleton(() => GetEmployerJobsUseCase(sl()));
@@ -276,4 +287,35 @@ Future<void> init() async {
   sl.registerLazySingleton<EmployerRemoteDataSource>(
     () => EmployerRemoteDataSourceImpl(apiClient: sl()),
   );
+
+  // ========================
+  // Features - Applications
+  // ========================
+
+  // Providers
+  sl.registerFactory(
+    () => ApplicationProvider(
+      applyJobUseCase: sl(),
+      getMyApplicationsUseCase: sl(),
+      getApplicationDetailUseCase: sl(),
+      withdrawApplicationUseCase: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => ApplyJobUseCase(sl()));
+  sl.registerLazySingleton(() => GetMyApplicationsUseCase(sl()));
+  sl.registerLazySingleton(() => GetApplicationDetailUseCase(sl()));
+  sl.registerLazySingleton(() => WithdrawApplicationUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<ApplicationRepository>(
+    () => ApplicationRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<ApplicationRemoteDataSource>(
+    () => ApplicationRemoteDataSourceImpl(apiClient: sl()),
+  );
 }
+
