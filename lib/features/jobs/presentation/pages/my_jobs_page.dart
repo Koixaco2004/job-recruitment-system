@@ -10,8 +10,8 @@ import '../widgets/saved_job_card.dart';
 import '../../../applications/presentation/widgets/applied_job_card.dart';
 import '../../../applications/presentation/providers/application_provider.dart';
 import '../widgets/audit_log_modal.dart';
-
 import '../pages/job_detail_page.dart';
+import '../../../applications/presentation/pages/job_kanban_page.dart';
 
 /// Màn hình "Việc của tôi" với 2 tabs: Đã lưu & Đã ứng tuyển
 class MyJobsPage extends StatefulWidget {
@@ -424,16 +424,40 @@ class _MyJobsPageState extends State<MyJobsPage>
                               'Cập nhật: ${job.updatedAt.day}/${job.updatedAt.month}/${job.updatedAt.year}',
                               style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                             ),
-                            if (job.status == 'draft')
-                              TextButton.icon(
-                                onPressed: () => provider.publishJob(job.jobPostId),
-                                icon: const Icon(Icons.publish, size: 18),
-                                label: const Text('Đăng ngay'),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                              ),
+                            Row(
+                              children: [
+                                if (job.applicationCount > 0 || job.status == 'published' || job.status == 'approved')
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => JobKanbanPage(
+                                            jobId: job.jobPostId,
+                                            jobTitle: job.title,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.people_alt_outlined, size: 18),
+                                    label: Text('Ứng viên (${job.applicationCount})'),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  ),
+                                if (job.status == 'draft')
+                                  TextButton.icon(
+                                    onPressed: () => provider.publishJob(job.jobPostId),
+                                    icon: const Icon(Icons.publish, size: 18),
+                                    label: const Text('Đăng ngay'),
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ],
                         ),
                       ],

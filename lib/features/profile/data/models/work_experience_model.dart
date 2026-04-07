@@ -57,9 +57,9 @@ class WorkExperienceModel extends WorkExperienceEntity {
       'companyName': companyName,
       'position': position,
       'startDate': '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}',
-      'isWorkingHere': isCurrentJob ?? false,
+      'isWorkingHere': isCurrentJob,
     };
-    if (endDate != null && !(isCurrentJob ?? false)) {
+    if (endDate != null && !(isCurrentJob)) {
       dto['endDate'] = '${endDate!.year}-${endDate!.month.toString().padLeft(2, '0')}-${endDate!.day.toString().padLeft(2, '0')}';
     }
     if (description != null && description!.isNotEmpty) {

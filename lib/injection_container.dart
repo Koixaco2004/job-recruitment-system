@@ -31,7 +31,6 @@ import 'features/jobs/domain/repositories/job_repository.dart';
 import 'features/jobs/domain/usecases/get_jobs_usecase.dart';
 import 'features/jobs/domain/usecases/get_my_applications_usecase.dart' as job_usecase;
 import 'features/jobs/domain/usecases/get_saved_jobs_usecase.dart';
-
 import 'features/jobs/domain/usecases/save_job_usecase.dart';
 import 'features/jobs/domain/usecases/submit_application_usecase.dart';
 import 'features/jobs/domain/usecases/unsave_job_usecase.dart';
@@ -60,14 +59,20 @@ import 'features/employer/domain/repositories/employer_repository.dart';
 import 'features/employer/domain/usecases/employer_usecases.dart';
 import 'features/employer/presentation/providers/employer_provider.dart';
 import 'features/applications/data/datasources/application_remote_datasource.dart';
+import 'features/applications/data/datasources/employer_application_remote_datasource.dart';
 import 'features/applications/data/repositories/application_repository_impl.dart';
 import 'features/applications/domain/repositories/application_repository.dart';
 import 'features/applications/domain/usecases/apply_job_usecase.dart';
 import 'features/applications/domain/usecases/get_my_applications_usecase.dart';
 import 'features/applications/domain/usecases/get_application_detail_usecase.dart';
 import 'features/applications/domain/usecases/withdraw_application_usecase.dart';
+import 'features/applications/domain/usecases/get_job_applications_usecase.dart';
+import 'features/applications/domain/usecases/get_kanban_board_usecase.dart';
+import 'features/applications/domain/usecases/get_employer_application_detail_usecase.dart';
+import 'features/applications/domain/usecases/get_application_status_history_usecase.dart';
+import 'features/applications/domain/usecases/update_application_status_usecase.dart';
 import 'features/applications/presentation/providers/application_provider.dart';
-
+import 'features/applications/presentation/providers/employer_application_provider.dart';
 
 final sl = GetIt.instance; // Service Locator
 
@@ -302,20 +307,41 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(
+    () => EmployerApplicationProvider(
+      getJobApplicationsUseCase: sl(),
+      getKanbanBoardUseCase: sl(),
+      getEmployerApplicationDetailUseCase: sl(),
+      getApplicationStatusHistoryUseCase: sl(),
+      updateApplicationStatusUseCase: sl(),
+    ),
+  );
+
   // Use cases
   sl.registerLazySingleton(() => ApplyJobUseCase(sl()));
   sl.registerLazySingleton(() => GetMyApplicationsUseCase(sl()));
   sl.registerLazySingleton(() => GetApplicationDetailUseCase(sl()));
   sl.registerLazySingleton(() => WithdrawApplicationUseCase(sl()));
+  sl.registerLazySingleton(() => GetJobApplicationsUseCase(sl()));
+  sl.registerLazySingleton(() => GetKanbanBoardUseCase(sl()));
+  sl.registerLazySingleton(() => GetEmployerApplicationDetailUseCase(sl()));
+  sl.registerLazySingleton(() => GetApplicationStatusHistoryUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateApplicationStatusUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ApplicationRepository>(
-    () => ApplicationRepositoryImpl(remoteDataSource: sl()),
+    () => ApplicationRepositoryImpl(
+      remoteDataSource: sl(),
+      employerRemoteDataSource: sl(),
+    ),
   );
 
   // Data sources
   sl.registerLazySingleton<ApplicationRemoteDataSource>(
     () => ApplicationRemoteDataSourceImpl(apiClient: sl()),
   );
-}
 
+  sl.registerLazySingleton<EmployerApplicationRemoteDataSource>(
+    () => EmployerApplicationRemoteDataSourceImpl(sl()),
+  );
+}

@@ -5,11 +5,18 @@ import '../../../../core/models/paginated_response.dart';
 import '../../domain/entities/application_entity.dart';
 import '../../domain/repositories/application_repository.dart';
 import '../datasources/application_remote_datasource.dart';
+import '../datasources/employer_application_remote_datasource.dart';
+import '../../domain/entities/application_kanban_column_entity.dart';
+import '../../domain/entities/application_status_history_entity.dart';
 
 class ApplicationRepositoryImpl implements ApplicationRepository {
   final ApplicationRemoteDataSource remoteDataSource;
+  final EmployerApplicationRemoteDataSource employerRemoteDataSource;
 
-  ApplicationRepositoryImpl({required this.remoteDataSource});
+  ApplicationRepositoryImpl({
+    required this.remoteDataSource,
+    required this.employerRemoteDataSource,
+  });
 
   @override
   Future<Either<Failure, ApplicationEntity>> apply({
@@ -65,6 +72,90 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
   Future<Either<Failure, void>> withdrawApplication(int id) async {
     try {
       await remoteDataSource.withdrawApplication(id);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedResponse<ApplicationEntity>>> getJobApplications(
+    int jobId, {
+    int page = 1,
+    int limit = 10,
+    String? status,
+  }) async {
+    try {
+      final result = await employerRemoteDataSource.getJobApplications(
+        jobId,
+        page: page,
+        limit: limit,
+        status: status,
+      );
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ApplicationKanbanColumnEntity>>> getKanbanBoard(
+    int jobId,
+  ) async {
+    try {
+      final result = await employerRemoteDataSource.getKanbanBoard(jobId);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ApplicationEntity>> getEmployerApplicationDetail(
+    int id,
+  ) async {
+    try {
+      final result = await employerRemoteDataSource.getEmployerApplicationDetail(id);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ApplicationStatusHistoryEntity>>> getApplicationHistory(int id) async {
+    try {
+      final history = await employerRemoteDataSource.getApplicationHistory(id);
+      return Right(history);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateApplicationStatus(
+    int id,
+    String status, {
+    String? reason,
+    String? note,
+  }) async {
+    try {
+      await employerRemoteDataSource.updateApplicationStatus(
+        id,
+        status,
+        reason: reason,
+        note: note,
+      );
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
