@@ -212,7 +212,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
   @override
   Future<JobPostModel> createJob(Map<String, dynamic> data) async {
     try {
-      final response = await apiClient.dio.post('/api/jobs', data: data);
+      final response = await apiClient.dio.post('/api/jobs/employer', data: data);
       if (response.statusCode == 201 || response.statusCode == 200) {
         final jobData = response.data['data'] ?? response.data;
         return JobPostModel.fromJson(jobData);
@@ -228,7 +228,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
   @override
   Future<JobPostModel> updateJob(int jobId, Map<String, dynamic> data) async {
     try {
-      final response = await apiClient.dio.put('/api/jobs/$jobId', data: data);
+      final response = await apiClient.dio.put('/api/jobs/employer/$jobId', data: data);
       if (response.statusCode == 200) {
         final jobData = response.data['data'] ?? response.data;
         return JobPostModel.fromJson(jobData);
@@ -254,7 +254,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
         if (status != null) 'status': status,
       };
       
-      final response = await apiClient.dio.get('/api/jobs', queryParameters: queryParams);
+      final response = await apiClient.dio.get('/api/jobs/employer', queryParameters: queryParams);
       
       if (response.statusCode == 200) {
         return PaginatedResponse.fromJson(
@@ -273,7 +273,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
   @override
   Future<List<JobStatusHistoryModel>> getJobHistory(int jobId) async {
     try {
-      final response = await apiClient.dio.get('/api/jobs/$jobId/history');
+      final response = await apiClient.dio.get('/api/jobs/employer/$jobId/history');
       if (response.statusCode == 200) {
         final dynamic rawData = response.data;
         List data;

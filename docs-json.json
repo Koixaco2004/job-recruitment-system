@@ -134,6 +134,36 @@
                 ]
             }
         },
+        "/api/auth/refresh": {
+            "post": {
+                "operationId": "AuthController_refresh",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "summary": "Làm mới Access Token (Silent Refresh)",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "operationId": "AuthController_logout",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "summary": "Đăng xuất",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
         "/api/auth/status": {
             "get": {
                 "operationId": "AuthController_getStatus",
@@ -1859,7 +1889,7 @@
         },
         "/api/jobs/public": {
             "get": {
-                "operationId": "JobsController_getPublicJobs",
+                "operationId": "PublicJobsController_getPublicJobs",
                 "parameters": [
                     {
                         "name": "page",
@@ -1887,6 +1917,7 @@
                         "in": "query",
                         "description": "Từ khóa tìm kiếm (theo tên job)",
                         "schema": {
+                            "maxLength": 100,
                             "type": "string"
                         }
                     },
@@ -1934,14 +1965,13 @@
                 },
                 "summary": "Lấy danh sách các công việc đang mở (Cho ứng viên tìm kiếm)",
                 "tags": [
-                    "Jobs",
                     "Jobs - Public"
                 ]
             }
         },
         "/api/jobs/public/{id}": {
             "get": {
-                "operationId": "JobsController_getJobDetail",
+                "operationId": "PublicJobsController_getJobDetail",
                 "parameters": [
                     {
                         "name": "id",
@@ -1960,49 +1990,13 @@
                 },
                 "summary": "Lấy chi tiết 1 bài đăng tuyển dụng",
                 "tags": [
-                    "Jobs",
                     "Jobs - Public"
                 ]
             }
         },
-        "/api/jobs": {
-            "post": {
-                "operationId": "JobsController_createJob",
-                "parameters": [],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CreateJobDto"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": ""
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Tạo mới một tin tuyển dụng (Lưu nháp)",
-                "tags": [
-                    "Jobs",
-                    "Jobs - Quản lý Nhàn Tuyển Dụng"
-                ]
-            },
+        "/api/jobs/employer": {
             "get": {
-                "operationId": "JobsController_getEmployerJobs",
+                "operationId": "EmployerJobsController_getEmployerJobs",
                 "parameters": [
                     {
                         "name": "page",
@@ -2030,6 +2024,7 @@
                         "in": "query",
                         "description": "Từ khóa tìm kiếm (theo tên job)",
                         "schema": {
+                            "maxLength": 100,
                             "type": "string"
                         }
                     },
@@ -2095,36 +2090,24 @@
                 ],
                 "summary": "Lấy danh sách tin tuyển dụng cá nhân tạo ra",
                 "tags": [
-                    "Jobs",
-                    "Jobs - Quản lý Nhàn Tuyển Dụng"
+                    "Jobs - Quản lý Nhà Tuyển Dụng"
                 ]
-            }
-        },
-        "/api/jobs/{id}": {
-            "put": {
-                "operationId": "JobsController_updateJob",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
+            },
+            "post": {
+                "operationId": "EmployerJobsController_createJob",
+                "parameters": [],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/UpdateJobDto"
+                                "$ref": "#/components/schemas/CreateJobDto"
                             }
                         }
                     }
                 },
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": ""
                     },
                     "401": {
@@ -2139,16 +2122,15 @@
                         "bearer": []
                     }
                 ],
-                "summary": "Cập nhật tin tuyển dụng",
+                "summary": "Tạo mới một tin tuyển dụng (Lưu nháp)",
                 "tags": [
-                    "Jobs",
-                    "Jobs - Quản lý Nhàn Tuyển Dụng"
+                    "Jobs - Quản lý Nhà Tuyển Dụng"
                 ]
             }
         },
-        "/api/jobs/{id}/history": {
+        "/api/jobs/employer/{id}/history": {
             "get": {
-                "operationId": "JobsController_getEmployerJobHistory",
+                "operationId": "EmployerJobsController_getEmployerJobHistory",
                 "parameters": [
                     {
                         "name": "id",
@@ -2187,50 +2169,13 @@
                 ],
                 "summary": "Xem lịch sử thay đổi trạng thái của tin (Nhà tuyển dụng)",
                 "tags": [
-                    "Jobs",
-                    "Jobs - Quản lý Nhàn Tuyển Dụng"
+                    "Jobs - Quản lý Nhà Tuyển Dụng"
                 ]
             }
         },
-        "/api/jobs/admin/{id}/approve": {
-            "patch": {
-                "operationId": "JobsController_approveJob",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Duyệt tin tuyển dụng (Admin)",
-                "tags": [
-                    "Jobs",
-                    "Jobs - Quản trị Hệ thống"
-                ]
-            }
-        },
-        "/api/jobs/admin/{id}/reject": {
-            "patch": {
-                "operationId": "JobsController_rejectJob",
+        "/api/jobs/employer/{id}": {
+            "put": {
+                "operationId": "EmployerJobsController_updateJob",
                 "parameters": [
                     {
                         "name": "id",
@@ -2246,7 +2191,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/RejectJobDto"
+                                "$ref": "#/components/schemas/UpdateJobDto"
                             }
                         }
                     }
@@ -2267,16 +2212,15 @@
                         "bearer": []
                     }
                 ],
-                "summary": "Từ chối tin tuyển dụng (Admin)",
+                "summary": "Cập nhật tin tuyển dụng",
                 "tags": [
-                    "Jobs",
-                    "Jobs - Quản trị Hệ thống"
+                    "Jobs - Quản lý Nhà Tuyển Dụng"
                 ]
             }
         },
         "/api/jobs/admin/all": {
             "get": {
-                "operationId": "JobsController_getAdminJobs",
+                "operationId": "AdminJobsController_getAdminJobs",
                 "parameters": [
                     {
                         "name": "page",
@@ -2304,6 +2248,7 @@
                         "in": "query",
                         "description": "Từ khóa tìm kiếm (theo tên job)",
                         "schema": {
+                            "maxLength": 100,
                             "type": "string"
                         }
                     },
@@ -2362,14 +2307,13 @@
                 ],
                 "summary": "Lấy tất cả tin tuyển dụng trong hệ thống (Admin)",
                 "tags": [
-                    "Jobs",
                     "Jobs - Quản trị Hệ thống"
                 ]
             }
         },
         "/api/jobs/admin/{id}/history": {
             "get": {
-                "operationId": "JobsController_getAdminJobHistory",
+                "operationId": "AdminJobsController_getAdminJobHistory",
                 "parameters": [
                     {
                         "name": "id",
@@ -2408,7 +2352,86 @@
                 ],
                 "summary": "Xem lịch sử thay đổi trạng thái của tin (Admin)",
                 "tags": [
-                    "Jobs",
+                    "Jobs - Quản trị Hệ thống"
+                ]
+            }
+        },
+        "/api/jobs/admin/{id}/approve": {
+            "patch": {
+                "operationId": "AdminJobsController_approveJob",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Duyệt tin tuyển dụng (Admin)",
+                "tags": [
+                    "Jobs - Quản trị Hệ thống"
+                ]
+            }
+        },
+        "/api/jobs/admin/{id}/reject": {
+            "patch": {
+                "operationId": "AdminJobsController_rejectJob",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectJobDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Từ chối tin tuyển dụng (Admin)",
+                "tags": [
                     "Jobs - Quản trị Hệ thống"
                 ]
             }
@@ -4608,6 +4631,46 @@
                     "description"
                 ]
             },
+            "JobStatusHistoryEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "jobId": {
+                        "type": "number"
+                    },
+                    "oldStatus": {
+                        "type": "string"
+                    },
+                    "newStatus": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "changedById": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "job": {
+                        "$ref": "#/components/schemas/JobEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "jobId",
+                    "oldStatus",
+                    "newStatus",
+                    "reason",
+                    "changedById",
+                    "createdAt",
+                    "job"
+                ]
+            },
             "UpdateJobDto": {
                 "type": "object",
                 "properties": {
@@ -4699,46 +4762,6 @@
                         }
                     }
                 }
-            },
-            "JobStatusHistoryEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "jobId": {
-                        "type": "number"
-                    },
-                    "oldStatus": {
-                        "type": "string"
-                    },
-                    "newStatus": {
-                        "type": "string"
-                    },
-                    "reason": {
-                        "type": "string"
-                    },
-                    "changedById": {
-                        "type": "number"
-                    },
-                    "createdAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "job": {
-                        "$ref": "#/components/schemas/JobEntity"
-                    }
-                },
-                "required": [
-                    "id",
-                    "jobId",
-                    "oldStatus",
-                    "newStatus",
-                    "reason",
-                    "changedById",
-                    "createdAt",
-                    "job"
-                ]
             },
             "ApplyJobDto": {
                 "type": "object",

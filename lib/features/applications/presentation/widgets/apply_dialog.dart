@@ -179,13 +179,18 @@ class _ApplyDialogState extends State<ApplyDialog> {
 
                         if (mounted) {
                           if (success) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Ứng tuyển thành công! Bạn có thể theo dõi đơn ứng tuyển trong mục Nhật ký.'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
+                            // Làm mới danh sách ứng tuyển để cập nhật trạng thái nút ở trang chi tiết
+                            await applicationProvider.fetchMyApplications();
+                            
+                            if (mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Ứng tuyển thành công! Bạn có thể theo dõi đơn ứng tuyển trong mục Nhật ký.'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
                           } else {
                             if (applicationProvider.applyError == 'CV_MISSING') {
                               // Special case for missing CV

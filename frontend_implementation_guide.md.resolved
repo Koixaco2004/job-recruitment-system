@@ -1,0 +1,91 @@
+# Hướng dẫn Tích hợp Refresh Token (Dành cho Frontend)
+
+Tài liệu này hướng dẫn đội ngũ Frontend cách tích hợp với hệ thống xác thực mới sử dụng **Access Token** (Header) và **Refresh Token** (HttpOnly Cookie).
+
+## 1. Cấu hình Quan trọng nhất: `withCredentials`
+
+Vì `refresh_token` được lưu trong **HttpOnly Cookie**, trình duyệt sẽ **KHÔNG** tự động gửi nó lên Server trừ khi bạn bật tùy chọn `withCredentials`.
+
+> [!IMPORTANT]
+> Mọi yêu cầu API (Axios hoặc Fetch) đến Backend đều phải bật:
+> ```javascript
+> // Đối với Axios (Cấu hình toàn cục)
+> axios.defaults.withCredentials = true;
+> 
+> // Đối với Fetch
+> fetch(url, { credentials: 'include' });
+> ```
+
+---
+
+## 2. Luồng xử lý Interceptor (Silent Refresh)
+
+Frontend nên sử dụng một Interceptor để tự động gia hạn phiên đăng nhập khi Access Token hết hạn mà không làm gián đoạn trải nghiệm người dùng.
+
+### Mã mẫu Axios Interceptor:
+
+```javascript
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://api.yourdomain.com/api',
+  withCredentials: true, // Bắt buộc để gửi/nhận Cookie
+});
+
+// Interceptor cho Response (Bắt lỗi 401)
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Nếu lỗi là 401 và chưa từng thử refresh trước đó
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Gọi API Refresh (Server tự lấy Refresh Token từ Cookie)
+        const { data } = await axios.post(
+          'https://api.yourdomain.com/api/auth/refresh',
+          {},
+          { withCredentials: true }
+        );
+
+        const newAccessToken = data.access_token;
+
+        // Lưu Access Token mới vào Store (Redux/Zustand/...)
+        // store.dispatch(setAccessToken(newAccessToken));
+
+        // Cập nhật header và nạp lại request ban đầu
+        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Nếu refresh thất bại (Refresh Token hết hạn) -> Đăng xuất người dùng
+        // store.dispatch(logout());
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+---
+
+## 3. Quản lý Đăng xuất (Logout)
+
+Khi người dùng nhấn Đăng xuất, Frontend cần gọi API `POST /auth/logout`. API này sẽ:
+1. Xóa bản ghi session trong database ở Backend.
+2. Xóa HttpOnly Cookie trình duyệt.
+
+Frontend chỉ cần xóa thêm `access_token` và thông tin User trong bộ nhớ của mình.
+
+---
+
+## 4. Bảo mật cần lưu ý
+
+1. **Không lưu Token vào localStorage**: `access_token` nên được lưu trong biến (RAM) hoặc Store để tránh bị tấn công XSS đánh cắp.
+2. **HttpOnly Cookie**: Frontend **không thể** đọc, sửa hay xóa `refresh_token` qua code Javascript (`document.cookie`). Việc này hoàn toàn do trình duyệt và Server đảm nhận, giúp tăng độ an toàn.
+
+> [!TIP]
+> Nếu bạn đang chạy Frontend ở một tên miền khác Backend (ví dụ: `localhost:3000` và `localhost:8080`), hãy đảm bảo Backend đã cấu hình CORS đúng (như chúng tôi đã làm trong `main.ts`).
