@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/employer_application_provider.dart';
 import '../../domain/entities/application_entity.dart';
 
@@ -548,9 +549,9 @@ class ApplicationDetailDrawer extends StatelessWidget {
         children: [
           Expanded(
             child: OutlinedButton(
-              onPressed: () {
-                // TODO: Open CV Snapshot in new view/PDF
-              },
+              onPressed: app.cvUrlSnapshot != null && app.cvUrlSnapshot!.isNotEmpty
+                  ? () => _openCv(context, app.cvUrlSnapshot!)
+                  : null,
               child: const Text('Xem CV Gốc'),
             ),
           ),
@@ -612,5 +613,26 @@ class ApplicationDetailDrawer extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _openCv(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không thể mở liên kết CV')),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi mở CV: $e')),
+        );
+      }
+    }
   }
 }
