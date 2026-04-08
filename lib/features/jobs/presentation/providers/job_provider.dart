@@ -38,6 +38,7 @@ class JobProvider extends ChangeNotifier {
   int _currentPublicPage = 1;
   int _lastPublicPage = 1;
   String? _errorMessage;
+  String? _jobDetailError;
   JobFilterModel _filter = const JobFilterModel();
   JobPostEntity? _currentJobDetail;
 
@@ -72,6 +73,7 @@ class JobProvider extends ChangeNotifier {
   int get currentPublicPage => _currentPublicPage;
   int get lastPublicPage => _lastPublicPage;
   String? get errorMessage => _errorMessage;
+  String? get jobDetailError => _jobDetailError;
   bool get hasMoreJobs => _currentPublicPage < _lastPublicPage;
   bool get hasJobs => _allJobs.isNotEmpty;
   JobFilterModel get filter => _filter;
@@ -167,7 +169,7 @@ class JobProvider extends ChangeNotifier {
   Future<void> fetchJobDetail(int jobId) async {
     _isLoading = true;
     _currentJobDetail = null;
-    _errorMessage = null;
+    _jobDetailError = null; // Clear detail error
     notifyListeners();
 
     final result = await getJobDetailUseCase(jobId);
@@ -175,7 +177,7 @@ class JobProvider extends ChangeNotifier {
     result.fold(
       (failure) {
         _isLoading = false;
-        _errorMessage = failure.message;
+        _jobDetailError = failure.message; // Use detail error variable
         notifyListeners();
       },
       (job) {
@@ -245,6 +247,12 @@ class JobProvider extends ChangeNotifier {
   /// Clear error message
   void clearError() {
     _errorMessage = null;
+    notifyListeners();
+  }
+
+  /// Clear job detail error message
+  void clearJobDetailError() {
+    _jobDetailError = null;
     notifyListeners();
   }
 

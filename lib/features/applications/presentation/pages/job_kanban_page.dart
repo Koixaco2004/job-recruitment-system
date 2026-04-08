@@ -82,6 +82,34 @@ class _JobKanbanPageState extends State<JobKanbanPage> {
     );
   }
 
+  Color _getColumnColor(String statusId) {
+    switch (statusId.toLowerCase()) {
+      case 'applied':
+        return Colors.blue;
+      case 'shortlisted':
+        return Colors.teal;
+      case 'skill_test':
+        return Colors.purple;
+      case 'technical_interview':
+        return Colors.indigo;
+      case 'final_interview':
+        return Colors.deepPurple;
+      case 'hired':
+      case 'accepted':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      default:
+        return Colors.blueGrey;
+    }
+  }
+
+  Color _darkenColor(Color color, [double amount = 0.15]) {
+    final hsl = HSLColor.fromColor(color);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
+  }
+
   Widget _buildKanbanTab() {
     return Consumer<EmployerApplicationProvider>(
       builder: (context, provider, child) {
@@ -107,16 +135,29 @@ class _JobKanbanPageState extends State<JobKanbanPage> {
 
         return ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: provider.kanbanColumns.length,
           itemBuilder: (context, index) {
             final column = provider.kanbanColumns[index];
+            final color = _getColumnColor(column.id);
+            final darkerColor = _darkenColor(color, 0.2);
+            
             return Container(
               width: 280,
-              margin: const EdgeInsets.only(right: 16),
+              margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: color.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(12),
+                border: Border(
+                  top: BorderSide(color: color, width: 4),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
@@ -128,19 +169,27 @@ class _JobKanbanPageState extends State<JobKanbanPage> {
                         Flexible(
                           child: Text(
                             column.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold, 
+                              fontSize: 15,
+                              color: darkerColor,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: Colors.blue[100],
+                            color: color.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             '${column.count}',
-                            style: TextStyle(color: Colors.blue[800], fontSize: 12, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: _darkenColor(color, 0.3), 
+                              fontSize: 12, 
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -154,21 +203,57 @@ class _JobKanbanPageState extends State<JobKanbanPage> {
                       itemBuilder: (context, itemIndex) {
                         final item = column.items[itemIndex];
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          elevation: 0.5,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(color: Colors.grey[200]!, width: 0.5),
+                          ),
                           child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                             onTap: () => _openDetail(item.id),
-                            title: Text(item.candidate?.fullName ?? 'Ẩn danh'),
-                            subtitle: Text(item.candidate?.currentJobTitle ?? 'Ứng viên'),
+                            title: Text(
+                              item.candidate?.fullName ?? 'Ẩn danh',
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                            ),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                item.candidate?.currentJobTitle ?? 'Ứng viên',
+                                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                              ),
+                            ),
                             trailing: item.matchScore != null 
                                 ? Container(
-                                    padding: const EdgeInsets.all(4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: Colors.green[50],
-                                      shape: BoxShape.circle,
+                                      color: (item.matchScore! >= 70 ? Colors.green : (item.matchScore! >= 40 ? Colors.orange : Colors.red)).withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: (item.matchScore! >= 70 ? Colors.green : (item.matchScore! >= 40 ? Colors.orange : Colors.red)).withValues(alpha: 0.3),
+                                        width: 1,
+                                      ),
                                     ),
-                                    child: Text(
-                                      '${item.matchScore!.toInt()}',
-                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'Phù hợp',
+                                          style: TextStyle(
+                                            fontSize: 9, 
+                                            color: (item.matchScore! >= 70 ? Colors.green : (item.matchScore! >= 40 ? Colors.orange : Colors.red)),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${item.matchScore!.toInt()}%',
+                                          style: TextStyle(
+                                            fontSize: 13, 
+                                            fontWeight: FontWeight.bold, 
+                                            color: (item.matchScore! >= 70 ? Colors.green : (item.matchScore! >= 40 ? Colors.orange : Colors.red)),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   )
                                 : null,

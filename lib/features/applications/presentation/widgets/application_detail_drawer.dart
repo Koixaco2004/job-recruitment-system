@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/employer_application_provider.dart';
 import '../../domain/entities/application_entity.dart';
+import '../../../../features/profile/presentation/providers/profile_provider.dart';
 
 class ApplicationDetailDrawer extends StatelessWidget {
   const ApplicationDetailDrawer({
@@ -13,8 +14,8 @@ class ApplicationDetailDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.85,
-      child: Consumer<EmployerApplicationProvider>(
-        builder: (context, provider, child) {
+      child: Consumer2<EmployerApplicationProvider, ProfileProvider>(
+        builder: (context, provider, profileProvider, child) {
           if (provider.isLoadingDetail) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -23,6 +24,12 @@ class ApplicationDetailDrawer extends StatelessWidget {
           if (app == null) {
             return const Center(child: Text('Không tìm thấy dữ liệu hồ sơ'));
           }
+
+          // Đảm bảo metadata đã được tải
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            profileProvider.fetchProvincesIfEmpty();
+            profileProvider.fetchJobTypesIfEmpty();
+          });
 
           return Column(
             children: [
@@ -33,8 +40,18 @@ class ApplicationDetailDrawer extends StatelessWidget {
                   children: [
                     _buildAiMatchSection(context, app),
                     const SizedBox(height: 16),
-                    _buildCandidateOverview(context, app),
+                    _buildCandidateOverview(context, app, profileProvider),
                     const SizedBox(height: 16),
+                    if (app.candidate?.bio != null && app.candidate!.bio!.isNotEmpty) ...[
+                      _buildSectionTitle('Giới thiệu bản thân'),
+                      _buildCard(
+                        Text(
+                          app.candidate!.bio!,
+                          style: const TextStyle(fontSize: 14, height: 1.5),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     if (app.coverLetter != null && app.coverLetter!.isNotEmpty) ...[
                       _buildSectionTitle('Thư ngỏ'),
                       _buildCard(Text(app.coverLetter!)),
@@ -146,8 +163,25 @@ class ApplicationDetailDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildCandidateOverview(BuildContext context, ApplicationEntity app) {
+  Widget _buildCandidateOverview(BuildContext context, ApplicationEntity app, ProfileProvider profileProvider) {
     final candidate = app.candidate;
+    
+    // Ánh xạ tên từ Metadata
+    final provinceName = profileProvider.getProvinceName(candidate?.provinceId);
+    final jobTypeName = profileProvider.getJobTypeName(candidate?.jobTypeId);
+    
+    // Định dạng lương
+    String salaryText = 'Thỏa thuận';
+    if (candidate?.desiredSalaryMin != null || candidate?.desiredSalaryMax != null) {
+      if (candidate?.desiredSalaryMin != null && candidate?.desiredSalaryMax != null) {
+        salaryText = '${candidate!.desiredSalaryMin} - ${candidate.desiredSalaryMax} \$';
+      } else if (candidate?.desiredSalaryMin != null) {
+        salaryText = 'Từ ${candidate!.desiredSalaryMin} \$';
+      } else {
+        salaryText = 'Đến ${candidate!.desiredSalaryMax} \$';
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -155,10 +189,13 @@ class ApplicationDetailDrawer extends StatelessWidget {
         _buildCard(
           Column(
             children: [
-              _buildInfoRow(Icons.work_outline, 'Vị trí hiện tại', candidate?.currentJobTitle ?? 'Chưa cập nhật'),
+              _buildInfoRow(Icons.ads_click, 'Vị trí mong muốn', candidate?.desiredJobTitle ?? 'Chưa cập nhật'),
               _buildInfoRow(Icons.history, 'Kinh nghiệm', '${candidate?.yearsOfExperience ?? 0} năm'),
               _buildInfoRow(Icons.phone_android, 'Số điện thoại', candidate?.phone ?? 'Chưa cập nhật'),
-              _buildInfoRow(Icons.location_on_outlined, 'Khu vực', candidate?.cityName ?? 'Chưa cập nhật'),
+              _buildInfoRow(Icons.location_on_outlined, 'Khu vực', provinceName ?? candidate?.cityName ?? 'Chưa cập nhật'),
+              _buildInfoRow(Icons.type_specimen_outlined, 'Loại hình', jobTypeName ?? 'Chưa cập nhật'),
+              _buildInfoRow(Icons.person_outline, 'Giới tính', candidate?.gender ?? 'Chưa cập nhật'),
+              _buildInfoRow(Icons.monetization_on_outlined, 'Lương mong muốn', salaryText),
             ],
           ),
         ),
@@ -217,10 +254,39 @@ class ApplicationDetailDrawer extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(cert.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(
-                  'Cấp ngày: ${cert.issueDate.day}/${cert.issueDate.month}/${cert.issueDate.year}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(cert.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                            'Cấp ngày: ${cert.issueDate.day}/${cert.issueDate.month}/${cert.issueDate.year}',
+                            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (cert.credentialUrl != null && cert.credentialUrl!.isNotEmpty)
+                      GestureDetector(
+                        onTap: () => _openCv(context, cert.credentialUrl!),
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          margin: const EdgeInsets.only(left: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[200]!),
+                            image: DecorationImage(
+                              image: NetworkImage(cert.credentialUrl!),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -452,7 +518,7 @@ class ApplicationDetailDrawer extends StatelessWidget {
                       selected: isSelected,
                       onSelected: (selected) {
                         if (selected) {
-                          setModalState(() => selectedStatus = entry.key);
+                           setModalState(() => selectedStatus = entry.key);
                         }
                       },
                       selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),

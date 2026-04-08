@@ -69,6 +69,38 @@ class _JobDetailPageState extends State<JobDetailPage> {
         // Ưu tiên dùng dữ liệu mới nhất từ Provider, nếu đang load hoặc lỗi thì dùng data cũ từ widget
         final job = provider.currentJobDetail ?? widget.job;
         final isLoading = provider.isLoading && provider.currentJobDetail == null;
+        final detailError = provider.jobDetailError;
+
+        // Kiểm tra xem tin có bị đóng hoặc hết hạn không
+        final isClosed = job.status.toLowerCase() == 'closed' || job.status.toLowerCase() == 'private';
+        final isExpired = _daysRemaining(job.deadline) < 0;
+        final showExpiredBanner = isClosed || isExpired;
+
+        // Nếu fetch lỗi hoàn toàn và không có cả dữ liệu cũ từ widget (trường hợp hiếm), mới hiện màn hình lỗi
+        if (detailError != null && provider.currentJobDetail == null && widget.job.jobPostId == 0) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Chi tiết việc làm')),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.info_outline, size: 64, color: Colors.orange[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    detailError,
+                    style: const TextStyle(fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Quay lại'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
 
         return Scaffold(
           backgroundColor: Colors.grey[100],
@@ -207,6 +239,30 @@ class _JobDetailPageState extends State<JobDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Expired Banner
+                    if (showExpiredBanner)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        color: Colors.red[50],
+                        child: Row(
+                          children: [
+                            Icon(Icons.timer_off_outlined, color: Colors.red[700], size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                isClosed ? 'Tin tuyển dụng này đã được đóng bởi nhà tuyển dụng.' : 'Tin tuyển dụng này đã hết hạn nộp hồ sơ.',
+                                style: TextStyle(
+                                  color: Colors.red[700],
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    
                     // Job title + badges
                     Container(
                       width: double.infinity,
@@ -474,6 +530,10 @@ class _JobDetailPageState extends State<JobDetailPage> {
     final applicationProvider = context.watch<ApplicationProvider>();
     final profileProvider = context.watch<ProfileProvider>();
     
+    // Kiểm tra xem tin có bị đóng hoặc hết hạn không
+    final isClosed = job.status.toLowerCase() == 'closed' || job.status.toLowerCase() == 'private';
+    final isExpired = _daysRemaining(job.deadline) < 0;
+
     // Kiểm tra đã ứng tuyển chưa
     final isApplied = applicationProvider.myApplications.any(
       (a) => a.jobId == job.jobPostId && a.status != 'withdrawn'
@@ -537,7 +597,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton.icon(
-                  onPressed: isApplied 
+                  onPressed: (isApplied || isClosed || isExpired) 
                     ? null 
                     : () {
                         // Kiểm tra CV
@@ -553,9 +613,14 @@ class _JobDetailPageState extends State<JobDetailPage> {
                           );
                         }
                       },
-                  icon: Icon(isApplied ? Icons.check_circle : Icons.send, size: 20),
+                  icon: Icon(
+                    isApplied ? Icons.check_circle : (isClosed || isExpired ? Icons.block : Icons.send), 
+                    size: 20
+                  ),
                   label: Text(
-                    isApplied ? 'Đã ứng tuyển' : 'Ứng tuyển ngay',
+                    isApplied 
+                        ? 'Đã ứng tuyển' 
+                        : (isClosed ? 'Công việc đã đóng' : (isExpired ? 'Đã hết hạn nộp' : 'Ứng tuyển ngay')),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
