@@ -4,6 +4,7 @@ import '../../../../core/models/paginated_response.dart';
 import '../entities/application_entity.dart';
 import '../entities/application_kanban_column_entity.dart';
 import '../entities/application_status_history_entity.dart';
+import '../entities/application_note_entity.dart';
 
 abstract class ApplicationRepository {
   Future<Either<Failure, ApplicationEntity>> apply({
@@ -40,5 +41,15 @@ abstract class ApplicationRepository {
     String status, {
     String? reason,
     String? note,
+  });
+
+  Future<Either<Failure, ApplicationNoteEntity>> addApplicationNote({
+    required int applicationId,
+    required String content,
+  });
+
+  Future<Either<Failure, ApplicationNoteEntity>> updateApplicationNote({
+    required int noteId,
+    required String content,
   });
 }

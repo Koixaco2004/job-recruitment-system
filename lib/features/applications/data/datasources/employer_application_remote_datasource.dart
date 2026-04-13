@@ -5,6 +5,7 @@ import '../../../../core/models/paginated_response.dart';
 import '../models/application_model.dart';
 import '../models/application_kanban_column_model.dart';
 import '../models/application_status_history_model.dart';
+import '../models/application_note_model.dart';
 
 abstract class EmployerApplicationRemoteDataSource {
   Future<PaginatedResponse<ApplicationModel>> getJobApplications(
@@ -26,6 +27,9 @@ abstract class EmployerApplicationRemoteDataSource {
     String? reason,
     String? note,
   });
+
+  Future<ApplicationNoteModel> addNote(int applicationId, String content);
+  Future<ApplicationNoteModel> updateNote(int noteId, String content);
 }
 
 class EmployerApplicationRemoteDataSourceImpl
@@ -166,6 +170,42 @@ class EmployerApplicationRemoteDataSourceImpl
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw const ServerException('Cập nhật trạng thái thất bại');
       }
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<ApplicationNoteModel> addNote(int applicationId, String content) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/employer/applications/$applicationId/notes',
+        data: {'content': content},
+      );
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return ApplicationNoteModel.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw const ServerException('Thêm ghi chú thất bại');
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<ApplicationNoteModel> updateNote(int noteId, String content) async {
+    try {
+      final response = await apiClient.dio.patch(
+        '/api/employer/applications/notes/$noteId',
+        data: {'content': content},
+      );
+      if (response.statusCode == 200) {
+        return ApplicationNoteModel.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw const ServerException('Cập nhật ghi chú thất bại');
     } on DioException catch (e) {
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {

@@ -2881,6 +2881,104 @@
                     "Applications - Employer"
                 ]
             }
+        },
+        "/api/employer/applications/{id}/notes": {
+            "post": {
+                "operationId": "EmployerApplicationsController_addNote",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateApplicationNoteDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Đã thêm ghi chú"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Đơn ứng tuyển không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thêm ghi chú/nhận xét cho đơn ứng tuyển",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/notes/{noteId}": {
+            "patch": {
+                "operationId": "EmployerApplicationsController_updateNote",
+                "parameters": [
+                    {
+                        "name": "noteId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID của ghi chú",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateApplicationNoteDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Ghi chú không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật nội dung ghi chú (chỉ người tạo)",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
         }
     },
     "info": {
@@ -4117,6 +4215,47 @@
                     "application"
                 ]
             },
+            "ApplicationNoteEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "applicationId": {
+                        "type": "number"
+                    },
+                    "authorId": {
+                        "type": "number"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "application": {
+                        "$ref": "#/components/schemas/JobApplicationEntity"
+                    },
+                    "author": {
+                        "$ref": "#/components/schemas/EmployerEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "applicationId",
+                    "authorId",
+                    "content",
+                    "createdAt",
+                    "updatedAt",
+                    "application",
+                    "author"
+                ]
+            },
             "JobApplicationEntity": {
                 "type": "object",
                 "properties": {
@@ -4183,6 +4322,12 @@
                         "items": {
                             "$ref": "#/components/schemas/ApplicationStatusHistoryEntity"
                         }
+                    },
+                    "notes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ApplicationNoteEntity"
+                        }
                     }
                 },
                 "required": [
@@ -4202,7 +4347,8 @@
                     "updatedAt",
                     "job",
                     "candidate",
-                    "statusHistory"
+                    "statusHistory",
+                    "notes"
                 ]
             },
             "CandidateEntity": {
@@ -4804,6 +4950,34 @@
                 },
                 "required": [
                     "status"
+                ]
+            },
+            "CreateApplicationNoteDto": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000,
+                        "description": "Nội dung ghi chú"
+                    }
+                },
+                "required": [
+                    "content"
+                ]
+            },
+            "UpdateApplicationNoteDto": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000,
+                        "description": "Cập nhật nội dung ghi chú"
+                    }
+                },
+                "required": [
+                    "content"
                 ]
             }
         }

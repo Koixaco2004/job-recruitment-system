@@ -2,6 +2,7 @@ import '../../domain/entities/application_entity.dart';
 import '../../../jobs/data/models/job_post_model.dart';
 import '../../../profile/data/models/candidate_profile_model.dart';
 import 'application_status_history_model.dart';
+import 'application_note_model.dart';
 
 
 class ApplicationModel extends ApplicationEntity {
@@ -23,6 +24,7 @@ class ApplicationModel extends ApplicationEntity {
     super.job,
     super.candidate,
     super.statusHistory,
+    super.notes,
   });
 
   factory ApplicationModel.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,11 @@ class ApplicationModel extends ApplicationEntity {
       statusHistory: json['statusHistory'] != null
           ? (json['statusHistory'] as List)
               .map((e) => ApplicationStatusHistoryModel.fromJson(e))
+              .toList()
+          : null,
+      notes: json['notes'] != null
+          ? (json['notes'] as List)
+              .map((e) => ApplicationNoteModel.fromJson(e))
               .toList()
           : null,
     );

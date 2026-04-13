@@ -1,0 +1,83 @@
+# Hướng dẫn tích hợp Timeline Notes (Dành cho Frontend Team)
+
+Tài liệu này hướng dẫn cách fetch và hiển thị tính năng **Timeline Ghi chú (Employer Notes)** mới được cập nhật ở Backend.
+
+## 1. Các thay đổi trong API Chi tiết Đơn ứng tuyển
+
+**Endpoint:** `GET /api/employer/applications/:id`
+
+Mảng `notes` hiện đã được trả về trong object chi tiết đơn ứng tuyển, sắp xếp theo thời gian mới nhất lên đầu.
+
+### Cấu trúc dữ liệu Ghi chú:
+```typescript
+interface ApplicationNote {
+  id: number;
+  content: string; // Nội dung ghi chú
+  createdAt: string; // ISO Date
+  authorId: number; // ID người viết
+  author: {
+    fullName: string; // Tên hiển thị (Dùng cái này để render)
+    avatarUrl: string | null;
+  }
+}
+```
+
+## 2. API Thêm ghi chú mới (Không đổi trạng thái)
+
+Sử dụng khi nhà tuyển dụng muốn nhận xét thêm mà không cần di chuyển cột Kanban.
+
+- **Method:** `POST`
+- **URL:** `/api/employer/applications/:id/notes`
+- **Body:**
+```json
+{
+  "content": "Nội dung nhận xét ở đây..."
+}
+```
+
+## 3. API Cập nhật trạng thái (Tích hợp Note)
+
+Khi gọi API chuyển trạng thái (Applied -> Interview...), nếu bạn gửi kèm trường `note`, hệ thống sẽ tự động tạo một bản ghi mới trong Timeline.
+
+- **Method:** `PATCH`
+- **URL:** `/api/employer/applications/:id/status`
+- **Body:**
+```json
+{
+  "status": "interview",
+  "note": "Hồ sơ rất ấn tượng, đã hẹn lịch phỏng vấn." 
+}
+```
+
+## 4. API Chỉnh sửa ghi chú
+
+Người dùng chỉ có quyền sửa ghi chú do chính mình tạo ra.
+
+- **Method:** `PATCH`
+- **URL:** `/api/employer/applications/notes/:noteId`
+- **Body:**
+```json
+{
+  "content": "Nội dung nhận xét đã chỉnh sửa..."
+}
+```
+
+## 5. Lưu ý cho Frontend UI/UX
+
+> [!TIP]
+> **Hiển thị nút Sửa:** 
+> Frontend nên so sánh `note.authorId` với `currentUser.id`. Nếu khớp thì mới hiển thị icon/nút "Chỉnh sửa".
+
+> [!IMPORTANT]
+> **Tính minh bạch:** 
+> Backend **không cung cấp API Xóa**. Nếu FE có thiết kế nút xóa, hãy gỡ bỏ nó để tránh lỗi 404/405 từ server.
+
+> [!NOTE]
+> **Formatting:**
+> Vì nội dung ghi chú (`content`) có thể xuống dòng, FE nên render bằng component hỗ trợ `white-space: pre-wrap` hoặc Markdown (nếu cần).
+
+## Gợi ý UI Component
+Bạn nên render dưới dạng một **Vertical Timeline** (Dòng thời gian dọc):
+- **Bên trái:** Avatar và Tên người nhận xét.
+- **Ở giữa:** Nội dung ghi chú.
+- **Bên phải/Dưới:** Thời gian (dùng `date-fns` format `distanceInWordsToNow` để hiển thị "2 phút trước", "1 ngày trước").

@@ -8,6 +8,8 @@ import '../../domain/usecases/get_kanban_board_usecase.dart';
 import '../../domain/usecases/get_employer_application_detail_usecase.dart';
 import '../../domain/usecases/get_application_status_history_usecase.dart';
 import '../../domain/usecases/update_application_status_usecase.dart';
+import '../../domain/usecases/add_application_note_usecase.dart';
+import '../../domain/usecases/update_application_note_usecase.dart';
 
 class EmployerApplicationProvider with ChangeNotifier {
   final GetJobApplicationsUseCase getJobApplicationsUseCase;
@@ -15,6 +17,8 @@ class EmployerApplicationProvider with ChangeNotifier {
   final GetEmployerApplicationDetailUseCase getEmployerApplicationDetailUseCase;
   final GetApplicationStatusHistoryUseCase getApplicationStatusHistoryUseCase;
   final UpdateApplicationStatusUseCase updateApplicationStatusUseCase;
+  final AddApplicationNoteUseCase addApplicationNoteUseCase;
+  final UpdateApplicationNoteUseCase updateApplicationNoteUseCase;
 
   EmployerApplicationProvider({
     required this.getJobApplicationsUseCase,
@@ -22,6 +26,8 @@ class EmployerApplicationProvider with ChangeNotifier {
     required this.getEmployerApplicationDetailUseCase,
     required this.getApplicationStatusHistoryUseCase,
     required this.updateApplicationStatusUseCase,
+    required this.addApplicationNoteUseCase,
+    required this.updateApplicationNoteUseCase,
   });
 
   List<ApplicationKanbanColumnEntity> _kanbanColumns = [];
@@ -199,6 +205,60 @@ class EmployerApplicationProvider with ChangeNotifier {
           await fetchKanbanBoard(_selectedApplication!.jobId);
           await fetchJobApplications(_selectedApplication!.jobId);
         }
+        _isLoadingDetail = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> addApplicationNote(int applicationId, String content) async {
+    _isLoadingDetail = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await addApplicationNoteUseCase(
+      applicationId: applicationId,
+      content: content,
+    );
+
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _isLoadingDetail = false;
+        notifyListeners();
+        return false;
+      },
+      (note) async {
+        // Refresh detail to get the updated notes list
+        await fetchApplicationDetail(applicationId);
+        _isLoadingDetail = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> updateApplicationNote(int applicationId, int noteId, String content) async {
+    _isLoadingDetail = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await updateApplicationNoteUseCase(
+      noteId: noteId,
+      content: content,
+    );
+
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _isLoadingDetail = false;
+        notifyListeners();
+        return false;
+      },
+      (note) async {
+        // Refresh detail to get the updated notes list
+        await fetchApplicationDetail(applicationId);
         _isLoadingDetail = false;
         notifyListeners();
         return true;

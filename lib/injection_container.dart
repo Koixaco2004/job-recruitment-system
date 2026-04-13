@@ -71,6 +71,8 @@ import 'features/applications/domain/usecases/get_kanban_board_usecase.dart';
 import 'features/applications/domain/usecases/get_employer_application_detail_usecase.dart';
 import 'features/applications/domain/usecases/get_application_status_history_usecase.dart';
 import 'features/applications/domain/usecases/update_application_status_usecase.dart';
+import 'features/applications/domain/usecases/add_application_note_usecase.dart';
+import 'features/applications/domain/usecases/update_application_note_usecase.dart';
 import 'features/applications/presentation/providers/application_provider.dart';
 import 'features/applications/presentation/providers/employer_application_provider.dart';
 
@@ -314,6 +316,8 @@ Future<void> init() async {
       getEmployerApplicationDetailUseCase: sl(),
       getApplicationStatusHistoryUseCase: sl(),
       updateApplicationStatusUseCase: sl(),
+      addApplicationNoteUseCase: sl(),
+      updateApplicationNoteUseCase: sl(),
     ),
   );
 
@@ -327,6 +331,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetEmployerApplicationDetailUseCase(sl()));
   sl.registerLazySingleton(() => GetApplicationStatusHistoryUseCase(sl()));
   sl.registerLazySingleton(() => UpdateApplicationStatusUseCase(sl()));
+  sl.registerLazySingleton(() => AddApplicationNoteUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateApplicationNoteUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ApplicationRepository>(

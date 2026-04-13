@@ -8,6 +8,7 @@ import '../datasources/application_remote_datasource.dart';
 import '../datasources/employer_application_remote_datasource.dart';
 import '../../domain/entities/application_kanban_column_entity.dart';
 import '../../domain/entities/application_status_history_entity.dart';
+import '../../domain/entities/application_note_entity.dart';
 
 class ApplicationRepositoryImpl implements ApplicationRepository {
   final ApplicationRemoteDataSource remoteDataSource;
@@ -157,6 +158,36 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
         note: note,
       );
       return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ApplicationNoteEntity>> addApplicationNote({
+    required int applicationId,
+    required String content,
+  }) async {
+    try {
+      final result = await employerRemoteDataSource.addNote(applicationId, content);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ApplicationNoteEntity>> updateApplicationNote({
+    required int noteId,
+    required String content,
+  }) async {
+    try {
+      final result = await employerRemoteDataSource.updateNote(noteId, content);
+      return Right(result);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

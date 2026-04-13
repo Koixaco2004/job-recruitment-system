@@ -322,7 +322,7 @@ class _MyJobsPageState extends State<MyJobsPage>
           child: ListView.builder(
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.fromLTRB(0, 8, 0, 80),
             itemCount: jobs.length + (provider.hasMoreEmployerJobs ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == jobs.length) {
@@ -440,7 +440,7 @@ class _MyJobsPageState extends State<MyJobsPage>
                                       );
                                     },
                                     icon: const Icon(Icons.people_alt_outlined, size: 18),
-                                    label: Text('Ứng viên (${job.applicationCount})'),
+                                    label: const Text('Ứng viên'),
                                     style: TextButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(horizontal: 8),
                                       visualDensity: VisualDensity.compact,

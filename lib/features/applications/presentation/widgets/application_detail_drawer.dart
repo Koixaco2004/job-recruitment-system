@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/employer_application_provider.dart';
 import '../../domain/entities/application_entity.dart';
+import '../../domain/entities/application_note_entity.dart';
 import '../../../../features/profile/presentation/providers/profile_provider.dart';
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import 'package:intl/intl.dart';
 
 class ApplicationDetailDrawer extends StatelessWidget {
   const ApplicationDetailDrawer({
@@ -14,8 +17,8 @@ class ApplicationDetailDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.85,
-      child: Consumer2<EmployerApplicationProvider, ProfileProvider>(
-        builder: (context, provider, profileProvider, child) {
+      child: Consumer3<EmployerApplicationProvider, ProfileProvider, AuthProvider>(
+        builder: (context, provider, profileProvider, authProvider, child) {
           if (provider.isLoadingDetail) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -60,6 +63,8 @@ class ApplicationDetailDrawer extends StatelessWidget {
                     _buildProfessionalInfo(context, app),
                     const SizedBox(height: 16),
                     _buildStatusHistory(context, provider),
+                    const SizedBox(height: 16),
+                    _buildNotesTimeline(context, provider, authProvider),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -451,6 +456,219 @@ class ApplicationDetailDrawer extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildNotesTimeline(BuildContext context, EmployerApplicationProvider provider, AuthProvider authProvider) {
+    final app = provider.selectedApplication;
+    final notes = app?.notes ?? [];
+    final currentUserId = authProvider.user?.userId;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionTitle('Ghi chú nội bộ'),
+            TextButton.icon(
+              onPressed: () => _showNoteDialog(context, provider, applicationId: app?.id),
+              icon: const Icon(Icons.add_comment_outlined, size: 16),
+              label: const Text('Thêm ghi chú', style: TextStyle(fontSize: 12)),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: Theme.of(context).primaryColor,
+              ),
+            ),
+          ],
+        ),
+        if (notes.isEmpty)
+          _buildCard(
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Chưa có ghi chú nào cho ứng viên này',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              ),
+            ),
+          )
+        else
+          _buildCard(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                children: List.generate(notes.length, (index) {
+                  final note = notes[index];
+                  final isLast = index == notes.length - 1;
+                  final isAuthor = note.authorId == currentUserId;
+
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Column(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: (note.authorAvatar != null && note.authorAvatar!.isNotEmpty)
+                                    ? DecorationImage(
+                                        image: NetworkImage(note.authorAvatar!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                                color: Colors.blue[100],
+                              ),
+                              child: (note.authorAvatar == null || note.authorAvatar!.isEmpty)
+                                  ? Icon(Icons.person, size: 16, color: Colors.blue[800])
+                                  : null,
+                            ),
+                            if (!isLast)
+                              Expanded(
+                                child: Container(
+                                  width: 2,
+                                  color: Colors.grey[200],
+                                  margin: const EdgeInsets.symmetric(vertical: 4),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    note.authorName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    DateFormat('dd/MM HH:mm').format(note.createdAt),
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  if (isAuthor)
+                                    IconButton(
+                                      icon: const Icon(Icons.edit_outlined, size: 14),
+                                      onPressed: () => _showNoteDialog(
+                                        context,
+                                        provider,
+                                        applicationId: app?.id,
+                                        note: note,
+                                      ),
+                                      constraints: const BoxConstraints(),
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                      color: Colors.grey[600],
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: isAuthor ? Colors.blue[50] : Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  note.content,
+                                  style: const TextStyle(fontSize: 13, height: 1.4),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showNoteDialog(
+    BuildContext context,
+    EmployerApplicationProvider provider, {
+    int? applicationId,
+    ApplicationNoteEntity? note,
+  }) {
+    final controller = TextEditingController(text: note?.content);
+    final isEditing = note != null;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isEditing ? 'Sửa ghi chú' : 'Thêm ghi chú mới'),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Nhập nội dung ghi chú...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (controller.text.trim().isEmpty) return;
+
+              bool success;
+              if (isEditing) {
+                success = await provider.updateApplicationNote(
+                  applicationId!,
+                  note.id,
+                  controller.text.trim(),
+                );
+              } else {
+                success = await provider.addApplicationNote(
+                  applicationId!,
+                  controller.text.trim(),
+                );
+              }
+
+              if (context.mounted) {
+                Navigator.pop(context);
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(isEditing ? 'Đã cập nhật ghi chú' : 'Đã thêm ghi chú')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(provider.errorMessage ?? 'Có lỗi xảy ra')),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isEditing ? 'Cập nhật' : 'Gửi'),
+          ),
+        ],
+      ),
     );
   }
 

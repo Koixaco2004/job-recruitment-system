@@ -3,6 +3,7 @@ import '../../../jobs/domain/entities/job_post_entity.dart';
 import '../../../profile/domain/entities/candidate_profile_entity.dart';
 
 import 'application_status_history_entity.dart';
+import 'application_note_entity.dart';
 
 class ApplicationEntity extends Equatable {
   final int id;
@@ -22,6 +23,7 @@ class ApplicationEntity extends Equatable {
   final JobPostEntity? job;
   final CandidateProfileEntity? candidate;
   final List<ApplicationStatusHistoryEntity>? statusHistory;
+  final List<ApplicationNoteEntity>? notes;
 
   const ApplicationEntity({
     required this.id,
@@ -41,6 +43,7 @@ class ApplicationEntity extends Equatable {
     this.job,
     this.candidate,
     this.statusHistory,
+    this.notes,
   });
 
   @override
@@ -62,5 +65,6 @@ class ApplicationEntity extends Equatable {
         job,
         candidate,
         statusHistory,
+        notes,
       ];
 }
