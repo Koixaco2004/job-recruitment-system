@@ -38,8 +38,13 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
-          // Xử lý lỗi 401: Thử Refresh Token
-          if (e.response?.statusCode == 401) {
+          // KHÔNG thử refresh token nếu lỗi xảy ra ở luồng Login/Register
+          final isAuthPath = e.requestOptions.path.contains('/api/auth/login') || 
+                            e.requestOptions.path.contains('/api/auth/register') ||
+                            e.requestOptions.path.contains('/api/auth/employer/register');
+
+          // Xử lý lỗi 401: Thử Refresh Token (chỉ áp dụng cho các API yêu cầu Auth khác)
+          if (e.response?.statusCode == 401 && !isAuthPath) {
             try {
               // Gọi API refresh (CookieManager sẽ tự gửi refresh_token trong Cookie)
               final refreshResponse = await dio.post('/api/auth/refresh');

@@ -37,25 +37,26 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final result = await loginUseCase(email: email, password: password);
+    try {
+      final result = await loginUseCase(email: email, password: password);
 
-    return result.fold(
-      (failure) {
-        // Login thất bại
-        _isLoading = false;
-        _errorMessage = failure.message;
-        notifyListeners();
-        return false;
-      },
-      (user) {
-        // Login thành công
-        _isLoading = false;
-        _user = user;
-        _errorMessage = null;
-        notifyListeners();
-        return true;
-      },
-    );
+      return result.fold(
+        (failure) {
+          // Login thất bại
+          _errorMessage = failure.message;
+          return false;
+        },
+        (user) {
+          // Login thành công
+          _user = user;
+          _errorMessage = null;
+          return true;
+        },
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Register method
@@ -71,32 +72,33 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final result = await registerUseCase(
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      password: password,
-      phone: phone,
-      provinceId: provinceId,
-    );
+    try {
+      final result = await registerUseCase(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: password,
+        phone: phone,
+        provinceId: provinceId,
+      );
 
-    return result.fold(
-      (failure) {
-        // Đăng ký thất bại
-        _isLoading = false;
-        _errorMessage = failure.message;
-        notifyListeners();
-        return false;
-      },
-      (user) {
-        // Đăng ký thành công
-        _isLoading = false;
-        _user = user;
-        _errorMessage = null;
-        notifyListeners();
-        return true;
-      },
-    );
+      return result.fold(
+        (failure) {
+          // Đăng ký thất bại
+          _errorMessage = failure.message;
+          return false;
+        },
+        (user) {
+          // Đăng ký thành công
+          _user = user;
+          _errorMessage = null;
+          return true;
+        },
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Register Employer method
@@ -108,26 +110,27 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final result = await registerEmployerUseCase(
-      email: email,
-      password: password,
-    );
+    try {
+      final result = await registerEmployerUseCase(
+        email: email,
+        password: password,
+      );
 
-    return result.fold(
-      (failure) {
-        _isLoading = false;
-        _errorMessage = failure.message;
-        notifyListeners();
-        return false;
-      },
-      (user) {
-        _isLoading = false;
-        _user = user;
-        _errorMessage = null;
-        notifyListeners();
-        return true;
-      },
-    );
+      return result.fold(
+        (failure) {
+          _errorMessage = failure.message;
+          return false;
+        },
+        (user) {
+          _user = user;
+          _errorMessage = null;
+          return true;
+        },
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Logout method
@@ -135,12 +138,14 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await logoutUseCase();
-
-    _user = null;
-    _errorMessage = null;
-    _isLoading = false;
-    notifyListeners();
+    try {
+      await logoutUseCase();
+    } finally {
+      _user = null;
+      _errorMessage = null;
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Clear error message

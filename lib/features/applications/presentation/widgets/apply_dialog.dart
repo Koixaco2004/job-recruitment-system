@@ -15,7 +15,6 @@ class ApplyDialog extends StatefulWidget {
 
 class _ApplyDialogState extends State<ApplyDialog> {
   final _coverLetterController = TextEditingController();
-  bool _useDefaultCoverLetter = true;
 
   @override
   void dispose() {
@@ -112,56 +111,26 @@ class _ApplyDialogState extends State<ApplyDialog> {
             ),
             
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Thư giới thiệu (Cover Letter)',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-                Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                    value: _useDefaultCoverLetter,
-                    onChanged: (val) {
-                      setState(() {
-                        _useDefaultCoverLetter = val;
-                      });
-                    },
-                  ),
-                ),
-              ],
+            const Text(
+              'Thư giới thiệu (Cover Letter) *',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
             const Text(
-              'Thêm một bức thư ngắn gọn để giới thiệu bản thân với nhà tuyển dụng.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              'Bắt buộc viết một bức thư ngắn gọn để giới thiệu bản thân với nhà tuyển dụng.',
+              style: TextStyle(fontSize: 12, color: Colors.blueGrey),
             ),
             const SizedBox(height: 12),
-            if (!_useDefaultCoverLetter)
-              TextField(
-                controller: _coverLetterController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: 'VD: Tôi rất ấn tượng với vị trí này...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.all(12),
-                ),
-              )
-            else
-              Container(
-                padding: const EdgeInsets.all(12),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
+            TextField(
+              controller: _coverLetterController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: 'VD: Tôi rất ấn tượng với vị trí này...',
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'Sử dụng thư giới thiệu mặc định của hệ thống.',
-                  style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
-                ),
+                contentPadding: const EdgeInsets.all(12),
               ),
+            ),
             
             const SizedBox(height: 24),
             SizedBox(
@@ -171,9 +140,20 @@ class _ApplyDialogState extends State<ApplyDialog> {
                 onPressed: applicationProvider.isApplying
                     ? null
                     : () async {
+                        // Validate Cover Letter
+                        if (_coverLetterController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Vui lòng nhập thư giới thiệu (Cover Letter)'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                          return;
+                        }
+
                         final success = await applicationProvider.apply(
                           jobId: widget.job.jobPostId,
-                          coverLetter: _useDefaultCoverLetter ? null : _coverLetterController.text,
+                          coverLetter: _coverLetterController.text,
                           currentCvUrl: profile?.cvFileUrl,
                         );
 
