@@ -299,6 +299,40 @@
                 ]
             }
         },
+        "/api/candidates/cv/parse": {
+            "post": {
+                "description": "Gọi Gemini AI đọc file CV đã upload và tự động điền: họ tên, SĐT, vị trí, bio, kinh nghiệm làm việc, học vấn, dự án, chứng chỉ và kỹ năng. Tính năng chỉ chạy khi người dùng chủ động bấm nút — KHÔNG tự động khi upload CV. Dữ liệu mới được THÊM VÀO, không xóa dữ liệu đã có.",
+                "operationId": "CandidatesController_parseCvToProfile",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Phân tích và cập nhật thành công"
+                    },
+                    "201": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Chưa upload CV | File không đọc được | AI chưa cấu hình"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "404": {
+                        "description": "Hồ sơ ứng viên không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "[AI] Parse CV → Tự động điền thông tin vào Profile",
+                "tags": [
+                    "Candidates",
+                    "Candidates - Profile"
+                ]
+            }
+        },
         "/api/candidates/avatar": {
             "post": {
                 "operationId": "CandidatesController_uploadAvatar",
@@ -1714,6 +1748,33 @@
                     }
                 ],
                 "summary": "Upload Giấy phép kinh doanh để xác thực công ty",
+                "tags": [
+                    "Companies - Quản lý hồ sơ doanh nghiệp"
+                ]
+            }
+        },
+        "/api/companies/slug/{slug}": {
+            "get": {
+                "operationId": "CompaniesController_getCompanyPublicBySlug",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thông tin công ty và gallery"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy công ty"
+                    }
+                },
+                "summary": "Xem chi tiết thông tin công ty qua Slug (Public)",
                 "tags": [
                     "Companies - Quản lý hồ sơ doanh nghiệp"
                 ]
@@ -3944,6 +4005,9 @@
                         "format": "date-time",
                         "type": "string"
                     },
+                    "slug": {
+                        "type": "string"
+                    },
                     "createdAt": {
                         "format": "date-time",
                         "type": "string"
@@ -3986,6 +4050,7 @@
                     "status",
                     "rejectionReason",
                     "verifiedAt",
+                    "slug",
                     "createdAt",
                     "updatedAt",
                     "employers",
@@ -4242,7 +4307,7 @@
                         "$ref": "#/components/schemas/JobApplicationEntity"
                     },
                     "author": {
-                        "$ref": "#/components/schemas/EmployerEntity"
+                        "$ref": "#/components/schemas/UserEntity"
                     }
                 },
                 "required": [
@@ -4504,6 +4569,9 @@
                     },
                     "candidate": {
                         "$ref": "#/components/schemas/CandidateEntity"
+                    },
+                    "employer": {
+                        "$ref": "#/components/schemas/EmployerEntity"
                     }
                 },
                 "required": [
@@ -4513,7 +4581,8 @@
                     "role",
                     "status",
                     "created_at",
-                    "candidate"
+                    "candidate",
+                    "employer"
                 ]
             },
             "UpdateEmployerProfileDto": {

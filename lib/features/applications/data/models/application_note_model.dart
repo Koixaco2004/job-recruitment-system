@@ -22,19 +22,20 @@ class ApplicationNoteModel extends ApplicationNoteEntity {
     //   "author": { "fullName": string, "avatarUrl": string | null }
     // }
     
-    final author = json['author'] as Map<String, dynamic>?;
+    final authorJson = json['author'] as Map<String, dynamic>?;
+    final employerJson = authorJson?['employer'] as Map<String, dynamic>?;
     
     return ApplicationNoteModel(
       id: json['id'] as int,
-      applicationId: json['applicationId'] as int? ?? 0, // Backend doesn't always return this in detail
-      authorId: json['authorId'] as int? ?? (author?['id'] as int? ?? 0),
+      applicationId: json['applicationId'] as int? ?? 0,
+      authorId: json['authorId'] as int? ?? (authorJson?['id'] as int? ?? 0),
       content: json['content'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: json['updatedAt'] != null 
           ? DateTime.parse(json['updatedAt'] as String) 
           : DateTime.parse(json['createdAt'] as String),
-      authorName: author?['fullName'] as String? ?? 'Unknown',
-      authorAvatar: author?['avatarUrl'] as String?,
+      authorName: employerJson?['fullName'] as String? ?? authorJson?['fullName'] as String? ?? 'Unknown',
+      authorAvatar: employerJson?['avatarUrl'] as String? ?? authorJson?['avatarUrl'] as String?,
     );
   }
 

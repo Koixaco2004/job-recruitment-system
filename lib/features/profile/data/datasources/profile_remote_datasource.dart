@@ -59,6 +59,7 @@ abstract class ProfileRemoteDataSource {
   Future<void> addCandidateSkills(List<dynamic> skills);
   Future<void> deleteCandidateSkill(int mappingId);
   Future<String?> uploadAvatar(Uint8List bytes, String fileName);
+  Future<void> parseCv();
 }
 
 /// Implementation gọi API thật
@@ -720,6 +721,38 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     } catch (e) {
       if (e is ServerException || e is AuthenticationException) rethrow;
       throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> parseCv() async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/candidates/cv/parse',
+        options: Options(
+          receiveTimeout: const Duration(seconds: 120),
+        ),
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException('Phân tích CV thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      
+      final data = e.response?.data;
+      final String? serverMsg = data is Map ? (data['message'] ?? data['error'])?.toString() : null;
+
+      if (e.response?.statusCode == 503 || e.response?.statusCode == 504) {
+        throw ServerException(serverMsg ?? 'Dịch vụ AI đang quá tải, vui lòng thử lại sau vài phút');
+      }
+      
+      if (e.response?.statusCode == 400) {
+        throw ServerException(serverMsg ?? 'Chưa upload CV hoặc file không đọc được');
+      }
+      throw ServerException(serverMsg ?? e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
     }
   }
 }

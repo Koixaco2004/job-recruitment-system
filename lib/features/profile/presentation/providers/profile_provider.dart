@@ -8,6 +8,7 @@ import '../../domain/entities/certificate_entity.dart';
 import '../../domain/entities/project_entity.dart';
 import '../../domain/usecases/get_profile_usecase.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
+import '../../domain/usecases/parse_cv_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../metadata/domain/usecases/get_provinces_usecase.dart';
@@ -31,6 +32,7 @@ class ProfileProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isSaving = false;
   bool _isUploadingCV = false;
+  bool _isParsingCV = false;
   CandidateProfileEntity? _profile;
   String? _errorMessage;
   String? _successMessage;
@@ -60,6 +62,7 @@ class ProfileProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   bool get isUploadingCV => _isUploadingCV;
+  bool get isParsingCV => _isParsingCV;
   CandidateProfileEntity? get profile => _profile;
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
@@ -1089,5 +1092,33 @@ class ProfileProvider extends ChangeNotifier {
       createdAt: _profile!.createdAt,
       updatedAt: _profile!.updatedAt,
     );
+  }
+
+  Future<void> parseCV() async {
+    _isParsingCV = true;
+    _errorMessage = null;
+    _successMessage = null;
+    notifyListeners();
+
+    try {
+      final parseCvUseCase = di.sl<ParseCvUseCase>();
+      final result = await parseCvUseCase();
+      
+      await result.fold(
+        (failure) async {
+          _errorMessage = failure.message;
+        },
+        (_) async {
+          _successMessage = 'Tự động điền hồ sơ thành công!';
+          // Refresh profile to see changes
+          await fetchProfile();
+        },
+      );
+    } catch (e) {
+      _errorMessage = 'Đã xảy ra lỗi khi phân tích CV';
+    } finally {
+      _isParsingCV = false;
+      notifyListeners();
+    }
   }
 }

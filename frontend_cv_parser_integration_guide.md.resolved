@@ -1,0 +1,81 @@
+# Hướng Dẫn Tích Hợp: AI Parse CV (Dành cho Team Frontend)
+
+Tài liệu này mô tả chi tiết logic, cách thức gọi API và các lời khuyên về UX để team Frontend (FE) tích hợp tính năng **Dùng AI phân tích CV & Tự động điền dữ liệu** vào hồ sơ ứng viên.
+
+---
+
+## 1. Luồng chạy (Business Flow)
+
+> [!IMPORTANT]
+> Tự động parse CV **KHÔNG** chạy ngầm khi tải CV lên. Tính năng này cần một thao tác bấm (Trigger) chủ động từ ứng viên.
+
+- FE cần tạo một nút (Button/Icon) tại trang Profile, mang tên: *"Tự động điền Profile bằng CV"*, *"Phân tích CV"*, hoặc rải một icon nhỏ hình Bot AI góc trên cùng màn hình.
+- **Điều kiện:** Ứng viên bắt buộc phải có CV (PDF) đã tải lên hệ thống trước đó. Nếu chưa có, Backend (BE) sẽ quăng lỗi 400.
+
+---
+
+## 2. Thông Tin Endpoint API
+
+Endpoint chính kích hoạt AI Parse:
+- **Phương thức:** `POST`
+- **Url:** `/api/candidates/cv/parse`
+- **Headers:** `Authorization: Bearer <Candidate_Token>`
+- **Payload (Body):** Bỏ trống (BE tự truy xuất CV mới nhất đã lưu).
+
+### Thời Gian Phản Hồi
+Do đây là luồng đàm phán trực tiếp với Google Gemini AI, thời gian xử lý độ trễ sẽ rơi vào khoảng **2s - 5s**. (Xem phần đề xuất UX bên dưới).
+
+### Cấu Trúc Response (Khi Thành Công - 200 OK)
+
+```json
+{
+  "message": "Phân tích CV thành công. Đã cập nhật 4 trường hồ sơ, thêm 3 kinh nghiệm, 1 học vấn, 2 dự án, 2 chứng chỉ, 15 kỹ năng.",
+  "summary": {
+    "profileFieldsUpdated": ["fullName", "position", "bio", "yearWorkingExperience"],
+    "workExperiencesAdded": 3,
+    "educationsAdded": 1,
+    "projectsAdded": 2,
+    "certificatesAdded": 2,
+    "skillsAdded": 15
+  }
+}
+```
+
+---
+
+## 3. Quy Luật Ghi Đè Dữ Liệu Của AI
+
+> [!WARNING]
+> FE cần nắm rõ quy tắc này để biết Data nào sẽ bị thay đổi sau khi API trả về 200 nhằm cập nhật giao diện tương ứng.
+
+1. **Thông tin cơ bản (Tên, SĐT, Vị trí làm việc, Giới thiệu chung):**
+   - **Ghi đè hoàn toàn (Overwrite).** Bất cứ dữ liệu nào AI tìm thấy sẽ đè lên chữ cũ.
+2. **Các danh sách mảng (Kinh nghiệm, Học vấn, Dự án):**
+   - **Chỉ chèn vào nếu bảng đang TRỐNG.**
+   - Nếu ứng viên đã cất công tự điền 1 dự án trước đó -> AI sẽ KHÔNG đụng vào để tránh gây trùng lặp/hỏng dữ liệu.
+3. **Chứng chỉ & Kỹ năng (Skills):**
+   - **Gắn thêm (Append).** Giữ nguyên kỹ năng cũ và thêm kỹ năng mới không trùng lặp.
+
+---
+
+## 4. Khuyến Nghị Về UX / UI Cho Frontend
+
+Để tối ưu hóa trải nghiệm do API này có độ trễ lớn (Tới 5 giây), FE vui lòng xem xét các kỹ thuật sau:
+
+> [!TIP]
+> **State 1: Đang gọi API (Pending)**
+> - Bật một **Toast/Popup** nhỏ, không cản trở màn hình: *"Đang nhờ bot AI đọc CV của bạn..."*
+> - Trong lúc này, cho phép user tiếp tục lướt thông tin khác. Tránh hiển thị bộ Loading phủ kín toàn màn hình (Blocking UX).
+
+> [!CAUTION]
+> **State 2: Có Lỗi (Rejected / Catch)**
+> - Đón bắt và báo lỗi mượt mà khi BE trả về `400` (VD: Chưa có CV, File lỗi, hoặc cạn giới hạn quota của Google Cloud).
+> - Hiển thị popup nhẹ nhàng khuyên user điền thông tin thủ công.
+
+> [!NOTE]
+> **State 3: Thành Công (Fulfilled)**
+> - Bật Notification chúc mừng người dùng (Show cái `message` BE trả về).
+> - Tính từ lúc có `200 OK`, FE hãy gọi thêm Endpoint **Fetch Current Profile** (`GET /candidates/profile`) rồi ném tất cả Data mới nhận được vào React/Vue state để chớp mắt "làm đầy" trang Profile tự động. User sẽ thấy rất ngạc nhiên.
+  
+----
+*Mọi thay đổi tiếp theo về hệ Validation cho file PDF, BE cũng đã clear dứt điểm ở endpoint `/candidates/cv`. FE cứ truyền lên file Blob bình thường.*

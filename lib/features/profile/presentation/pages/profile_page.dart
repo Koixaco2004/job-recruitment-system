@@ -52,6 +52,17 @@ class _ProfilePageState extends State<ProfilePage> {
       provider.clearMessages();
     }
 
+    // Show general error as SnackBar
+    if (provider.errorMessage != null && provider.profile != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage!),
+          backgroundColor: Colors.red,
+        ),
+      );
+      provider.clearMessages();
+    }
+
     // Show success message
     if (provider.successMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -798,6 +809,86 @@ class _ProfilePageState extends State<ProfilePage> {
           ] else
             const Text('Chưa upload CV', style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 12),
+          // --- AI Parse CV Button ---
+          if (profile.cvFileUrl != null) ...[
+            Container(
+              width: double.infinity,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2575FC).withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: provider.isParsingCV ? null : () => provider.parseCV(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: provider.isParsingCV
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'AI đang phân tích CV...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.auto_awesome, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Tự động điền hồ sơ bằng AI',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '✨ Gemini AI sẽ giúp bạn điền nhanh thông tin từ CV.',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          // --- End AI Parse CV ---
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(

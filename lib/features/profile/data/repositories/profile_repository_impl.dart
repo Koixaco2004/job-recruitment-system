@@ -269,7 +269,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
     }
   }
 
-
   @override
   Future<Either<Failure, void>> deleteCertificate(int id) async {
     try {
@@ -461,6 +460,20 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> parseCv() async {
+    try {
+      await remoteDataSource.parseCv();
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi khi phân tích CV: $e'));
     }
   }
 }

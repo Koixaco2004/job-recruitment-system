@@ -47,6 +47,7 @@ import 'features/profile/data/repositories/profile_repository_impl.dart';
 import 'features/profile/domain/repositories/profile_repository.dart';
 import 'features/profile/domain/usecases/get_profile_usecase.dart';
 import 'features/profile/domain/usecases/update_profile_usecase.dart';
+import 'features/profile/domain/usecases/parse_cv_usecase.dart';
 import 'features/profile/presentation/providers/profile_provider.dart';
 import 'features/metadata/data/datasources/metadata_remote_datasource.dart';
 import 'features/metadata/data/repositories/metadata_repository_impl.dart';
@@ -217,6 +218,7 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => GetProfileUseCase(sl()));
   sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));
+  sl.registerLazySingleton(() => ParseCvUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ProfileRepository>(
