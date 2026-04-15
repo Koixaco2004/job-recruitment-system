@@ -76,6 +76,11 @@ import 'features/applications/domain/usecases/add_application_note_usecase.dart'
 import 'features/applications/domain/usecases/update_application_note_usecase.dart';
 import 'features/applications/presentation/providers/application_provider.dart';
 import 'features/applications/presentation/providers/employer_application_provider.dart';
+import 'features/headhunting/data/datasources/headhunting_remote_datasource.dart';
+import 'features/headhunting/data/repositories/headhunting_repository_impl.dart';
+import 'features/headhunting/domain/repositories/headhunting_repository.dart';
+import 'features/headhunting/domain/usecases/get_suggested_candidates_usecase.dart';
+import 'features/headhunting/presentation/providers/headhunting_provider.dart';
 
 final sl = GetIt.instance; // Service Locator
 
@@ -351,5 +356,29 @@ Future<void> init() async {
 
   sl.registerLazySingleton<EmployerApplicationRemoteDataSource>(
     () => EmployerApplicationRemoteDataSourceImpl(sl()),
+  );
+
+  // ========================
+  // Features - Headhunting
+  // ========================
+
+  // Providers
+  sl.registerFactory(
+    () => HeadhuntingProvider(
+      getSuggestedCandidatesUseCase: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetSuggestedCandidatesUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<HeadhuntingRepository>(
+    () => HeadhuntingRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<HeadhuntingRemoteDataSource>(
+    () => HeadhuntingRemoteDataSourceImpl(apiClient: sl()),
   );
 }

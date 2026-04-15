@@ -10,6 +10,7 @@ import 'features/profile/presentation/providers/profile_provider.dart';
 import 'features/employer/presentation/providers/employer_provider.dart';
 import 'features/applications/presentation/providers/application_provider.dart';
 import 'features/applications/presentation/providers/employer_application_provider.dart';
+import 'features/headhunting/presentation/providers/headhunting_provider.dart';
 import 'injection_container.dart' as di;
 
 
@@ -45,6 +46,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<ApplicationProvider>()),
         // Employer Application Provider
         ChangeNotifierProvider(create: (_) => di.sl<EmployerApplicationProvider>()),
+        // Headhunting Provider
+        ChangeNotifierProvider(create: (_) => di.sl<HeadhuntingProvider>()),
       ],
       child: MaterialApp(
         title: 'Recruitment App',

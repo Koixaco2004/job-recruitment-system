@@ -189,7 +189,7 @@
         },
         "/api/candidates/profile": {
             "get": {
-                "operationId": "CandidatesController_getProfile",
+                "operationId": "CandidateProfileController_getProfile",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -209,12 +209,12 @@
                 ],
                 "summary": "Lấy toàn bộ hồ sơ ứng viên",
                 "tags": [
-                    "Candidates",
+                    "CandidateProfile",
                     "Candidates - Profile"
                 ]
             },
             "put": {
-                "operationId": "CandidatesController_updateProfile",
+                "operationId": "CandidateProfileController_updateProfile",
                 "parameters": [],
                 "requestBody": {
                     "required": true,
@@ -244,14 +244,51 @@
                 ],
                 "summary": "Cập nhật hồ sơ ứng viên",
                 "tags": [
-                    "Candidates",
+                    "CandidateProfile",
+                    "Candidates - Profile"
+                ]
+            }
+        },
+        "/api/candidates/profile/visibility": {
+            "put": {
+                "operationId": "CandidateProfileController_updateVisibility",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateVisibilityDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật trạng thái thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy hồ sơ ứng viên"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Bật/Tắt chế độ công khai hồ sơ cho Employer Headhunting",
+                "tags": [
+                    "CandidateProfile",
                     "Candidates - Profile"
                 ]
             }
         },
         "/api/candidates/cv": {
             "post": {
-                "operationId": "CandidatesController_uploadCv",
+                "operationId": "CandidateProfileController_uploadCv",
                 "parameters": [],
                 "requestBody": {
                     "required": true,
@@ -294,7 +331,7 @@
                 ],
                 "summary": "Upload CV (PDF) Ứng viên",
                 "tags": [
-                    "Candidates",
+                    "CandidateProfile",
                     "Candidates - Profile"
                 ]
             }
@@ -302,7 +339,7 @@
         "/api/candidates/cv/parse": {
             "post": {
                 "description": "Gọi Gemini AI đọc file CV đã upload và tự động điền: họ tên, SĐT, vị trí, bio, kinh nghiệm làm việc, học vấn, dự án, chứng chỉ và kỹ năng. Tính năng chỉ chạy khi người dùng chủ động bấm nút — KHÔNG tự động khi upload CV. Dữ liệu mới được THÊM VÀO, không xóa dữ liệu đã có.",
-                "operationId": "CandidatesController_parseCvToProfile",
+                "operationId": "CandidateProfileController_parseCvToProfile",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -328,14 +365,14 @@
                 ],
                 "summary": "[AI] Parse CV → Tự động điền thông tin vào Profile",
                 "tags": [
-                    "Candidates",
+                    "CandidateProfile",
                     "Candidates - Profile"
                 ]
             }
         },
         "/api/candidates/avatar": {
             "post": {
-                "operationId": "CandidatesController_uploadAvatar",
+                "operationId": "CandidateProfileController_uploadAvatar",
                 "parameters": [],
                 "requestBody": {
                     "required": true,
@@ -378,14 +415,14 @@
                 ],
                 "summary": "Upload ảnh đại diện (Avatar) Ứng viên",
                 "tags": [
-                    "Candidates",
+                    "CandidateProfile",
                     "Candidates - Profile"
                 ]
             }
         },
         "/api/candidates/work-experiences": {
             "get": {
-                "operationId": "CandidatesController_getWorkExperiences",
+                "operationId": "CandidateExperienceController_getWorkExperiences",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -402,12 +439,12 @@
                 ],
                 "summary": "Lấy danh sách kinh nghiệm làm việc",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Work Experiences"
                 ]
             },
             "post": {
-                "operationId": "CandidatesController_createWorkExperience",
+                "operationId": "CandidateExperienceController_createWorkExperience",
                 "parameters": [],
                 "requestBody": {
                     "required": true,
@@ -437,14 +474,14 @@
                 ],
                 "summary": "Thêm kinh nghiệm làm việc mới",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Work Experiences"
                 ]
             }
         },
         "/api/candidates/work-experiences/{id}": {
             "put": {
-                "operationId": "CandidatesController_updateWorkExperience",
+                "operationId": "CandidateExperienceController_updateWorkExperience",
                 "parameters": [
                     {
                         "name": "id",
@@ -487,12 +524,12 @@
                 ],
                 "summary": "Cập nhật kinh nghiệm làm việc",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Work Experiences"
                 ]
             },
             "delete": {
-                "operationId": "CandidatesController_deleteWorkExperience",
+                "operationId": "CandidateExperienceController_deleteWorkExperience",
                 "parameters": [
                     {
                         "name": "id",
@@ -525,14 +562,14 @@
                 ],
                 "summary": "Xóa kinh nghiệm làm việc",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Work Experiences"
                 ]
             }
         },
         "/api/candidates/educations": {
             "get": {
-                "operationId": "CandidatesController_getEducations",
+                "operationId": "CandidateExperienceController_getEducations",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -549,12 +586,12 @@
                 ],
                 "summary": "Lấy danh sách học vấn",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Educations"
                 ]
             },
             "post": {
-                "operationId": "CandidatesController_createEducation",
+                "operationId": "CandidateExperienceController_createEducation",
                 "parameters": [],
                 "requestBody": {
                     "required": true,
@@ -584,14 +621,14 @@
                 ],
                 "summary": "Thêm học vấn mới",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Educations"
                 ]
             }
         },
         "/api/candidates/educations/{id}": {
             "put": {
-                "operationId": "CandidatesController_updateEducation",
+                "operationId": "CandidateExperienceController_updateEducation",
                 "parameters": [
                     {
                         "name": "id",
@@ -634,12 +671,12 @@
                 ],
                 "summary": "Cập nhật học vấn",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Educations"
                 ]
             },
             "delete": {
-                "operationId": "CandidatesController_deleteEducation",
+                "operationId": "CandidateExperienceController_deleteEducation",
                 "parameters": [
                     {
                         "name": "id",
@@ -672,14 +709,14 @@
                 ],
                 "summary": "Xóa học vấn",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Educations"
                 ]
             }
         },
         "/api/candidates/projects": {
             "get": {
-                "operationId": "CandidatesController_getProjects",
+                "operationId": "CandidateExperienceController_getProjects",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -696,12 +733,12 @@
                 ],
                 "summary": "Lấy danh sách dự án",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Projects"
                 ]
             },
             "post": {
-                "operationId": "CandidatesController_createProject",
+                "operationId": "CandidateExperienceController_createProject",
                 "parameters": [],
                 "requestBody": {
                     "required": true,
@@ -731,14 +768,14 @@
                 ],
                 "summary": "Thêm dự án mới",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Projects"
                 ]
             }
         },
         "/api/candidates/projects/{id}": {
             "put": {
-                "operationId": "CandidatesController_updateProject",
+                "operationId": "CandidateExperienceController_updateProject",
                 "parameters": [
                     {
                         "name": "id",
@@ -781,12 +818,12 @@
                 ],
                 "summary": "Cập nhật dự án",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Projects"
                 ]
             },
             "delete": {
-                "operationId": "CandidatesController_deleteProject",
+                "operationId": "CandidateExperienceController_deleteProject",
                 "parameters": [
                     {
                         "name": "id",
@@ -819,14 +856,14 @@
                 ],
                 "summary": "Xóa dự án",
                 "tags": [
-                    "Candidates",
+                    "CandidateExperience",
                     "Candidates - Projects"
                 ]
             }
         },
         "/api/candidates/certificates": {
             "get": {
-                "operationId": "CandidatesController_getCertificates",
+                "operationId": "CandidateSkillsController_getCertificates",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -843,12 +880,12 @@
                 ],
                 "summary": "Lấy danh sách chứng chỉ",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Certificates"
                 ]
             },
             "post": {
-                "operationId": "CandidatesController_createCertificate",
+                "operationId": "CandidateSkillsController_createCertificate",
                 "parameters": [],
                 "requestBody": {
                     "required": true,
@@ -891,14 +928,14 @@
                 ],
                 "summary": "Thêm chứng chỉ mới (có thể upload ảnh)",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Certificates"
                 ]
             }
         },
         "/api/candidates/certificates/{id}": {
             "put": {
-                "operationId": "CandidatesController_updateCertificate",
+                "operationId": "CandidateSkillsController_updateCertificate",
                 "parameters": [
                     {
                         "name": "id",
@@ -951,12 +988,12 @@
                 ],
                 "summary": "Cập nhật chứng chỉ (có thể upload lại ảnh)",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Certificates"
                 ]
             },
             "delete": {
-                "operationId": "CandidatesController_deleteCertificate",
+                "operationId": "CandidateSkillsController_deleteCertificate",
                 "parameters": [
                     {
                         "name": "id",
@@ -989,14 +1026,14 @@
                 ],
                 "summary": "Xóa chứng chỉ",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Certificates"
                 ]
             }
         },
         "/api/candidates/skills": {
             "get": {
-                "operationId": "CandidatesController_getSkills",
+                "operationId": "CandidateSkillsController_getSkills",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -1013,12 +1050,12 @@
                 ],
                 "summary": "Lấy danh sách skills của mình",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Skills"
                 ]
             },
             "post": {
-                "operationId": "CandidatesController_addSkills",
+                "operationId": "CandidateSkillsController_addSkills",
                 "parameters": [],
                 "requestBody": {
                     "required": true,
@@ -1048,14 +1085,14 @@
                 ],
                 "summary": "Thêm skills (hỗn hợp ID + string, AI format cho string)",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Skills"
                 ]
             }
         },
         "/api/candidates/skills/{id}": {
             "delete": {
-                "operationId": "CandidatesController_deleteSkill",
+                "operationId": "CandidateSkillsController_deleteSkill",
                 "parameters": [
                     {
                         "name": "id",
@@ -1088,14 +1125,14 @@
                 ],
                 "summary": "Xóa 1 skill",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Skills"
                 ]
             }
         },
         "/api/candidates/job-categories": {
             "get": {
-                "operationId": "CandidatesController_getJobCategories",
+                "operationId": "CandidateSkillsController_getJobCategories",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -1112,12 +1149,12 @@
                 ],
                 "summary": "Lấy danh sách các ngành nghề ứng viên đã chọn",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Job Categories"
                 ]
             },
             "post": {
-                "operationId": "CandidatesController_addJobCategories",
+                "operationId": "CandidateSkillsController_addJobCategories",
                 "parameters": [],
                 "requestBody": {
                     "required": true,
@@ -1144,14 +1181,14 @@
                 ],
                 "summary": "Thêm ngành nghề cho ứng viên",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Job Categories"
                 ]
             }
         },
         "/api/candidates/job-categories/{id}": {
             "delete": {
-                "operationId": "CandidatesController_deleteJobCategory",
+                "operationId": "CandidateSkillsController_deleteJobCategory",
                 "parameters": [
                     {
                         "name": "id",
@@ -1178,14 +1215,14 @@
                 ],
                 "summary": "Xóa 1 ngành nghề (truyền ID của bảng candidate_job_category)",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Job Categories"
                 ]
             }
         },
         "/api/candidates/job-types": {
             "get": {
-                "operationId": "CandidatesController_getJobTypes",
+                "operationId": "CandidateSkillsController_getJobTypes",
                 "parameters": [],
                 "responses": {
                     "200": {
@@ -1194,8 +1231,101 @@
                 },
                 "summary": "Lấy filter hình thức làm việc",
                 "tags": [
-                    "Candidates",
+                    "CandidateSkills",
                     "Candidates - Job Types"
+                ]
+            }
+        },
+        "/api/candidates/headhunting/invitations": {
+            "get": {
+                "operationId": "CandidateHeadhuntingController_getMyInvitations",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách thư mời"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách thư mời nhận việc từ NTD",
+                "tags": [
+                    "Candidates - Headhunting"
+                ]
+            }
+        },
+        "/api/candidates/headhunting/invitations/{id}/accept": {
+            "post": {
+                "operationId": "CandidateHeadhuntingController_acceptInvitation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chấp nhận thành công"
+                    },
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Chấp nhận thư mời (Tự động tạo đơn ứng tuyển)",
+                "tags": [
+                    "Candidates - Headhunting"
+                ]
+            }
+        },
+        "/api/candidates/headhunting/invitations/{id}/decline": {
+            "post": {
+                "operationId": "CandidateHeadhuntingController_declineInvitation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Từ chối thành công"
+                    },
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Từ chối thư mời",
+                "tags": [
+                    "Candidates - Headhunting"
                 ]
             }
         },
@@ -1504,6 +1634,325 @@
                 "summary": "Upload ảnh đại diện HR",
                 "tags": [
                     "Employers - Quản lý HR"
+                ]
+            }
+        },
+        "/api/employers/headhunting/jobs/{jobId}/suggested-candidates": {
+            "get": {
+                "operationId": "EmployerHeadhuntingController_getSuggestedCandidates",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách 50 ứng viên phù hợp nhất"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách ứng viên đề xuất tự động cho một công việc",
+                "tags": [
+                    "Employers - Headhunting"
+                ]
+            }
+        },
+        "/api/employers/headhunting/candidates": {
+            "get": {
+                "operationId": "EmployerHeadhuntingController_searchCandidates",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "required": false,
+                        "in": "query",
+                        "description": "Từ khóa tìm kiếm (tên, vị trí, bio)",
+                        "schema": {
+                            "example": "Nodejs",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "provinceId",
+                        "required": false,
+                        "in": "query",
+                        "description": "ID Tỉnh/Thành phố",
+                        "schema": {
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "example": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "jobCategoryId",
+                        "required": false,
+                        "in": "query",
+                        "description": "ID Ngành nghề (Job Category)",
+                        "schema": {
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "example": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "jobTypeId",
+                        "required": false,
+                        "in": "query",
+                        "description": "ID Cấp bậc / Hình thức làm việc (Job Type)",
+                        "schema": {
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "example": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "minExperience",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số năm kinh nghiệm tối thiểu",
+                        "schema": {
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "example": 2,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số lượng item mỗi trang",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 10,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách ứng viên theo bộ lọc"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Tìm kiếm ứng viên tự do (Headhunting Search)",
+                "tags": [
+                    "Employers - Headhunting"
+                ]
+            }
+        },
+        "/api/employers/headhunting/candidates/{id}": {
+            "get": {
+                "operationId": "EmployerHeadhuntingController_getCandidateDetail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Full Profile Ứng viên"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem chi tiết hồ sơ ứng viên (VIP - Không che)",
+                "tags": [
+                    "Employers - Headhunting"
+                ]
+            }
+        },
+        "/api/employers/headhunting/saved-candidates": {
+            "get": {
+                "operationId": "EmployerHeadhuntingController_getSavedCandidates",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách ứng viên đã lưu"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách ứng viên trong Talent Pool",
+                "tags": [
+                    "Employers - Headhunting"
+                ]
+            }
+        },
+        "/api/employers/headhunting/saved-candidates/{candidateId}": {
+            "post": {
+                "operationId": "EmployerHeadhuntingController_saveCandidate",
+                "parameters": [
+                    {
+                        "name": "candidateId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveCandidateDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Lưu thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lưu ứng viên vào Talent Pool",
+                "tags": [
+                    "Employers - Headhunting"
+                ]
+            },
+            "delete": {
+                "operationId": "EmployerHeadhuntingController_unsaveCandidate",
+                "parameters": [
+                    {
+                        "name": "candidateId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa ứng viên khỏi Talent Pool",
+                "tags": [
+                    "Employers - Headhunting"
+                ]
+            }
+        },
+        "/api/employers/headhunting/invitations": {
+            "post": {
+                "operationId": "EmployerHeadhuntingController_sendInvitation",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateJobInvitationDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Gửi thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Gửi thư mời ứng tuyển cho ứng viên",
+                "tags": [
+                    "Employers - Headhunting"
+                ]
+            },
+            "get": {
+                "operationId": "EmployerHeadhuntingController_getSentInvitations",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách thư mời"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách thư mời đã gửi",
+                "tags": [
+                    "Employers - Headhunting"
                 ]
             }
         },
@@ -3233,8 +3682,74 @@
                         "maximum": 9007199254740991,
                         "description": "Số năm kinh nghiệm làm việc",
                         "example": 2
+                    },
+                    "isPublic": {
+                        "type": "boolean",
+                        "description": "Bật/Tắt trạng thái public hồ sơ",
+                        "example": true
+                    },
+                    "linkedinUrl": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 255,
+                                "format": "uri"
+                            },
+                            {
+                                "type": "string",
+                                "const": ""
+                            }
+                        ],
+                        "x-nestjs_zod-empty-type": true,
+                        "description": "Link Hồ sơ LinkedIn",
+                        "example": "https://linkedin.com/in/username"
+                    },
+                    "githubUrl": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 255,
+                                "format": "uri"
+                            },
+                            {
+                                "type": "string",
+                                "const": ""
+                            }
+                        ],
+                        "x-nestjs_zod-empty-type": true,
+                        "description": "Link Hồ sơ Github",
+                        "example": "https://github.com/username"
+                    },
+                    "portfolioUrl": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 255,
+                                "format": "uri"
+                            },
+                            {
+                                "type": "string",
+                                "const": ""
+                            }
+                        ],
+                        "x-nestjs_zod-empty-type": true,
+                        "description": "Link Hồ sơ Cá nhân / Portfolio",
+                        "example": "https://myportfolio.com"
                     }
                 }
+            },
+            "UpdateVisibilityDto": {
+                "type": "object",
+                "properties": {
+                    "isPublic": {
+                        "type": "boolean",
+                        "description": "Bật/Tắt trạng thái public hồ sơ",
+                        "example": true
+                    }
+                },
+                "required": [
+                    "isPublic"
+                ]
             },
             "CreateWorkExperienceDto": {
                 "type": "object",
@@ -4464,6 +4979,18 @@
                     "yearWorkingExperience": {
                         "type": "number"
                     },
+                    "isPublic": {
+                        "type": "boolean"
+                    },
+                    "linkedinUrl": {
+                        "type": "string"
+                    },
+                    "githubUrl": {
+                        "type": "string"
+                    },
+                    "portfolioUrl": {
+                        "type": "string"
+                    },
                     "user": {
                         "$ref": "#/components/schemas/UserEntity"
                     },
@@ -4526,6 +5053,10 @@
                     "jobTypeId",
                     "jobType",
                     "yearWorkingExperience",
+                    "isPublic",
+                    "linkedinUrl",
+                    "githubUrl",
+                    "portfolioUrl",
                     "user",
                     "certificates",
                     "jobCategories",
@@ -4597,6 +5128,44 @@
                         "description": "Số điện thoại liên hệ"
                     }
                 }
+            },
+            "SaveCandidateDto": {
+                "type": "object",
+                "properties": {
+                    "note": {
+                        "type": "string",
+                        "description": "Ghi chú về ứng viên này",
+                        "example": "Ứng viên tiềm năng cho vị trí Backend"
+                    }
+                }
+            },
+            "CreateJobInvitationDto": {
+                "type": "object",
+                "properties": {
+                    "jobId": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "ID của Job muốn mời ứng tuyển",
+                        "example": 1
+                    },
+                    "candidateId": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "ID của Ứng viên muốn mời",
+                        "example": 10
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Lời nhắn gửi đến ứng viên",
+                        "example": "Chào bạn, chúng tôi thấy hồ sơ của bạn rất phù hợp..."
+                    }
+                },
+                "required": [
+                    "jobId",
+                    "candidateId"
+                ]
             },
             "UpdateCompanyDto": {
                 "type": "object",

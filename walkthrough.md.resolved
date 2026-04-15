@@ -1,0 +1,584 @@
+# 🎯 Headhunting Feature — Tài liệu tích hợp Frontend
+
+> **Phiên bản:** 1.0 · **Cập nhật lần cuối:** 2026-04-14
+> **Base URL:** `http://localhost:3000/api` (production: theo env)
+> **Auth:** Tất cả API đều yêu cầu `Authorization: Bearer <access_token>`
+
+---
+
+## 📌 Tổng quan tính năng
+
+Headhunting là tính năng cho phép **Nhà tuyển dụng (NTD) chủ động tìm kiếm và tiếp cận ứng viên**, thay vì chờ ứng viên tự nộp đơn. Hệ thống cung cấp:
+
+1. **Thuật toán đề xuất ứng viên** phù hợp với một tin tuyển dụng cụ thể
+2. **Công cụ tìm kiếm tự do** với bộ lọc linh hoạt
+3. **Talent Pool** — Danh sách ứng viên yêu thích của NTD
+4. **Job Invitation** — NTD gửi thư mời ứng tuyển cho ứng viên
+5. **Ứng viên phản hồi** lời mời (chấp nhận tự tạo đơn, hoặc từ chối)
+
+---
+
+## 👥 Đối tượng người dùng & Luồng tổng thể
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  ỨNG VIÊN (Candidate)                                               │
+│  - Bật is_public = true → hiện trong hệ thống Headhunting          │
+│  - Nhận thư mời → Chấp nhận (tạo đơn tự động) / Từ chối           │
+└────────────────────────────────┬────────────────────────────────────┘
+                                 │  Job Invitation
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  NHÀ TUYỂN DỤNG (Employer)                                         │
+│  - Xem đề xuất ứng viên theo từng Job                              │
+│  - Tìm kiếm tự do theo filter                                       │
+│  - Lưu ứng viên vào Talent Pool                                     │
+│  - Gửi thư mời ứng tuyển                                              │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+> [!IMPORTANT]
+> **Điều kiện tiên quyết:**
+> - NTD phải thuộc về một **Công ty** đã được thiết lập (`companyId` khác null)
+> - Ứng viên phải có `isPublic = true` mới xuất hiện trong kết quả tìm kiếm
+> - Chỉ gửi được invitation cho Job đang ở trạng thái **PUBLISHED**
+
+---
+
+## 📋 Danh sách tất cả API
+
+### 🏢 Employer Side — Base path: `/api/employers/headhunting`
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| `GET` | `/jobs/:jobId/suggested-candidates` | Đề xuất ứng viên tự động theo Job |
+| `GET` | `/candidates` | Tìm kiếm ứng viên tự do |
+| `GET` | `/candidates/:id` | Xem full profile ứng viên (không che thông tin) |
+| `GET` | `/saved-candidates` | Danh sách Talent Pool |
+| `POST` | `/saved-candidates/:candidateId` | Lưu ứng viên vào Talent Pool |
+| `DELETE` | `/saved-candidates/:candidateId` | Bỏ lưu ứng viên |
+| `POST` | `/invitations` | Gửi thư mời ứng tuyển |
+| `GET` | `/invitations` | Danh sách thư mời đã gửi |
+
+### 👤 Candidate Side — Base path: `/api/candidates`
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| `PUT` | `/profile/visibility` | Bật / Tắt hiển thị hồ sơ trong Headhunting |
+| `GET` | `/headhunting/invitations` | Danh sách thư mời nhận được |
+| `POST` | `/headhunting/invitations/:id/accept` | Chấp nhận thư mời |
+| `POST` | `/headhunting/invitations/:id/decline` | Từ chối thư mời |
+
+---
+
+## 🔍 Chi tiết từng API
+
+---
+
+### 1. Cài đặt hiển thị hồ sơ (Candidate)
+
+#### `PUT /api/candidates/profile/visibility`
+
+> **Màn hình:** Trang Cài đặt / Hồ sơ của ứng viên
+> **Mục đích:** Bật/tắt hiển thị hồ sơ để NTD có thể tìm thấy và liên hệ
+
+**Request Body:**
+```json
+{
+  "isPublic": true
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Cập nhật trạng thái hồ sơ thành công",
+  "isPublic": true
+}
+```
+
+> [!NOTE]
+> Mặc định khi tạo tài khoản mới, `isPublic = false`. Ứng viên phải chủ động bật để tham gia hệ thống Headhunting.
+
+---
+
+### 2. Đề xuất ứng viên theo Job (Employer)
+
+#### `GET /api/employers/headhunting/jobs/:jobId/suggested-candidates`
+
+> **Màn hình:** Trang Quản lý Job → Tab "Đề xuất ứng viên"
+> **Mục đích:** Hiển thị danh sách ứng viên được xếp hạng phù hợp nhất với một tin tuyển dụng cụ thể
+
+**Parameters:**
+
+| Tên | Loại | Bắt buộc | Mô tả |
+|-----|------|----------|-------|
+| `jobId` | path `number` | ✅ | ID của tin tuyển dụng (phải thuộc công ty của NTD) |
+
+**Response (200) — Mảng ứng viên xếp theo điểm phù hợp:**
+```json
+[
+  {
+    "id": 42,
+    "fullName": "Nguyen Van A",
+    "position": "Senior Backend Developer",
+    "yearWorkingExperience": 6,
+    "bio": "Hơn 6 năm kinh nghiệm với Node.js, NestJS...",
+    "isPublic": true,
+    "linkedinUrl": "https://linkedin.com/in/nguyenvana",
+    "githubUrl": "https://github.com/nguyenvana",
+    "portfolioUrl": null,
+    "skills": [
+      {
+        "id": 1,
+        "candidateId": 42,
+        "skillMetadataId": 10,
+        "skillMetadata": { "id": 10, "canonicalName": "Node.js" }
+      }
+    ],
+    "jobCategories": [],
+    "jobType": { "id": 2, "name": "Full-time" },
+    "matchedSkillsCount": 4,
+    "certificateBonusCount": 2
+  }
+]
+```
+
+> [!TIP]
+> **Cách hiển thị điểm phù hợp trên UI:**
+> - `matchedSkillsCount` → "4/6 skills match" — thanh progress bar
+> - `certificateBonusCount` → số huy hiệu chứng chỉ (🏅)
+> - Kết quả đã được sort sẵn theo thứ tự phù hợp nhất, FE không cần tính toán thêm
+
+**Errors:**
+
+| Code | Trường hợp |
+|------|-----------|
+| `400` | Job chưa được phân ngành nghề (`categoryId` null) |
+| `403` | Tài khoản không phải NTD hoặc chưa có công ty |
+| `404` | Job không tồn tại hoặc không thuộc công ty |
+
+---
+
+### 3. Tìm kiếm ứng viên tự do (Employer)
+
+#### `GET /api/employers/headhunting/candidates`
+
+> **Màn hình:** Trang Headhunting → Tab "Tìm kiếm"
+> **Mục đích:** Cho phép NTD tìm kiếm ứng viên theo các tiêu chí tùy chọn, có phân trang
+
+**Query Parameters:**
+
+| Tên | Loại | Default | Mô tả |
+|-----|------|---------|-------|
+| `keyword` | `string` | - | Tìm theo tên, vị trí, bio (ILIKE) |
+| `jobCategoryId` | `number` | - | ID Ngành nghề |
+| `jobTypeId` | `number` | - | ID Hình thức làm việc |
+| `provinceId` | `number` | - | ID Tỉnh/Thành phố |
+| `minExperience` | `number` | - | Số năm kinh nghiệm tối thiểu |
+| `page` | `number` | `1` | Trang hiện tại |
+| `limit` | `number` | `10` | Số kết quả mỗi trang (max: 100) |
+
+**Ví dụ Request:**
+```
+GET /api/employers/headhunting/candidates?keyword=React&jobCategoryId=3&minExperience=2&page=1&limit=20
+```
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "id": 15,
+      "fullName": "Tran Thi B",
+      "position": "Frontend Developer",
+      "yearWorkingExperience": 3,
+      "provinceId": 1,
+      "isPublic": true,
+      "linkedinUrl": "https://linkedin.com/in/tranthib",
+      "githubUrl": "https://github.com/tranthib",
+      "skills": [
+        { "skillMetadata": { "id": 5, "canonicalName": "React" } }
+      ]
+    }
+  ],
+  "total": 48,
+  "page": 1,
+  "lastPage": 3
+}
+```
+
+**Metadata API để populate bộ lọc:**
+```
+GET /api/metadata/job-categories  →  [{ id, name }]
+GET /api/metadata/job-types       →  [{ id, name }]
+GET /api/metadata/provinces       →  [{ id, name }]
+```
+
+---
+
+### 4. Xem chi tiết profile ứng viên (Employer — Full Access)
+
+#### `GET /api/employers/headhunting/candidates/:id`
+
+> **Màn hình:** Trang chi tiết hồ sơ khi bấm vào một ứng viên
+> **Mục đích:** Hiển thị 100% thông tin ứng viên bao gồm toàn bộ kinh nghiệm, học vấn, dự án, chứng chỉ
+
+> [!WARNING]
+> API này trả về `cvUrl`, `phone` của ứng viên — chỉ accessible khi `isPublic = true`. Nếu ứng viên tắt profile → API trả về `404`.
+
+**Response (200) — Full Profile:**
+```json
+{
+  "id": 42,
+  "fullName": "Nguyen Van A",
+  "gender": "male",
+  "phone": "0901234567",
+  "avatarUrl": "https://storage.../avatar.jpg",
+  "cvUrl": "https://storage.../cv.pdf",
+  "bio": "Over 6 years of experience...",
+  "position": "Senior Backend Developer",
+  "yearWorkingExperience": 6,
+  "salaryMin": 2000,
+  "salaryMax": 4000,
+  "isPublic": true,
+  "linkedinUrl": "https://linkedin.com/in/example",
+  "githubUrl": "https://github.com/example",
+  "portfolioUrl": "https://myportfolio.dev",
+  "jobType": { "id": 1, "name": "Full-time" },
+  "skills": [
+    { "skillMetadata": { "id": 10, "canonicalName": "Node.js" } }
+  ],
+  "workExperiences": [
+    {
+      "id": 1,
+      "companyName": "TechCorp",
+      "position": "Backend Lead",
+      "startDate": "2020-01-01",
+      "endDate": null,
+      "isCurrent": true,
+      "description": "Led microservices architecture design..."
+    }
+  ],
+  "educations": [
+    {
+      "id": 2,
+      "schoolName": "HUST",
+      "degree": "Bachelor",
+      "major": "Computer Science",
+      "startYear": 2014,
+      "endYear": 2018
+    }
+  ],
+  "projects": [],
+  "certificates": [
+    {
+      "id": 3,
+      "name": "AWS Solutions Architect",
+      "cerImgUrl": "https://storage.../cert.jpg"
+    }
+  ],
+  "jobCategories": [
+    {
+      "jobCategory": { "id": 3, "name": "Công nghệ thông tin" }
+    }
+  ]
+}
+```
+
+---
+
+### 5. Talent Pool — Quản lý ứng viên yêu thích (Employer)
+
+#### Lưu ứng viên: `POST /api/employers/headhunting/saved-candidates/:candidateId`
+
+> **Màn hình:** Nút "❤️ Save" trên card/profile ứng viên
+
+```json
+// Request body (note là optional)
+{ "note": "Ứng viên tiềm năng cho Q3" }
+
+// Response 201
+{ "id": 7, "employerId": 3, "candidateId": 42, "note": "...", "createdAt": "..." }
+```
+
+> Nếu ứng viên đã được lưu → API **update note** thay vì báo lỗi duplicate.
+
+#### Bỏ lưu: `DELETE /api/employers/headhunting/saved-candidates/:candidateId`
+
+```json
+// Response 200
+{ "message": "Đã xóa ứng viên khỏi Talent Pool" }
+```
+
+#### Danh sách Talent Pool: `GET /api/employers/headhunting/saved-candidates`
+
+```json
+// Response 200
+[
+  {
+    "id": 7,
+    "note": "Ứng viên tiềm năng...",
+    "createdAt": "...",
+    "candidate": {
+      "id": 42,
+      "fullName": "Nguyen Van A",
+      "position": "Senior Backend Developer",
+      "yearWorkingExperience": 6,
+      "linkedinUrl": "...",
+      "skills": [...]
+    }
+  }
+]
+```
+
+---
+
+### 6. Gửi thư mời ứng tuyển (Employer)
+
+#### `POST /api/employers/headhunting/invitations`
+
+> **Màn hình:** Nút "📩 Mời ứng tuyển" trên profile ứng viên hoặc trong Talent Pool
+
+> [!IMPORTANT]
+> **Business rules:**
+> - Job phải đang ở trạng thái `PUBLISHED`
+> - Mỗi cặp `(jobId, candidateId)` chỉ được gửi **1 thư mời** — gửi lại → lỗi 400
+
+**Request Body:**
+```json
+{
+  "jobId": 5,
+  "candidateId": 42,
+  "message": "Kính chào, chúng tôi ấn tượng với kinh nghiệm của bạn..."
+}
+```
+
+**Response (201):**
+```json
+{
+  "id": 11,
+  "employerId": 3,
+  "candidateId": 42,
+  "jobId": 5,
+  "message": "Kính chào...",
+  "status": "pending",
+  "createdAt": "2026-04-14T12:05:00.000Z",
+  "updatedAt": "2026-04-14T12:05:00.000Z"
+}
+```
+
+| Error Code | Trường hợp |
+|------------|-----------|
+| `400` | Job không ở trạng thái PUBLISHED |
+| `400` | Đã gửi thư mời này trước đó |
+| `404` | Job không tồn tại hoặc không thuộc công ty |
+| `404` | Ứng viên không tồn tại hoặc đã ẩn hồ sơ |
+
+---
+
+#### Danh sách thư mời đã gửi: `GET /api/employers/headhunting/invitations`
+
+```json
+// Response 200
+[
+  {
+    "id": 11,
+    "message": "...",
+    "status": "pending",
+    "createdAt": "...",
+    "candidate": {
+      "id": 42,
+      "fullName": "Nguyen Van A",
+      "position": "Senior Backend Developer"
+    },
+    "job": {
+      "id": 5,
+      "title": "Senior Backend Developer",
+      "status": "published"
+    }
+  }
+]
+```
+
+**Invitation Status:**
+
+| Value | UI Badge | Mô tả |
+|-------|----------|-------|
+| `pending` | 🟡 Chờ phản hồi | Ứng viên chưa xử lý |
+| `accepted` | 🟢 Đã chấp nhận | Ứng viên đồng ý, đã có đơn ứng tuyển |
+| `declined` | 🔴 Đã từ chối | Ứng viên từ chối |
+
+---
+
+### 7. Ứng viên xem & phản hồi thư mời
+
+#### Danh sách thư mời: `GET /api/candidates/headhunting/invitations`
+
+> **Màn hình:** Trang "Thư mời" / Notification bell trong app ứng viên
+
+```json
+// Response 200 — sort theo mới nhất
+[
+  {
+    "id": 11,
+    "message": "Kính chào...",
+    "status": "pending",
+    "createdAt": "...",
+    "job": {
+      "id": 5,
+      "title": "Senior Backend Developer",
+      "salaryMin": 2000,
+      "salaryMax": 4000,
+      "currency": "USD",
+      "company": {
+        "id": 1,
+        "name": "TechCorp Vietnam",
+        "logoUrl": "..."
+      }
+    }
+  }
+]
+```
+
+---
+
+#### Chấp nhận thư mời: `POST /api/candidates/headhunting/invitations/:id/accept`
+
+> [!TIP]
+> **Backend tự động làm trong 1 transaction:**
+> 1. Invitation status → `accepted`
+> 2. Tạo `JobApplication` với status `APPLIED`
+> 3. Ghi `ApplicationStatusHistory`
+>
+> FE chỉ cần call API và redirect ứng viên đến "Đơn ứng tuyển của tôi"
+
+```json
+// Response 200
+{ "message": "Đã chấp nhận thư mời và tạo đơn ứng tuyển thành công" }
+```
+
+---
+
+#### Từ chối thư mời: `POST /api/candidates/headhunting/invitations/:id/decline`
+
+```json
+// Response 200
+{ "message": "Đã từ chối thư mời" }
+```
+
+**Errors chung cho 2 endpoint trên:**
+
+| Code | Trường hợp |
+|------|-----------|
+| `400` | Thư mời đã được xử lý (không phải `pending`) |
+| `404` | Không tìm thấy thư mời |
+
+---
+
+## 🗺️ Gợi ý cấu trúc màn hình
+
+### Employer — Headhunting Dashboard
+
+```
+[Headhunting] (sidebar nav)
+    │
+    ├── [Tab: Đề xuất theo Job]
+    │     Dropdown chọn Job → Danh sách ứng viên + skill match badge
+    │
+    ├── [Tab: Tìm kiếm]
+    │     Search bar + Filter sidebar → Card grid kết quả
+    │     Mỗi card: Avatar, Tên, Vị trí, Skills, [💾 Lưu] [📩 Mời]
+    │
+    ├── [Tab: Talent Pool]
+    │     Danh sách ứng viên đã lưu với note + thao tác nhanh
+    │
+    └── [Tab: Thư mời đã gửi]
+          Bảng: Ứng viên | Job | Ngày gửi | Status badge
+```
+
+### Candidate — Thư mời nhận được
+
+```
+[Thư mời] (menu/notification)
+    │
+    └── Danh sách thư mời (sort mới nhất)
+          └── Chi tiết thư mời
+                - Logo + Tên công ty
+                - Tên vị trí + Mức lương
+                - Lời nhắn cá nhân
+                - [✅ Chấp nhận] [❌ Từ chối]
+                  (Ẩn nút nếu status != pending)
+```
+
+---
+
+## 🔀 Toàn bộ luồng dữ liệu
+
+```
+Ứng viên bật isPublic
+         │
+         ▼
+  Xuất hiện trong search/suggest (Employer)
+         │
+         ├── NTD save → Talent Pool
+         │
+         └── NTD send invitation ──► status = "pending"
+                                            │
+                              ┌─────────────┴─────────────┐
+                              ▼                           ▼
+                    Ứng viên ACCEPT                Ứng viên DECLINE
+                              │                           │
+               ┌──────────────┴──────────────┐    status = "declined"
+               │ 1. status = "accepted"        │
+               │ 2. JobApplication tạo tự động │
+               │ 3. StatusHistory ghi lại      │
+               └───────────────────────────────┘
+                    Ứng viên vào quy trình ATS
+```
+
+---
+
+## ⚠️ Checklist kỹ thuật cho FE
+
+- [ ] **Null-check** `linkedinUrl`, `githubUrl`, `portfolioUrl` trước khi render icon
+- [ ] **`isPublic` toggle** trên trang profile ứng viên — call `PUT /profile/visibility`
+- [ ] **Chỉ hiện nút** Chấp nhận/Từ chối khi `invitation.status === 'pending'`
+- [ ] **Sau khi accept**, redirect ứng viên đến `GET /api/applications/me` để thấy đơn mới
+- [ ] **`GET /suggested-candidates`** trả về mảng flat `[]`, không có pagination — xử lý empty state
+- [ ] **`GET /candidates`** có pagination — dùng `total`, `lastPage` để render paginator
+- [ ] **Save/Unsave** là toggle — check xem ứng viên đã trong Talent Pool chưa để hiện đúng icon
+
+---
+
+## 🧪 Curl nhanh để test
+
+```bash
+# Bật profile ứng viên
+curl -X PUT http://localhost:3000/api/candidates/profile/visibility \
+  -H "Authorization: Bearer <CANDIDATE_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"isPublic": true}'
+
+# Lấy đề xuất ứng viên cho Job 5
+curl http://localhost:3000/api/employers/headhunting/jobs/5/suggested-candidates \
+  -H "Authorization: Bearer <EMPLOYER_TOKEN>"
+
+# Tìm kiếm tự do
+curl "http://localhost:3000/api/employers/headhunting/candidates?keyword=Node&minExperience=3" \
+  -H "Authorization: Bearer <EMPLOYER_TOKEN>"
+
+# Gửi thư mời
+curl -X POST http://localhost:3000/api/employers/headhunting/invitations \
+  -H "Authorization: Bearer <EMPLOYER_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"jobId": 5, "candidateId": 42, "message": "Chào bạn..."}'
+
+# Chấp nhận thư mời
+curl -X POST http://localhost:3000/api/candidates/headhunting/invitations/11/accept \
+  -H "Authorization: Bearer <CANDIDATE_TOKEN>"
+```
+
+> [!NOTE]
+> **Swagger UI:** `http://localhost:3000/api/docs`
+> Chọn tag **"Employers - Headhunting"** và **"Candidates - Headhunting"** để test trực tiếp.

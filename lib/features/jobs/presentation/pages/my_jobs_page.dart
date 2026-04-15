@@ -12,6 +12,7 @@ import '../../../applications/presentation/providers/application_provider.dart';
 import '../widgets/audit_log_modal.dart';
 import '../pages/job_detail_page.dart';
 import '../../../applications/presentation/pages/job_kanban_page.dart';
+import '../../../headhunting/presentation/pages/suggested_candidates_page.dart';
 
 /// Màn hình "Việc của tôi" với 2 tabs: Đã lưu & Đã ứng tuyển
 class MyJobsPage extends StatefulWidget {
@@ -441,6 +442,25 @@ class _MyJobsPageState extends State<MyJobsPage>
                                     },
                                     icon: const Icon(Icons.people_alt_outlined, size: 18),
                                     label: const Text('Ứng viên'),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  ),
+                                if (job.status == 'published' || job.status == 'approved')
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => SuggestedCandidatesPage(
+                                            jobId: job.jobPostId,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.auto_awesome_outlined, size: 18, color: Colors.purple),
+                                    label: const Text('Đề xuất', style: TextStyle(color: Colors.purple)),
                                     style: TextButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(horizontal: 8),
                                       visualDensity: VisualDensity.compact,
