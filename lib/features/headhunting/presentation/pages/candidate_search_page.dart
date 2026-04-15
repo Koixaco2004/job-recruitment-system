@@ -1,21 +1,20 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/job_provider.dart';
-import '../../../profile/data/models/job_category_model.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
-import '../widgets/filter_bottom_sheet.dart';
-import '../widgets/job_card.dart';
-import 'job_detail_page.dart';
+import '../../../profile/domain/entities/job_category_entity.dart';
+import '../providers/candidate_search_provider.dart';
+import '../widgets/candidate_card.dart';
+import '../widgets/candidate_filter_bottom_sheet.dart';
 
-class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+class CandidateSearchPage extends StatefulWidget {
+  const CandidateSearchPage({super.key});
 
   @override
-  State<SearchPage> createState() => _SearchPageState();
+  State<CandidateSearchPage> createState() => _CandidateSearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _CandidateSearchPageState extends State<CandidateSearchPage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   Timer? _debounce;
@@ -23,9 +22,13 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize with current keyword
-    _searchController.text = context.read<JobProvider>().filter.keyword;
+    _searchController.text = context.read<CandidateSearchProvider>().filter.keyword;
     _scrollController.addListener(_onScroll);
+    
+    // Initial fetch
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CandidateSearchProvider>().searchCandidates(refresh: true);
+    });
   }
 
   @override
@@ -39,9 +42,9 @@ class _SearchPageState extends State<SearchPage> {
 
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-      final provider = context.read<JobProvider>();
-      if (!provider.isLoading && provider.hasMoreJobs) {
-        provider.fetchJobs(refresh: false);
+      final provider = context.read<CandidateSearchProvider>();
+      if (!provider.isLoading && provider.hasMore) {
+        provider.searchCandidates(refresh: false);
       }
     }
   }
@@ -49,7 +52,7 @@ class _SearchPageState extends State<SearchPage> {
   void _onSearchChanged(String keyword) {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      final provider = context.read<JobProvider>();
+      final provider = context.read<CandidateSearchProvider>();
       provider.updateFilter(provider.filter.copyWith(keyword: keyword));
     });
   }
@@ -64,28 +67,30 @@ class _SearchPageState extends State<SearchPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const FilterBottomSheet(),
+      builder: (context) => const CandidateFilterBottomSheet(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
-          'Tìm kiếm việc làm',
+          'Tìm kiếm ứng viên',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: theme.primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: Column(
         children: [
-          // Search bar + Filter button
+          // Search bar
           Container(
-            color: Theme.of(context).primaryColor,
+            color: theme.primaryColor,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Row(
               children: [
@@ -94,7 +99,7 @@ class _SearchPageState extends State<SearchPage> {
                     controller: _searchController,
                     onChanged: _onSearchChanged,
                     decoration: InputDecoration(
-                      hintText: 'Tìm theo tên việc làm, công ty...',
+                      hintText: 'Tìm theo tên, vị trí, kỹ năng...',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
@@ -108,15 +113,12 @@ class _SearchPageState extends State<SearchPage> {
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                Consumer<JobProvider>(
+                Consumer<CandidateSearchProvider>(
                   builder: (context, provider, child) {
                     final filterCount = provider.filter.activeFilterCount;
                     return Stack(
@@ -126,7 +128,7 @@ class _SearchPageState extends State<SearchPage> {
                           icon: const Icon(Icons.filter_list),
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: theme.primaryColor,
                             padding: const EdgeInsets.all(12),
                           ),
                         ),
@@ -140,10 +142,7 @@ class _SearchPageState extends State<SearchPage> {
                                 color: Colors.red,
                                 shape: BoxShape.circle,
                               ),
-                              constraints: const BoxConstraints(
-                                minWidth: 20,
-                                minHeight: 20,
-                              ),
+                              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                               child: Text(
                                 '$filterCount',
                                 style: const TextStyle(
@@ -163,119 +162,93 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ),
 
-          // Active filter chips
-          Consumer<JobProvider>(
+          // Active filters
+          Consumer<CandidateSearchProvider>(
             builder: (context, provider, child) {
-              if (!provider.filter.hasActiveFilters) {
-                return const SizedBox.shrink();
-              }
-
+              if (!provider.filter.hasActiveFilters) return const SizedBox.shrink();
               return Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 color: Colors.white,
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     ..._buildActiveFilterChips(provider),
-                    if (provider.filter.hasActiveFilters)
-                      ActionChip(
-                        label: const Text('Xóa tất cả'),
-                        onPressed: () {
-                          provider.clearFilter();
-                          _searchController.clear();
-                        },
-                        avatar: const Icon(Icons.clear_all, size: 16),
-                      ),
+                    ActionChip(
+                      label: const Text('Xóa tất cả'),
+                      onPressed: () {
+                        provider.clearFilter();
+                        _searchController.clear();
+                      },
+                      avatar: const Icon(Icons.clear_all, size: 16),
+                    ),
                   ],
                 ),
               );
             },
           ),
 
-          // Results count
-          Consumer<JobProvider>(
-            builder: (context, provider, child) {
-              return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                color: Colors.white,
-                child: Text(
-                  'Tìm thấy ${provider.jobs.length} việc làm',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              );
-            },
-          ),
-
-          // Job list
+          // Search results
           Expanded(
-            child: Consumer<JobProvider>(
+            child: Consumer<CandidateSearchProvider>(
               builder: (context, provider, child) {
-                if (provider.isLoading) {
+                if (provider.isLoading && provider.candidates.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (!provider.hasJobs) {
+                if (provider.errorMessage != null && provider.candidates.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
+                        Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                         const SizedBox(height: 16),
-                        const Text(
-                          'Không tìm thấy việc làm phù hợp',
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm',
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        Text(provider.errorMessage!),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => provider.searchCandidates(refresh: true),
+                          child: const Text('Thử lại'),
                         ),
                       ],
                     ),
                   );
                 }
 
-                return ListView.builder(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 8, bottom: 16),
-                  itemCount: provider.jobs.length + (provider.hasMoreJobs ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == provider.jobs.length) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: CircularProgressIndicator(),
+                if (provider.candidates.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.person_search_outlined, size: 80, color: Colors.grey[300]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Không tìm thấy ứng viên phù hợp',
+                          style: theme.textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
                         ),
-                      );
-                    }
-                    final job = provider.jobs[index];
-                    return JobCard(
-                      job: job,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => JobDetailPage(job: job),
+                      ],
+                    ),
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () => provider.searchCandidates(refresh: true),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.only(top: 8, bottom: 24),
+                    itemCount: provider.candidates.length + (provider.hasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == provider.candidates.length) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: CircularProgressIndicator(),
                           ),
                         );
-                      },
-                    );
-                  },
+                      }
+                      return CandidateCard(candidate: provider.candidates[index]);
+                    },
+                  ),
                 );
               },
             ),
@@ -285,47 +258,44 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  List<Widget> _buildActiveFilterChips(JobProvider provider) {
+  List<Widget> _buildActiveFilterChips(CandidateSearchProvider provider) {
     final chips = <Widget>[];
     final filter = provider.filter;
     final profileProvider = context.read<ProfileProvider>();
 
-    // Province
+    if (filter.yearsOfExperience != null) {
+      chips.add(_buildFilterChip('${filter.yearsOfExperience}+ năm KN', () {
+        provider.updateFilter(filter.clearField(experience: true));
+      }));
+    }
+
     if (filter.provinceId != null) {
       final name = profileProvider.getProvinceName(filter.provinceId);
       if (name != null) {
-        chips.add(
-          _buildFilterChip(name, () {
-            provider.updateFilter(filter.clearField(province: true));
-          }),
-        );
+        chips.add(_buildFilterChip(name, () {
+          provider.updateFilter(filter.clearField(province: true));
+        }));
       }
     }
 
-    // Category
     if (filter.categoryId != null) {
       final category = profileProvider.allJobCategories.firstWhere(
         (c) => c.id == filter.categoryId,
-        orElse: () => const JobCategoryModel(id: -1, name: ''),
+        orElse: () => const JobCategoryEntity(id: -1, name: ''),
       );
       if (category.id != -1) {
-        chips.add(
-          _buildFilterChip(category.name, () {
-            provider.updateFilter(filter.clearField(category: true));
-          }),
-        );
+        chips.add(_buildFilterChip(category.name, () {
+          provider.updateFilter(filter.clearField(category: true));
+        }));
       }
     }
 
-    // Job Type
     if (filter.jobTypeId != null) {
       final name = profileProvider.getJobTypeName(filter.jobTypeId);
       if (name != null) {
-        chips.add(
-          _buildFilterChip(name, () {
-            provider.updateFilter(filter.clearField(jobType: true));
-          }),
-        );
+        chips.add(_buildFilterChip(name, () {
+          provider.updateFilter(filter.clearField(jobType: true));
+        }));
       }
     }
 

@@ -123,13 +123,16 @@ class JobProvider extends ChangeNotifier {
     int? categoryId,
     int? jobTypeId,
   }) async {
-    _currentPublicPage = refresh ? 1 : _currentPublicPage;
-    _totalPublicJobs = refresh ? 0 : _totalPublicJobs;
+    if (_isLoading) return; // Chặn yêu cầu nếu đang thực hiện
+    
+    _isLoading = true;
+    _errorMessage = null;
+    
     if (refresh) {
-      _isLoading = true;
-      _errorMessage = null;
-      notifyListeners();
+      _currentPublicPage = 1;
+      _totalPublicJobs = 0;
     }
+    notifyListeners();
 
     final result = await getJobsUseCase(
       page: refresh ? 1 : page,
@@ -153,7 +156,10 @@ class JobProvider extends ChangeNotifier {
         if (refresh) {
           _allJobs = List.from(newJobs);
         } else {
-          _allJobs.addAll(newJobs);
+          // Tránh trùng lặp ID khi addAll
+          final existingIds = _allJobs.map((j) => j.jobPostId).toSet();
+          final uniqueNewJobs = newJobs.where((j) => !existingIds.contains(j.jobPostId)).toList();
+          _allJobs.addAll(uniqueNewJobs);
         }
 
         _totalPublicJobs = paginatedResponse.total;

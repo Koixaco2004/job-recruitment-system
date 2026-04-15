@@ -1,0 +1,94 @@
+import 'package:flutter/material.dart';
+import '../../domain/entities/headhunting_candidate_entity.dart';
+import '../../domain/models/candidate_filter_model.dart';
+import '../../domain/usecases/search_candidates_usecase.dart';
+
+class CandidateSearchProvider extends ChangeNotifier {
+  final SearchCandidatesUseCase searchCandidatesUseCase;
+
+  CandidateSearchProvider({required this.searchCandidatesUseCase});
+
+  List<HeadhuntingCandidateEntity> _candidates = [];
+  List<HeadhuntingCandidateEntity> get candidates => _candidates;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  CandidateFilterModel _filter = const CandidateFilterModel();
+  CandidateFilterModel get filter => _filter;
+
+  int _totalCount = 0;
+  int get totalCount => _totalCount;
+
+  bool _hasMore = true;
+  bool get hasMore => _hasMore;
+
+  Future<void> searchCandidates({bool refresh = true}) async {
+    if (_isLoading) return; // Chặn yêu cầu nếu đang tải
+    
+    if (refresh) {
+      _filter = _filter.copyWith(page: 1);
+      _candidates = [];
+      _hasMore = true;
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+    } else {
+      if (!_hasMore || _isLoading) return;
+      _isLoading = true;
+      notifyListeners();
+    }
+
+    final result = await searchCandidatesUseCase(
+      keyword: _filter.keyword,
+      provinceId: _filter.provinceId,
+      yearsOfExperience: _filter.yearsOfExperience,
+      jobCategoryId: _filter.categoryId,
+      jobTypeId: _filter.jobTypeId,
+      page: _filter.page,
+    );
+
+    result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _isLoading = false;
+        notifyListeners();
+      },
+      (data) {
+        final List<HeadhuntingCandidateEntity> newCandidates = data['candidates'];
+        if (refresh) {
+          _candidates = newCandidates;
+        } else {
+          // Tránh trùng lặp ID khi addAll
+          final existingIds = _candidates.map((c) => c.id).toSet();
+          final uniqueNewCandidates = newCandidates.where((c) => !existingIds.contains(c.id)).toList();
+          _candidates.addAll(uniqueNewCandidates);
+        }
+
+        _totalCount = data['total'];
+        final int lastPage = data['lastPage'];
+        _hasMore = _filter.page < lastPage;
+
+        if (_hasMore) {
+          _filter = _filter.copyWith(page: _filter.page + 1);
+        }
+
+        _isLoading = false;
+        notifyListeners();
+      },
+    );
+  }
+
+  void updateFilter(CandidateFilterModel newFilter) {
+    _filter = newFilter;
+    searchCandidates(refresh: true);
+  }
+
+  void clearFilter() {
+    _filter = const CandidateFilterModel();
+    searchCandidates(refresh: true);
+  }
+}

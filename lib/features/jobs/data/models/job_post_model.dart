@@ -76,7 +76,9 @@ class JobPostModel extends JobPostEntity {
   static int _asInt(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value;
-    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is String) {
+      return double.tryParse(value)?.toInt() ?? 0;
+    }
     if (value is double) return value.toInt();
     return 0;
   }

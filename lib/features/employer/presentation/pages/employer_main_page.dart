@@ -9,6 +9,7 @@ import 'package:test1/features/employer/presentation/pages/employer_edit_profile
 import 'package:test1/features/employer/presentation/pages/employer_company_edit_page.dart';
 import 'package:test1/features/jobs/presentation/providers/job_provider.dart';
 import 'package:test1/features/jobs/presentation/pages/my_jobs_page.dart';
+import 'package:test1/features/headhunting/presentation/pages/candidate_search_page.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -73,6 +74,7 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
     final List<Widget> pages = [
       _buildDashboardTab(employer),
       const MyJobsPage(),
+      const CandidateSearchPage(),
       _buildProfileTab(context),
     ];
 
@@ -82,10 +84,14 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Tổng quan'),
           BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Tin tuyển dụng'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_search), label: 'Tìm ứng viên'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Hồ sơ'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue[800],
+        unselectedItemColor: Colors.grey[600],
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
         onTap: _onItemTapped,
       ),
     );

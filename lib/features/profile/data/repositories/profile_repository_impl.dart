@@ -93,7 +93,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<WorkExperienceEntity>>> getWorkExperiences() async {
     try {
       final list = await remoteDataSource.getWorkExperiences();
-      return Right(list);
+      final entities = list.map((e) => e as WorkExperienceEntity).toList();
+      return Right(entities);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -153,7 +154,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<EducationEntity>>> getEducations() async {
     try {
       final list = await remoteDataSource.getEducations();
-      return Right(list);
+      final entities = list.map((e) => e as EducationEntity).toList();
+      return Right(entities);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -213,7 +215,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<CertificateEntity>>> getCertificates() async {
     try {
       final list = await remoteDataSource.getCertificates();
-      return Right(list);
+      final entities = list.map((e) => e as CertificateEntity).toList();
+      return Right(entities);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -289,7 +292,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<ProjectEntity>>> getProjects() async {
     try {
       final list = await remoteDataSource.getProjects();
-      return Right(list);
+      final entities = list.map((e) => e as ProjectEntity).toList();
+      return Right(entities);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -347,7 +351,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<JobTypeEntity>>> getJobTypes() async {
     try {
       final result = await remoteDataSource.getJobTypes();
-      return Right(result);
+      // Chuyển đổi List<JobTypeModel> sang List<JobTypeEntity> để tránh lỗi type mismatch ở runtime
+      final entities = result.map((e) => e as JobTypeEntity).toList();
+      return Right(entities);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -361,7 +367,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<JobCategoryEntity>>> getJobCategoriesMetadata() async {
     try {
       final result = await remoteDataSource.getJobCategoriesMetadata();
-      return Right(result);
+      // Chuyển đổi List<JobCategoryModel> sang List<JobCategoryEntity> để tránh lỗi type mismatch ở runtime
+      final entities = result.map((e) => e as JobCategoryEntity).toList();
+      return Right(entities);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -419,7 +427,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<SkillEntity>>> searchSkills(String query) async {
     try {
       final results = await remoteDataSource.searchSkills(query);
-      return Right(results);
+      final entities = results.map((e) => e as SkillEntity).toList();
+      return Right(entities);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -431,7 +440,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, List<CandidateSkillEntity>>> getCandidateSkills() async {
     try {
       final results = await remoteDataSource.getCandidateSkills();
-      return Right(results);
+      final entities = results.map((e) => e as CandidateSkillEntity).toList();
+      return Right(entities);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
