@@ -81,6 +81,8 @@ import 'features/headhunting/data/repositories/headhunting_repository_impl.dart'
 import 'features/headhunting/domain/repositories/headhunting_repository.dart';
 import 'features/headhunting/domain/usecases/get_suggested_candidates_usecase.dart';
 import 'features/headhunting/domain/usecases/search_candidates_usecase.dart';
+import 'features/headhunting/domain/usecases/get_candidate_detail_usecase.dart';
+import 'features/headhunting/domain/usecases/send_invitation_usecase.dart';
 import 'features/headhunting/presentation/providers/headhunting_provider.dart';
 import 'features/headhunting/presentation/providers/candidate_search_provider.dart';
 
@@ -368,6 +370,8 @@ Future<void> init() async {
   sl.registerFactory(
     () => HeadhuntingProvider(
       getSuggestedCandidatesUseCase: sl(),
+      getCandidateDetailUseCase: sl(),
+      sendInvitationUseCase: sl(),
     ),
   );
 
@@ -380,6 +384,8 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => GetSuggestedCandidatesUseCase(sl()));
   sl.registerLazySingleton(() => SearchCandidatesUseCase(sl()));
+  sl.registerLazySingleton(() => GetCandidateDetailUseCase(sl()));
+  sl.registerLazySingleton(() => SendInvitationUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<HeadhuntingRepository>(

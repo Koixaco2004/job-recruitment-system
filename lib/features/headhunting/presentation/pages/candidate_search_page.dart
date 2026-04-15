@@ -6,6 +6,7 @@ import '../../../profile/domain/entities/job_category_entity.dart';
 import '../providers/candidate_search_provider.dart';
 import '../widgets/candidate_card.dart';
 import '../widgets/candidate_filter_bottom_sheet.dart';
+import 'candidate_detail_page.dart';
 
 class CandidateSearchPage extends StatefulWidget {
   const CandidateSearchPage({super.key});
@@ -246,7 +247,18 @@ class _CandidateSearchPageState extends State<CandidateSearchPage> {
                           ),
                         );
                       }
-                      return CandidateCard(candidate: provider.candidates[index]);
+                      final candidate = provider.candidates[index];
+                      return CandidateCard(
+                        candidate: candidate,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CandidateDetailPage(candidateId: candidate.id),
+                            ),
+                          );
+                        },
+                      );
                     },
                   ),
                 );

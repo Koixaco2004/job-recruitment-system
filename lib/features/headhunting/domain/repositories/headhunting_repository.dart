@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../entities/headhunting_candidate_entity.dart';
+import '../entities/candidate_detail_entity.dart';
 
 abstract class HeadhuntingRepository {
   Future<Either<Failure, List<HeadhuntingCandidateEntity>>> getSuggestedCandidates(int jobId);
@@ -13,6 +14,12 @@ abstract class HeadhuntingRepository {
     int? jobTypeId,
     int page = 1,
   });
-  
-  // Later we can add saveCandidate, etc.
+
+  Future<Either<Failure, CandidateDetailEntity>> getCandidateDetail(int id);
+
+  Future<Either<Failure, bool>> sendInvitation({
+    required int jobId,
+    required int candidateId,
+    required String message,
+  });
 }

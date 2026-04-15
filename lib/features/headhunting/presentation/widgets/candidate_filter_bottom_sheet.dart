@@ -111,7 +111,7 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                           title: 'Tỉnh / Thành phố',
                           icon: Icons.location_on_outlined,
                           child: DropdownButtonFormField<int>(
-                            value: profileProvider.provinces.any((p) => p.id == _tempFilter.provinceId) ? _tempFilter.provinceId : null,
+                            initialValue: profileProvider.provinces.any((p) => p.id == _tempFilter.provinceId) ? _tempFilter.provinceId : null,
                             isExpanded: true,
                             decoration: _dropdownDecoration('Chọn tỉnh/thành phố'),
                             items: [
@@ -138,7 +138,7 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                           title: 'Ngành nghề',
                           icon: Icons.work_outline,
                           child: DropdownButtonFormField<int>(
-                            value: profileProvider.allJobCategories.any((c) => c.id == _tempFilter.categoryId) ? _tempFilter.categoryId : null,
+                            initialValue: profileProvider.allJobCategories.any((c) => c.id == _tempFilter.categoryId) ? _tempFilter.categoryId : null,
                             isExpanded: true,
                             decoration: _dropdownDecoration('Chọn ngành nghề'),
                             items: [
@@ -165,7 +165,7 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                           title: 'Hình thức làm việc',
                           icon: Icons.access_time,
                           child: DropdownButtonFormField<int>(
-                            value: profileProvider.jobTypes.any((jt) => jt.id == _tempFilter.jobTypeId) ? _tempFilter.jobTypeId : null,
+                            initialValue: profileProvider.jobTypes.any((jt) => jt.id == _tempFilter.jobTypeId) ? _tempFilter.jobTypeId : null,
                             isExpanded: true,
                             decoration: _dropdownDecoration('Chọn hình thức'),
                             items: [

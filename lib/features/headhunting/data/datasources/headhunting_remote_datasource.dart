@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/headhunting_candidate_model.dart';
+import '../models/candidate_detail_model.dart';
 
 abstract class HeadhuntingRemoteDataSource {
   Future<List<HeadhuntingCandidateModel>> getSuggestedCandidates(int jobId);
@@ -11,6 +13,14 @@ abstract class HeadhuntingRemoteDataSource {
     int? jobCategoryId,
     int? jobTypeId,
     int page = 1,
+  });
+
+  Future<CandidateDetailModel> getCandidateDetail(int id);
+
+  Future<bool> sendInvitation({
+    required int jobId,
+    required int candidateId,
+    required String message,
   });
 }
 
@@ -43,7 +53,7 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
     final queryParams = {
       if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
       if (provinceId != null) 'provinceId': provinceId,
-      if (yearsOfExperience != null) 'yearsWorkingExperience': yearsOfExperience,
+      if (yearsOfExperience != null) 'minExperience': yearsOfExperience,
       if (jobCategoryId != null) 'jobCategoryId': jobCategoryId,
       if (jobTypeId != null) 'jobTypeId': jobTypeId,
       'page': page,
@@ -64,5 +74,44 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
       'page': response.data['page'],
       'lastPage': response.data['lastPage'],
     };
+  }
+
+  @override
+  Future<CandidateDetailModel> getCandidateDetail(int id) async {
+    final response = await apiClient.dio.get('/api/employers/headhunting/candidates/$id');
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return CandidateDetailModel.fromJson(response.data as Map<String, dynamic>);
+    } else {
+      throw Exception('Failed to load candidate detail');
+    }
+  }
+
+  @override
+  Future<bool> sendInvitation({
+    required int jobId,
+    required int candidateId,
+    required String message,
+  }) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/employers/headhunting/invitations',
+        data: {
+          'jobId': jobId,
+          'candidateId': candidateId,
+          'message': message,
+        },
+      );
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } on DioException catch (e) {
+      if (e.response != null && e.response!.data is Map) {
+        final errorMessage = e.response!.data['message'];
+        if (errorMessage != null) {
+          throw Exception(errorMessage);
+        }
+      }
+      rethrow;
+    }
   }
 }

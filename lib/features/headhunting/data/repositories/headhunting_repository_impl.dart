@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/headhunting_candidate_entity.dart';
+import '../../domain/entities/candidate_detail_entity.dart';
 import '../../domain/repositories/headhunting_repository.dart';
 import '../datasources/headhunting_remote_datasource.dart';
 
@@ -40,6 +41,35 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CandidateDetailEntity>> getCandidateDetail(int id) async {
+    try {
+      final detail = await remoteDataSource.getCandidateDetail(id);
+      return Right(detail);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> sendInvitation({
+    required int jobId,
+    required int candidateId,
+    required String message,
+  }) async {
+    try {
+      final success = await remoteDataSource.sendInvitation(
+        jobId: jobId,
+        candidateId: candidateId,
+        message: message,
+      );
+      return Right(success);
+    } catch (e) {
+      final message = e.toString().replaceAll('Exception: ', '');
+      return Left(ServerFailure(message));
     }
   }
 }

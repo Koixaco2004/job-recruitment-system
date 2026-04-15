@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/headhunting_provider.dart';
 import '../widgets/candidate_card.dart';
+import 'candidate_detail_page.dart';
 
 class SuggestedCandidatesPage extends StatefulWidget {
   final int jobId;
@@ -99,7 +100,15 @@ class _SuggestedCandidatesPageState extends State<SuggestedCandidatesPage> {
                 return CandidateCard(
                   candidate: candidate,
                   onTap: () {
-                    // TODO: Navigate to candidate detail
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CandidateDetailPage(
+                          candidateId: candidate.id,
+                          jobId: widget.jobId,
+                        ),
+                      ),
+                    );
                   },
                 );
               },

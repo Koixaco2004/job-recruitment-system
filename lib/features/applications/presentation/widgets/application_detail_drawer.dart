@@ -236,6 +236,28 @@ class ApplicationDetailDrawer extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 8),
           )),
         ],
+        if (candidate.projects.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _buildSectionTitle('Dự án'),
+          ...candidate.projects.map((proj) => _buildCard(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(proj.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                if (proj.startDate != null)
+                  Text(
+                    '${proj.startDate!.year} - ${proj.endDate?.year ?? "Hiện tại"}',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  ),
+                if (proj.description != null && proj.description!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(proj.description!, style: const TextStyle(fontSize: 13)),
+                ],
+              ],
+            ),
+            margin: const EdgeInsets.only(bottom: 8),
+          )),
+        ],
         if (candidate.educations.isNotEmpty) ...[
           const SizedBox(height: 16),
           _buildSectionTitle('Học vấn'),
