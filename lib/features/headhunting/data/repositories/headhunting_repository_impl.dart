@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/headhunting_candidate_entity.dart';
 import '../../domain/entities/candidate_detail_entity.dart';
+import '../../domain/entities/candidate_invitation_entity.dart';
 import '../../domain/repositories/headhunting_repository.dart';
 import '../datasources/headhunting_remote_datasource.dart';
 
@@ -70,6 +71,36 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
     } catch (e) {
       final message = e.toString().replaceAll('Exception: ', '');
       return Left(ServerFailure(message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CandidateInvitationEntity>>> getCandidateInvitations() async {
+    try {
+      final invitations = await remoteDataSource.getCandidateInvitations();
+      return Right(invitations);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> acceptInvitation(int id) async {
+    try {
+      final success = await remoteDataSource.acceptInvitation(id);
+      return Right(success);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> declineInvitation(int id) async {
+    try {
+      final success = await remoteDataSource.declineInvitation(id);
+      return Right(success);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

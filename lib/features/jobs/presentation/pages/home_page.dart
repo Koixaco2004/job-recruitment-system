@@ -4,6 +4,7 @@ import '../providers/job_provider.dart';
 import '../widgets/job_card.dart';
 import 'job_detail_page.dart';
 import 'search_page.dart';
+import '../../../headhunting/presentation/widgets/notification_bell.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,6 +37,7 @@ class _HomePageState extends State<HomePage> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          const NotificationBell(),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {

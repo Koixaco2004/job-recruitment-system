@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/headhunting_candidate_model.dart';
 import '../models/candidate_detail_model.dart';
+import '../models/candidate_invitation_model.dart';
 
 abstract class HeadhuntingRemoteDataSource {
   Future<List<HeadhuntingCandidateModel>> getSuggestedCandidates(int jobId);
@@ -22,6 +23,11 @@ abstract class HeadhuntingRemoteDataSource {
     required int candidateId,
     required String message,
   });
+
+  // Candidate Side
+  Future<List<CandidateInvitationModel>> getCandidateInvitations();
+  Future<bool> acceptInvitation(int id);
+  Future<bool> declineInvitation(int id);
 }
 
 class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
@@ -113,5 +119,29 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
       }
       rethrow;
     }
+  }
+
+  @override
+  Future<List<CandidateInvitationModel>> getCandidateInvitations() async {
+    final response = await apiClient.dio.get('/api/candidates/headhunting/invitations');
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final List<dynamic> data = response.data;
+      return data.map((json) => CandidateInvitationModel.fromJson(json as Map<String, dynamic>)).toList();
+    } else {
+      throw Exception('Failed to load candidate invitations');
+    }
+  }
+
+  @override
+  Future<bool> acceptInvitation(int id) async {
+    final response = await apiClient.dio.post('/api/candidates/headhunting/invitations/$id/accept');
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  @override
+  Future<bool> declineInvitation(int id) async {
+    final response = await apiClient.dio.post('/api/candidates/headhunting/invitations/$id/decline');
+    return response.statusCode == 200 || response.statusCode == 201;
   }
 }
