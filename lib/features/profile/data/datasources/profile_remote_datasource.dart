@@ -59,6 +59,7 @@ abstract class ProfileRemoteDataSource {
   Future<void> addCandidateSkills(List<dynamic> skills);
   Future<void> deleteCandidateSkill(int mappingId);
   Future<String?> uploadAvatar(Uint8List bytes, String fileName);
+  Future<void> updateVisibility(bool isVisible);
   Future<void> parseCv();
 }
 
@@ -721,6 +722,27 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     } catch (e) {
       if (e is ServerException || e is AuthenticationException) rethrow;
       throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> updateVisibility(bool isVisible) async {
+    try {
+      final response = await apiClient.dio.put(
+        '/api/candidates/profile/visibility',
+        data: {'isPublic': isVisible},
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException('Cập nhật trạng thái hiển thị thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      }
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
     }
   }
 

@@ -9,6 +9,7 @@ import '../../domain/entities/project_entity.dart';
 import '../../domain/usecases/get_profile_usecase.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
 import '../../domain/usecases/parse_cv_usecase.dart';
+import '../../domain/usecases/update_visibility_usecase.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../metadata/domain/usecases/get_provinces_usecase.dart';
@@ -20,11 +21,13 @@ import '../../domain/entities/skill_entity.dart';
 class ProfileProvider extends ChangeNotifier {
   final GetProfileUseCase getProfileUseCase;
   final UpdateProfileUseCase updateProfileUseCase;
+  final UpdateVisibilityUseCase updateVisibilityUseCase;
   final ProfileRepository profileRepository;
 
   ProfileProvider({
     required this.getProfileUseCase,
     required this.updateProfileUseCase,
+    required this.updateVisibilityUseCase,
     required this.profileRepository,
   });
 
@@ -38,6 +41,7 @@ class ProfileProvider extends ChangeNotifier {
   String? _successMessage;
   String? _uploadError; // Separate error for CV upload
   String? _uploadedCvUrl;
+  bool _isUpdatingVisibility = false;
 
   List<ProvinceEntity> _provinces = [];
   bool _isLoadingProvinces = false;
@@ -68,6 +72,7 @@ class ProfileProvider extends ChangeNotifier {
   String? get successMessage => _successMessage;
   String? get uploadError => _uploadError;
   String? get uploadedCvUrl => _uploadedCvUrl;
+  bool get isUpdatingVisibility => _isUpdatingVisibility;
   List<ProvinceEntity> get provinces => _provinces;
   bool get isLoadingProvinces => _isLoadingProvinces;
   List<JobTypeEntity> get jobTypes => _jobTypes;
@@ -569,42 +574,61 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  /// Bật/Tắt trạng thái tìm việc
+  /// Bật/Tắt trạng thái tìm việc (Sử dụng APIVisibility chuyên biệt)
   Future<void> toggleSearchable() async {
     if (_profile == null) return;
 
-    final updatedProfile = CandidateProfileEntity(
-      userId: _profile!.userId,
-      email: _profile!.email,
-      phone: _profile!.phone,
-      fullName: _profile!.fullName,
-      avatarUrl: _profile!.avatarUrl,
-      candidateId: _profile!.candidateId,
-      dateOfBirth: _profile!.dateOfBirth,
-      gender: _profile!.gender,
-      bio: _profile!.bio,
-      cityName: _profile!.cityName,
-      provinceId: _profile!.provinceId,
-      educationLevel: _profile!.educationLevel,
-      yearsOfExperience: _profile!.yearsOfExperience,
-      currentJobTitle: _profile!.currentJobTitle,
-      desiredJobTitle: _profile!.desiredJobTitle,
-      desiredSalaryMin: _profile!.desiredSalaryMin,
-      desiredSalaryMax: _profile!.desiredSalaryMax,
-      desiredJobType: _profile!.desiredJobType,
-      skills: _profile!.skills,
-      cvFileUrl: _profile!.cvFileUrl,
-      industry: _profile!.industry,
-      isSearchable: !_profile!.isSearchable, // Toggle
-      workExperiences: _profile!.workExperiences,
-      educations: _profile!.educations,
-      certificates: _profile!.certificates,
-      projects: _profile!.projects,
-      createdAt: _profile!.createdAt,
-      updatedAt: DateTime.now(),
-    );
+    final newVisibility = !_profile!.isSearchable;
+    
+    _isUpdatingVisibility = true;
+    _errorMessage = null;
+    notifyListeners();
 
-    await updateProfile(updatedProfile);
+    final result = await updateVisibilityUseCase(newVisibility);
+    
+    result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _isUpdatingVisibility = false;
+      },
+      (_) {
+        // Cập nhật local state sau khi API thành công
+        _profile = CandidateProfileEntity(
+          userId: _profile!.userId,
+          email: _profile!.email,
+          phone: _profile!.phone,
+          fullName: _profile!.fullName,
+          avatarUrl: _profile!.avatarUrl,
+          candidateId: _profile!.candidateId,
+          dateOfBirth: _profile!.dateOfBirth,
+          gender: _profile!.gender,
+          bio: _profile!.bio,
+          cityName: _profile!.cityName,
+          provinceId: _profile!.provinceId,
+          educationLevel: _profile!.educationLevel,
+          yearsOfExperience: _profile!.yearsOfExperience,
+          currentJobTitle: _profile!.currentJobTitle,
+          desiredJobTitle: _profile!.desiredJobTitle,
+          desiredSalaryMin: _profile!.desiredSalaryMin,
+          desiredSalaryMax: _profile!.desiredSalaryMax,
+          desiredJobType: _profile!.desiredJobType,
+          jobTypeId: _profile!.jobTypeId,
+          skills: _profile!.skills,
+          cvFileUrl: _profile!.cvFileUrl,
+          industry: _profile!.industry,
+          isSearchable: newVisibility, // Giá trị mới
+          workExperiences: _profile!.workExperiences,
+          educations: _profile!.educations,
+          certificates: _profile!.certificates,
+          projects: _profile!.projects,
+          createdAt: _profile!.createdAt,
+          updatedAt: DateTime.now(),
+        );
+        _successMessage = 'Đã cập nhật trạng thái hiển thị hồ sơ';
+        _isUpdatingVisibility = false;
+      },
+    );
+    notifyListeners();
   }
 
   void clearMessages() {

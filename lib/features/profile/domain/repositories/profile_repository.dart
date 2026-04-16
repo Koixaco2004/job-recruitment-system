@@ -61,5 +61,6 @@ abstract class ProfileRepository {
   Future<Either<Failure, List<CandidateSkillEntity>>> getCandidateSkills();
   Future<Either<Failure, void>> addCandidateSkills(List<dynamic> skills);
   Future<Either<Failure, void>> deleteCandidateSkill(int mappingId);
+  Future<Either<Failure, void>> updateVisibility(bool isVisible);
   Future<Either<Failure, void>> parseCv();
 }

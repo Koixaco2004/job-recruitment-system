@@ -304,13 +304,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                 ),
-                Switch(
-                  value: isOn,
-                  activeColor: Colors.green,
-                  onChanged: provider.isSaving
-                      ? null
-                      : (_) => provider.toggleSearchable(),
-                ),
+                provider.isUpdatingVisibility
+                    ? const SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : Switch(
+                        value: isOn,
+                        activeColor: Colors.green,
+                        onChanged: provider.isSaving || provider.isLoading
+                            ? null
+                            : (_) => provider.toggleSearchable(),
+                      ),
               ],
             ),
           ),

@@ -136,7 +136,7 @@ class CandidateProfileModel extends CandidateProfileEntity {
       cvFileUrl: _parseStringNullable(
           json['cv_file_url'] ?? json['cvUrl'] ?? json['cvFileUrl']),
       industry: _parseStringNullable(json['industry']),
-      isSearchable: _parseBool(json['is_searchable'] ?? json['isSearchable'], false),
+      isSearchable: _parseBool(json['is_searchable'] ?? json['isSearchable'] ?? json['isPublic'], false),
       workExperiences:
           json['work_experiences'] ?? json['workExperiences'] != null
           ? (json['work_experiences'] ?? json['workExperiences'] as List)

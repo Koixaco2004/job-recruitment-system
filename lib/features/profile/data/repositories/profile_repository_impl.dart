@@ -474,6 +474,20 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<Either<Failure, void>> updateVisibility(bool isVisible) async {
+    try {
+      await remoteDataSource.updateVisibility(isVisible);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthenticationException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi cập nhật trạng thái hiển thị: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> parseCv() async {
     try {
       await remoteDataSource.parseCv();
