@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/headhunting_candidate_entity.dart';
+import 'package:provider/provider.dart';
+import '../providers/headhunting_provider.dart';
 
 class CandidateCard extends StatelessWidget {
   final HeadhuntingCandidateEntity candidate;
+  final int? jobId;
   final VoidCallback? onTap;
+  final bool showAppliedBadge;
 
   const CandidateCard({
     super.key,
     required this.candidate,
+    this.jobId,
     this.onTap,
+    this.showAppliedBadge = true,
   });
 
   String _formatCurrency(double? value) {
@@ -29,7 +35,7 @@ class CandidateCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
-      shadowColor: theme.primaryColor.withValues(alpha: 0.1),
+      shadowColor: theme.primaryColor.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onTap,
@@ -42,7 +48,7 @@ class CandidateCard extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: [
                 Colors.white,
-                theme.primaryColor.withValues(alpha: 0.02),
+                theme.primaryColor.withOpacity(0.02),
               ],
             ),
           ),
@@ -60,7 +66,7 @@ class CandidateCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: theme.primaryColor.withValues(alpha: 0.2),
+                        color: theme.primaryColor.withOpacity(0.2),
                         width: 2,
                       ),
                       image: candidate.avatarUrl != null
@@ -80,13 +86,43 @@ class CandidateCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          candidate.fullName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                candidate.fullName,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
+                            if (jobId != null && showAppliedBadge)
+                              Consumer<HeadhuntingProvider>(
+                                builder: (context, provider, _) {
+                                  if (provider.isApplied(candidate.id, jobId!)) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                      ),
+                                      child: const Text(
+                                        'Đã ứng tuyển',
+                                        style: TextStyle(
+                                          color: Colors.orange,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox();
+                                },
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -140,14 +176,14 @@ class CandidateCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: theme.primaryColor.withValues(alpha: 0.05),
+                        color: theme.primaryColor.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         skill.skillMetadata.canonicalName,
                         style: TextStyle(
                           fontSize: 12,
-                          color: theme.primaryColor,
+                          color: theme.primaryColor.withOpacity(0.7), // Fallback if direct color is needed, but sticking to opacity pattern
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -184,7 +220,7 @@ class CandidateCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.05),
+          color: color.withOpacity(0.05),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(

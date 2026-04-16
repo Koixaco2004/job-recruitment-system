@@ -8,6 +8,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../applications/presentation/providers/application_provider.dart';
 import '../../../applications/presentation/widgets/apply_dialog.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
+import '../../../headhunting/presentation/providers/headhunting_provider.dart';
 
 
 /// Màn hình chi tiết việc làm
@@ -26,6 +27,12 @@ class _JobDetailPageState extends State<JobDetailPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<JobProvider>().fetchJobDetail(widget.job.jobPostId);
+      
+      // Fetch invitations if user is a candidate to sync "Apply" button status
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.user?.userType.toLowerCase() == 'candidate') {
+        context.read<HeadhuntingProvider>().fetchCandidateInvitations();
+      }
     });
   }
 
@@ -120,7 +127,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                          Theme.of(context).primaryColor.withOpacity(0.8),
                         ],
                       ),
                     ),
@@ -539,13 +546,20 @@ class _JobDetailPageState extends State<JobDetailPage> {
       (a) => a.jobId == job.jobPostId && a.status != 'withdrawn'
     );
 
+    // Kiểm tra đã chấp nhận lời mời chưa
+    final headhuntingProvider = context.watch<HeadhuntingProvider>();
+    final isInvitationAccepted = headhuntingProvider.isInvitationAcceptedForJob(job.jobPostId);
+
+    // Vô hiệu hóa nếu: đã ứng tuyển, hoặc đã chấp nhận lời mời, hoặc tin đóng/hết hạn
+    final bool isButtonDisabled = isApplied || isInvitationAccepted || isClosed || isExpired;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -597,7 +611,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton.icon(
-                  onPressed: (isApplied || isClosed || isExpired) 
+                  onPressed: isButtonDisabled 
                     ? null 
                     : () {
                         // Kiểm tra CV
@@ -614,20 +628,22 @@ class _JobDetailPageState extends State<JobDetailPage> {
                         }
                       },
                   icon: Icon(
-                    isApplied ? Icons.check_circle : (isClosed || isExpired ? Icons.block : Icons.send), 
+                    isApplied || isInvitationAccepted ? Icons.check_circle : (isClosed || isExpired ? Icons.block : Icons.send), 
                     size: 20
                   ),
                   label: Text(
                     isApplied 
                         ? 'Đã ứng tuyển' 
-                        : (isClosed ? 'Công việc đã đóng' : (isExpired ? 'Đã hết hạn nộp' : 'Ứng tuyển ngay')),
+                        : (isInvitationAccepted 
+                            ? 'Đã chấp nhận lời mời' 
+                            : (isClosed ? 'Công việc đã đóng' : (isExpired ? 'Đã hết hạn nộp' : 'Ứng tuyển ngay'))),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isApplied ? Colors.grey : Theme.of(context).primaryColor,
+                    backgroundColor: (isApplied || isInvitationAccepted) ? Colors.grey : Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -693,9 +709,9 @@ class _JobDetailPageState extends State<JobDetailPage> {
       width: 155,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
+        color: color.withOpacity(0.05),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
+        border: Border.all(color: color.withOpacity(0.15), width: 1),
       ),
       child: Row(
         children: [
@@ -795,7 +811,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                             width: 6,
                             height: 6,
                             decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.6),
+                              color: color.withOpacity(0.6),
                               shape: BoxShape.circle,
                             ),
                           ),

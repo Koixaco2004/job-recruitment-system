@@ -107,9 +107,9 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
+                      color: Colors.orange.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
                     ),
                     child: const Text(
                       'Bạn chưa có tin tuyển dụng nào đang đăng (Published). Vui lòng đăng tin trước khi gửi thư mời.',
@@ -157,14 +157,38 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
                   ),
                   style: const TextStyle(fontSize: 14),
                 ),
-                // Show "Already Invited" message if selected job is in tracked set
-                if (_selectedJob != null && headhuntingProvider.isInvited(widget.candidate.id, _selectedJob!.jobPostId)) ...[
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Bạn đã gửi thư mời cho ứng viên này vào vị trí này rồi',
-                    style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                ] else if (headhuntingProvider.invitationError != null) ...[
+                // Show "Already Invited" or "Already Applied" message if selected job is in tracked set
+                if (_selectedJob != null) ...[
+                  if (headhuntingProvider.isInvited(widget.candidate.id, _selectedJob!.jobPostId)) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Bạn đã gửi thư mời cho ứng viên này vào vị trí này rồi',
+                      style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                  ] else if (headhuntingProvider.isApplied(widget.candidate.id, _selectedJob!.jobPostId)) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 14, color: Colors.red),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Ứng viên này đã chủ động ứng tuyển vào vị trí này',
+                              style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+                if (headhuntingProvider.invitationError != null) ...[
                   const SizedBox(height: 8),
                   Text(
                     headhuntingProvider.invitationError!,
@@ -190,7 +214,8 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
                         onPressed: (headhuntingProvider.isSendingInvitation || 
                                     _selectedJob == null || 
                                     _messageController.text.trim().isEmpty ||
-                                    headhuntingProvider.isInvited(widget.candidate.id, _selectedJob!.jobPostId))
+                                    headhuntingProvider.isInvited(widget.candidate.id, _selectedJob!.jobPostId) ||
+                                    headhuntingProvider.isApplied(widget.candidate.id, _selectedJob!.jobPostId))
                             ? null
                             : () => _handleSend(context, headhuntingProvider),
                         style: ElevatedButton.styleFrom(

@@ -99,6 +99,7 @@ class _SuggestedCandidatesPageState extends State<SuggestedCandidatesPage> {
                 final candidate = provider.suggestedCandidates[index];
                 return CandidateCard(
                   candidate: candidate,
+                  jobId: widget.jobId,
                   onTap: () {
                     Navigator.push(
                       context,

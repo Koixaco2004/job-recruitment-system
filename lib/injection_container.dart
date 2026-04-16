@@ -381,6 +381,7 @@ Future<void> init() async {
       getCandidateInvitationsUseCase: sl(),
       acceptInvitationUseCase: sl(),
       declineInvitationUseCase: sl(),
+      getJobApplicationsUseCase: sl(),
     ),
   );
 

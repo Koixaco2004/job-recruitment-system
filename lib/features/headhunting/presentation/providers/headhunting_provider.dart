@@ -8,6 +8,7 @@ import '../../domain/usecases/get_candidate_invitations_usecase.dart';
 import '../../domain/usecases/accept_invitation_usecase.dart';
 import '../../domain/usecases/decline_invitation_usecase.dart';
 import '../../domain/entities/candidate_invitation_entity.dart';
+import '../../../applications/domain/usecases/get_job_applications_usecase.dart';
 
 class HeadhuntingProvider extends ChangeNotifier {
   final GetSuggestedCandidatesUseCase getSuggestedCandidatesUseCase;
@@ -16,6 +17,7 @@ class HeadhuntingProvider extends ChangeNotifier {
   final GetCandidateInvitationsUseCase getCandidateInvitationsUseCase;
   final AcceptInvitationUseCase acceptInvitationUseCase;
   final DeclineInvitationUseCase declineInvitationUseCase;
+  final GetJobApplicationsUseCase getJobApplicationsUseCase;
 
   HeadhuntingProvider({
     required this.getSuggestedCandidatesUseCase,
@@ -24,6 +26,7 @@ class HeadhuntingProvider extends ChangeNotifier {
     required this.getCandidateInvitationsUseCase,
     required this.acceptInvitationUseCase,
     required this.declineInvitationUseCase,
+    required this.getJobApplicationsUseCase,
   });
 
   bool _isLoading = false;
@@ -46,6 +49,8 @@ class HeadhuntingProvider extends ChangeNotifier {
   bool _isActionInProgress = false;
   // Map candidateId to Set of jobIds already invited or identified as already invited
   final Map<int, Set<int>> _invitedCandidateJobs = {};
+  // Map jobId to Set of candidateIds who have applied
+  final Map<int, Set<int>> _appliedCandidateJobs = {};
 
   bool get isLoading => _isLoading;
   List<HeadhuntingCandidateEntity> get suggestedCandidates => _suggestedCandidates;
@@ -69,11 +74,23 @@ class HeadhuntingProvider extends ChangeNotifier {
     return _invitedCandidateJobs[candidateId]?.contains(jobId) ?? false;
   }
 
+  bool isApplied(int candidateId, int jobId) {
+    return _appliedCandidateJobs[jobId]?.contains(candidateId) ?? false;
+  }
+
+  bool isInvitationAcceptedForJob(int jobId) {
+    return _candidateInvitations.any((inv) => inv.jobId == jobId && inv.status == 'accepted');
+  }
+
   Future<void> fetchSuggestedCandidates(int jobId) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
+    // Fetch applications first to ensure we have the "Already Applied" status ready
+    await fetchJobApplicants(jobId);
+    
+    // Then fetch suggested candidates
     final result = await getSuggestedCandidatesUseCase.execute(jobId);
 
     result.fold(
@@ -85,6 +102,18 @@ class HeadhuntingProvider extends ChangeNotifier {
       (candidates) {
         _suggestedCandidates = candidates;
         _isLoading = false;
+        notifyListeners();
+      },
+    );
+  }
+
+  Future<void> fetchJobApplicants(int jobId) async {
+    final result = await getJobApplicationsUseCase.call(jobId, limit: 100); // Get a good chunk of applicants
+    result.fold(
+      (failure) => null, // Ignore failures for sync
+      (paginatedResponse) {
+        final applicantIds = paginatedResponse.data.map((app) => app.candidateId).toSet();
+        _appliedCandidateJobs[jobId] = applicantIds;
         notifyListeners();
       },
     );

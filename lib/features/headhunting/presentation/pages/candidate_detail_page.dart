@@ -26,7 +26,11 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HeadhuntingProvider>().fetchCandidateDetail(widget.candidateId);
+      final provider = context.read<HeadhuntingProvider>();
+      provider.fetchCandidateDetail(widget.candidateId);
+      if (widget.jobId != null) {
+        provider.fetchJobApplicants(widget.jobId!);
+      }
       context.read<ProfileProvider>().fetchProvincesIfEmpty();
       context.read<ProfileProvider>().fetchJobTypesIfEmpty();
     });
@@ -208,7 +212,7 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
+                          color: Colors.green.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text('Hiện tại', style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -313,8 +317,8 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
               runSpacing: 8,
               children: candidate.skills.map((skill) => Chip(
                 label: Text(skill.skillMetadata.canonicalName, style: const TextStyle(fontSize: 12)),
-                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.05),
-                side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
+                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.05),
+                side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.2)),
                 padding: EdgeInsets.zero,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               )).toList(),
@@ -327,34 +331,43 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
   }
 
   Widget _buildBottomActions(BuildContext context, CandidateDetailEntity candidate) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            offset: const Offset(0, -4),
-            blurRadius: 10,
+    return Consumer<HeadhuntingProvider>(
+      builder: (context, provider, child) {
+        final bool isAlreadyApplied = widget.jobId != null && provider.isApplied(candidate.id, widget.jobId!);
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                offset: const Offset(0, -4),
+                blurRadius: 10,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton.icon(
-            onPressed: () => _showInvitationDialog(context, candidate),
-            icon: const Icon(Icons.mail_outline),
-            label: const Text('Gửi thư mời', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: SafeArea(
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: isAlreadyApplied ? null : () => _showInvitationDialog(context, candidate),
+                icon: Icon(isAlreadyApplied ? Icons.check_circle_outline : Icons.mail_outline),
+                label: Text(
+                  isAlreadyApplied ? 'Ứng viên đã ứng tuyển' : 'Gửi thư mời',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isAlreadyApplied ? Colors.grey[400] : Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

@@ -319,7 +319,7 @@ class _CandidateSearchPageState extends State<CandidateSearchPage> {
       label: Text(label, style: const TextStyle(fontSize: 12)),
       onDeleted: onDeleted,
       deleteIcon: const Icon(Icons.close, size: 14),
-      backgroundColor: Colors.blue.withValues(alpha: 0.1),
+      backgroundColor: Colors.blue.withOpacity(0.1),
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       visualDensity: VisualDensity.compact,
