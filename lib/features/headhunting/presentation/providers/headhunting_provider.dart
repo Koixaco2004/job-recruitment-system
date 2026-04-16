@@ -8,6 +8,8 @@ import '../../domain/usecases/get_candidate_invitations_usecase.dart';
 import '../../domain/usecases/accept_invitation_usecase.dart';
 import '../../domain/usecases/decline_invitation_usecase.dart';
 import '../../domain/entities/candidate_invitation_entity.dart';
+import '../../domain/entities/employer_invitation_entity.dart';
+import '../../domain/usecases/get_employer_invitations_usecase.dart';
 import '../../../applications/domain/usecases/get_job_applications_usecase.dart';
 
 class HeadhuntingProvider extends ChangeNotifier {
@@ -18,6 +20,7 @@ class HeadhuntingProvider extends ChangeNotifier {
   final AcceptInvitationUseCase acceptInvitationUseCase;
   final DeclineInvitationUseCase declineInvitationUseCase;
   final GetJobApplicationsUseCase getJobApplicationsUseCase;
+  final GetEmployerInvitationsUseCase getEmployerInvitationsUseCase;
 
   HeadhuntingProvider({
     required this.getSuggestedCandidatesUseCase,
@@ -27,6 +30,7 @@ class HeadhuntingProvider extends ChangeNotifier {
     required this.acceptInvitationUseCase,
     required this.declineInvitationUseCase,
     required this.getJobApplicationsUseCase,
+    required this.getEmployerInvitationsUseCase,
   });
 
   bool _isLoading = false;
@@ -51,6 +55,11 @@ class HeadhuntingProvider extends ChangeNotifier {
   final Map<int, Set<int>> _invitedCandidateJobs = {};
   // Map jobId to Set of candidateIds who have applied
   final Map<int, Set<int>> _appliedCandidateJobs = {};
+  
+  // Employer Side Invitations
+  List<EmployerInvitationEntity> _employerInvitations = [];
+  bool _isLoadingEmployerInvitations = false;
+  String? _employerInvitationError;
 
   bool get isLoading => _isLoading;
   List<HeadhuntingCandidateEntity> get suggestedCandidates => _suggestedCandidates;
@@ -69,6 +78,11 @@ class HeadhuntingProvider extends ChangeNotifier {
   String? get candidateInvitationError => _candidateInvitationError;
   bool get isActionInProgress => _isActionInProgress;
   int get pendingInvitationsCount => _candidateInvitations.where((i) => i.status == 'pending').length;
+  
+  // Employer Getters
+  List<EmployerInvitationEntity> get employerInvitations => _employerInvitations;
+  bool get isLoadingEmployerInvitations => _isLoadingEmployerInvitations;
+  String? get employerInvitationError => _employerInvitationError;
 
   bool isInvited(int candidateId, int jobId) {
     return _invitedCandidateJobs[candidateId]?.contains(jobId) ?? false;
@@ -340,6 +354,30 @@ class HeadhuntingProvider extends ChangeNotifier {
     _errorMessage = null;
     _detailError = null;
     _invitationError = null;
+    _employerInvitationError = null;
     notifyListeners();
+  }
+
+  // ─── Employer Invitations Methods ────────────────────────────────────────
+
+  Future<void> fetchEmployerInvitations() async {
+    _isLoadingEmployerInvitations = true;
+    _employerInvitationError = null;
+    notifyListeners();
+
+    final result = await getEmployerInvitationsUseCase.execute();
+
+    result.fold(
+      (failure) {
+        _employerInvitationError = failure.message;
+        _isLoadingEmployerInvitations = false;
+        notifyListeners();
+      },
+      (invitations) {
+        _employerInvitations = invitations;
+        _isLoadingEmployerInvitations = false;
+        notifyListeners();
+      },
+    );
   }
 }

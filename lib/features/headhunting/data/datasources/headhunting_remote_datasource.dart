@@ -3,6 +3,7 @@ import '../../../../core/network/api_client.dart';
 import '../models/headhunting_candidate_model.dart';
 import '../models/candidate_detail_model.dart';
 import '../models/candidate_invitation_model.dart';
+import '../models/employer_invitation_model.dart';
 
 abstract class HeadhuntingRemoteDataSource {
   Future<List<HeadhuntingCandidateModel>> getSuggestedCandidates(int jobId);
@@ -28,6 +29,9 @@ abstract class HeadhuntingRemoteDataSource {
   Future<List<CandidateInvitationModel>> getCandidateInvitations();
   Future<bool> acceptInvitation(int id);
   Future<bool> declineInvitation(int id);
+
+  // Employer Side
+  Future<List<EmployerInvitationModel>> getEmployerInvitations();
 }
 
 class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
@@ -143,5 +147,17 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
   Future<bool> declineInvitation(int id) async {
     final response = await apiClient.dio.post('/api/candidates/headhunting/invitations/$id/decline');
     return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  @override
+  Future<List<EmployerInvitationModel>> getEmployerInvitations() async {
+    final response = await apiClient.dio.get('/api/employers/headhunting/invitations');
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final List<dynamic> data = response.data;
+      return data.map((json) => EmployerInvitationModel.fromJson(json as Map<String, dynamic>)).toList();
+    } else {
+      throw Exception('Failed to load employer invitations');
+    }
   }
 }

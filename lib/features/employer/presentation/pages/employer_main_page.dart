@@ -9,7 +9,9 @@ import 'package:test1/features/employer/presentation/pages/employer_edit_profile
 import 'package:test1/features/employer/presentation/pages/employer_company_edit_page.dart';
 import 'package:test1/features/jobs/presentation/providers/job_provider.dart';
 import 'package:test1/features/jobs/presentation/pages/my_jobs_page.dart';
+import 'package:test1/features/headhunting/presentation/providers/headhunting_provider.dart';
 import 'package:test1/features/headhunting/presentation/pages/candidate_search_page.dart';
+import 'package:test1/features/headhunting/presentation/pages/employer_invitation_list_page.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -36,6 +38,7 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
     // Fetch job stats
     if (mounted) {
       context.read<JobProvider>().fetchEmployerJobs(status: 'published');
+      context.read<HeadhuntingProvider>().fetchEmployerInvitations();
     }
     
     if (mounted) {
@@ -158,7 +161,22 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
                       Colors.blue, 
                       onTap: () => _onItemTapped(1)
                   ),
-                  _buildStatCard('Ứng viên mới', '0', Icons.people, Colors.green),
+                  Consumer<HeadhuntingProvider>(
+                    builder: (context, headhuntingProvider, child) {
+                      return _buildStatCard(
+                        'Ứng viên đã mời', 
+                        headhuntingProvider.employerInvitations.length.toString(), 
+                        Icons.person_add_alt_1, 
+                        Colors.indigo,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const EmployerInvitationListPage()),
+                          );
+                        },
+                      );
+                    },
+                  ),
                   _buildStatCard('Phỏng vấn', '0', Icons.event_available, Colors.orange),
                   _buildStatCard('Thông báo', '0', Icons.notifications, Colors.purple),
                 ],
