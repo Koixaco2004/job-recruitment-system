@@ -163,6 +163,23 @@ class CandidateCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  // Save Button (Heart)
+                  Consumer<HeadhuntingProvider>(
+                    builder: (context, provider, _) {
+                      final isSaved = provider.isSaved(candidate.id);
+                      return IconButton(
+                        onPressed: () => provider.toggleSaveCandidate(candidate.id),
+                        icon: Icon(
+                          isSaved ? Icons.favorite : Icons.favorite_border,
+                          color: isSaved ? Colors.red : Colors.grey[400],
+                        ),
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                        splashRadius: 20,
+                      );
+                    },
+                  ),
                 ],
               ),
               const SizedBox(height: 16),

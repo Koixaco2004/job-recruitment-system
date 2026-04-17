@@ -23,6 +23,7 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
   JobPostEntity? _selectedJob;
   final _messageController = TextEditingController();
   bool _isInit = true;
+  bool _isCheckingStatus = false;
 
   @override
   void initState() {
@@ -73,6 +74,7 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
                 if (mounted && _selectedJob == null) {
                   setState(() {
                     _selectedJob = matchedJob;
+                    _checkJobApplicationStatus(matchedJob.jobPostId);
                   });
                 }
               });
@@ -136,9 +138,12 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
                       );
                     }).toList(),
                     onChanged: (value) {
-                      setState(() {
-                        _selectedJob = value;
-                      });
+                      if (value != null) {
+                        setState(() {
+                          _selectedJob = value;
+                          _checkJobApplicationStatus(value.jobPostId);
+                        });
+                      }
                     },
                   ),
                 const SizedBox(height: 16),
@@ -159,7 +164,20 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
                 ),
                 // Show "Already Invited" or "Already Applied" message if selected job is in tracked set
                 if (_selectedJob != null) ...[
-                  if (headhuntingProvider.isInvited(widget.candidate.id, _selectedJob!.jobPostId)) ...[
+                  if (_isCheckingStatus) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('Đang kiểm tra trạng thái...', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      ],
+                    ),
+                  ] else if (headhuntingProvider.isInvited(widget.candidate.id, _selectedJob!.jobPostId)) ...[
                     const SizedBox(height: 8),
                     const Text(
                       'Bạn đã gửi thư mời cho ứng viên này vào vị trí này rồi',
@@ -213,6 +231,7 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
                       child: ElevatedButton(
                         onPressed: (headhuntingProvider.isSendingInvitation || 
                                     _selectedJob == null || 
+                                    _isCheckingStatus ||
                                     _messageController.text.trim().isEmpty ||
                                     headhuntingProvider.isInvited(widget.candidate.id, _selectedJob!.jobPostId) ||
                                     headhuntingProvider.isApplied(widget.candidate.id, _selectedJob!.jobPostId))
@@ -261,6 +280,14 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _checkJobApplicationStatus(int jobId) async {
+    setState(() => _isCheckingStatus = true);
+    await context.read<HeadhuntingProvider>().fetchJobApplicants(jobId);
+    if (mounted) {
+      setState(() => _isCheckingStatus = false);
     }
   }
 }

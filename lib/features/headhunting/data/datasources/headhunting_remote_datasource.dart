@@ -4,6 +4,7 @@ import '../models/headhunting_candidate_model.dart';
 import '../models/candidate_detail_model.dart';
 import '../models/candidate_invitation_model.dart';
 import '../models/employer_invitation_model.dart';
+import '../models/saved_candidate_model.dart';
 
 abstract class HeadhuntingRemoteDataSource {
   Future<List<HeadhuntingCandidateModel>> getSuggestedCandidates(int jobId);
@@ -32,6 +33,9 @@ abstract class HeadhuntingRemoteDataSource {
 
   // Employer Side
   Future<List<EmployerInvitationModel>> getEmployerInvitations();
+  Future<bool> saveCandidate(int candidateId, {String? note});
+  Future<bool> unsaveCandidate(int candidateId);
+  Future<List<SavedCandidateModel>> getSavedCandidates();
 }
 
 class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
@@ -158,6 +162,33 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
       return data.map((json) => EmployerInvitationModel.fromJson(json as Map<String, dynamic>)).toList();
     } else {
       throw Exception('Failed to load employer invitations');
+    }
+  }
+
+  @override
+  Future<bool> saveCandidate(int candidateId, {String? note}) async {
+    final response = await apiClient.dio.post(
+      '/api/employers/headhunting/saved-candidates/$candidateId',
+      data: note != null ? {'note': note} : null,
+    );
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  @override
+  Future<bool> unsaveCandidate(int candidateId) async {
+    final response = await apiClient.dio.delete('/api/employers/headhunting/saved-candidates/$candidateId');
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  @override
+  Future<List<SavedCandidateModel>> getSavedCandidates() async {
+    final response = await apiClient.dio.get('/api/employers/headhunting/saved-candidates');
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final List<dynamic> data = response.data;
+      return data.map((json) => SavedCandidateModel.fromJson(json as Map<String, dynamic>)).toList();
+    } else {
+      throw Exception('Failed to load saved candidates');
     }
   }
 }

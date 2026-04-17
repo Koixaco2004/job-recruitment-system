@@ -12,6 +12,7 @@ import 'package:test1/features/jobs/presentation/pages/my_jobs_page.dart';
 import 'package:test1/features/headhunting/presentation/providers/headhunting_provider.dart';
 import 'package:test1/features/headhunting/presentation/pages/candidate_search_page.dart';
 import 'package:test1/features/headhunting/presentation/pages/employer_invitation_list_page.dart';
+import 'package:test1/features/headhunting/presentation/pages/employer_saved_candidates_page.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -39,6 +40,7 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
     if (mounted) {
       context.read<JobProvider>().fetchEmployerJobs(status: 'published');
       context.read<HeadhuntingProvider>().fetchEmployerInvitations();
+      context.read<HeadhuntingProvider>().fetchSavedCandidates();
     }
     
     if (mounted) {
@@ -177,8 +179,23 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
                       );
                     },
                   ),
-                  _buildStatCard('Phỏng vấn', '0', Icons.event_available, Colors.orange),
-                  _buildStatCard('Thông báo', '0', Icons.notifications, Colors.purple),
+                   _buildStatCard('Phỏng vấn', '0', Icons.event_available, Colors.orange),
+                  Consumer<HeadhuntingProvider>(
+                    builder: (context, headhuntingProvider, child) {
+                      return _buildStatCard(
+                        'Talent Pool', 
+                        headhuntingProvider.savedCandidates.length.toString(), 
+                        Icons.favorite, 
+                        Colors.red,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const EmployerSavedCandidatesPage()),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ],
               ),
             ],

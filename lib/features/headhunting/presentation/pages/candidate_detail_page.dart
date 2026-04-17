@@ -56,6 +56,19 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
               );
             },
           ),
+          Consumer<HeadhuntingProvider>(
+            builder: (context, provider, _) {
+              final isSaved = provider.isSaved(widget.candidateId);
+              return IconButton(
+                icon: Icon(
+                  isSaved ? Icons.favorite : Icons.favorite_border,
+                  color: isSaved ? Colors.red : Colors.white70,
+                ),
+                onPressed: () => provider.toggleSaveCandidate(widget.candidateId),
+                tooltip: isSaved ? 'Bỏ lưu' : 'Lưu ứng viên',
+              );
+            },
+          ),
         ],
       ),
       body: Consumer<HeadhuntingProvider>(

@@ -4,6 +4,7 @@ import '../../domain/entities/headhunting_candidate_entity.dart';
 import '../../domain/entities/candidate_detail_entity.dart';
 import '../../domain/entities/candidate_invitation_entity.dart';
 import '../../domain/entities/employer_invitation_entity.dart';
+import '../../domain/entities/saved_candidate_entity.dart';
 import '../../domain/repositories/headhunting_repository.dart';
 import '../datasources/headhunting_remote_datasource.dart';
 
@@ -110,6 +111,36 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
     try {
       final invitations = await remoteDataSource.getEmployerInvitations();
       return Right(invitations);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> saveCandidate(int candidateId, {String? note}) async {
+    try {
+      final success = await remoteDataSource.saveCandidate(candidateId, note: note);
+      return Right(success);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> unsaveCandidate(int candidateId) async {
+    try {
+      final success = await remoteDataSource.unsaveCandidate(candidateId);
+      return Right(success);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<SavedCandidateEntity>>> getSavedCandidates() async {
+    try {
+      final savedCandidates = await remoteDataSource.getSavedCandidates();
+      return Right(savedCandidates);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

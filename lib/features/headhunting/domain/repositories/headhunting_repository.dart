@@ -4,6 +4,7 @@ import '../entities/headhunting_candidate_entity.dart';
 import '../entities/candidate_detail_entity.dart';
 import '../entities/candidate_invitation_entity.dart';
 import '../entities/employer_invitation_entity.dart';
+import '../entities/saved_candidate_entity.dart';
 
 abstract class HeadhuntingRepository {
   Future<Either<Failure, List<HeadhuntingCandidateEntity>>> getSuggestedCandidates(int jobId);
@@ -32,4 +33,7 @@ abstract class HeadhuntingRepository {
 
   // Employer Side
   Future<Either<Failure, List<EmployerInvitationEntity>>> getEmployerInvitations();
+  Future<Either<Failure, bool>> saveCandidate(int candidateId, {String? note});
+  Future<Either<Failure, bool>> unsaveCandidate(int candidateId);
+  Future<Either<Failure, List<SavedCandidateEntity>>> getSavedCandidates();
 }

@@ -11,6 +11,10 @@ import '../../domain/entities/candidate_invitation_entity.dart';
 import '../../domain/entities/employer_invitation_entity.dart';
 import '../../domain/usecases/get_employer_invitations_usecase.dart';
 import '../../../applications/domain/usecases/get_job_applications_usecase.dart';
+import '../../domain/usecases/save_candidate_usecase.dart';
+import '../../domain/usecases/unsave_candidate_usecase.dart';
+import '../../domain/usecases/get_saved_candidates_usecase.dart';
+import '../../domain/entities/saved_candidate_entity.dart';
 
 class HeadhuntingProvider extends ChangeNotifier {
   final GetSuggestedCandidatesUseCase getSuggestedCandidatesUseCase;
@@ -21,6 +25,9 @@ class HeadhuntingProvider extends ChangeNotifier {
   final DeclineInvitationUseCase declineInvitationUseCase;
   final GetJobApplicationsUseCase getJobApplicationsUseCase;
   final GetEmployerInvitationsUseCase getEmployerInvitationsUseCase;
+  final SaveCandidateUseCase saveCandidateUseCase;
+  final UnsaveCandidateUseCase unsaveCandidateUseCase;
+  final GetSavedCandidatesUseCase getSavedCandidatesUseCase;
 
   HeadhuntingProvider({
     required this.getSuggestedCandidatesUseCase,
@@ -31,6 +38,9 @@ class HeadhuntingProvider extends ChangeNotifier {
     required this.declineInvitationUseCase,
     required this.getJobApplicationsUseCase,
     required this.getEmployerInvitationsUseCase,
+    required this.saveCandidateUseCase,
+    required this.unsaveCandidateUseCase,
+    required this.getSavedCandidatesUseCase,
   });
 
   bool _isLoading = false;
@@ -60,6 +70,12 @@ class HeadhuntingProvider extends ChangeNotifier {
   List<EmployerInvitationEntity> _employerInvitations = [];
   bool _isLoadingEmployerInvitations = false;
   String? _employerInvitationError;
+  
+  // Talent Pool State
+  List<SavedCandidateEntity> _savedCandidates = [];
+  final Set<int> _savedCandidateIds = {};
+  bool _isLoadingSavedCandidates = false;
+  String? _savedCandidatesError;
 
   bool get isLoading => _isLoading;
   List<HeadhuntingCandidateEntity> get suggestedCandidates => _suggestedCandidates;
@@ -83,6 +99,11 @@ class HeadhuntingProvider extends ChangeNotifier {
   List<EmployerInvitationEntity> get employerInvitations => _employerInvitations;
   bool get isLoadingEmployerInvitations => _isLoadingEmployerInvitations;
   String? get employerInvitationError => _employerInvitationError;
+  
+  // Talent Pool Getters
+  List<SavedCandidateEntity> get savedCandidates => _savedCandidates;
+  bool get isLoadingSavedCandidates => _isLoadingSavedCandidates;
+  String? get savedCandidatesError => _savedCandidatesError;
 
   bool isInvited(int candidateId, int jobId) {
     return _invitedCandidateJobs[candidateId]?.contains(jobId) ?? false;
@@ -90,6 +111,10 @@ class HeadhuntingProvider extends ChangeNotifier {
 
   bool isApplied(int candidateId, int jobId) {
     return _appliedCandidateJobs[jobId]?.contains(candidateId) ?? false;
+  }
+
+  bool isSaved(int candidateId) {
+    return _savedCandidateIds.contains(candidateId);
   }
 
   bool isInvitationAcceptedForJob(int jobId) {
@@ -379,5 +404,85 @@ class HeadhuntingProvider extends ChangeNotifier {
         notifyListeners();
       },
     );
+  }
+
+  // ─── Talent Pool Methods ────────────────────────────────────────────────
+
+  Future<void> fetchSavedCandidates() async {
+    _isLoadingSavedCandidates = true;
+    _savedCandidatesError = null;
+    notifyListeners();
+
+    final result = await getSavedCandidatesUseCase.execute();
+
+    result.fold(
+      (failure) {
+        _savedCandidatesError = failure.message;
+        _isLoadingSavedCandidates = false;
+        notifyListeners();
+      },
+      (savedCandidates) {
+        _savedCandidates = savedCandidates;
+        _savedCandidateIds.clear();
+        _savedCandidateIds.addAll(savedCandidates.map((e) => e.candidateId));
+        _isLoadingSavedCandidates = false;
+        notifyListeners();
+      },
+    );
+  }
+
+  Future<bool> toggleSaveCandidate(int candidateId, {String? note}) async {
+    final bool currentlySaved = isSaved(candidateId);
+    
+    // Optimistic Update
+    if (currentlySaved) {
+      _savedCandidateIds.remove(candidateId);
+    } else {
+      _savedCandidateIds.add(candidateId);
+    }
+    notifyListeners();
+
+    if (currentlySaved) {
+      final result = await unsaveCandidateUseCase.call(candidateId);
+      return result.fold(
+        (failure) {
+          // Rollback
+          _savedCandidateIds.add(candidateId);
+          notifyListeners();
+          return false;
+        },
+        (success) {
+          if (success) {
+            _savedCandidates.removeWhere((e) => e.candidateId == candidateId);
+          } else {
+            // Rollback
+            _savedCandidateIds.add(candidateId);
+          }
+          notifyListeners();
+          return success;
+        },
+      );
+    } else {
+      final result = await saveCandidateUseCase.call(candidateId, note: note);
+      return result.fold(
+        (failure) {
+          // Rollback
+          _savedCandidateIds.remove(candidateId);
+          notifyListeners();
+          return false;
+        },
+        (success) {
+          if (!success) {
+            // Rollback
+            _savedCandidateIds.remove(candidateId);
+          } else {
+            // Refetch to get the full SavedCandidateEntity with ID etc.
+            fetchSavedCandidates();
+          }
+          notifyListeners();
+          return success;
+        },
+      );
+    }
   }
 }

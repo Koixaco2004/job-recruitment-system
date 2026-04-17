@@ -88,6 +88,9 @@ import 'features/headhunting/domain/usecases/accept_invitation_usecase.dart';
 import 'features/headhunting/domain/usecases/decline_invitation_usecase.dart';
 import 'features/headhunting/domain/usecases/send_invitation_usecase.dart';
 import 'features/headhunting/domain/usecases/get_employer_invitations_usecase.dart';
+import 'features/headhunting/domain/usecases/save_candidate_usecase.dart';
+import 'features/headhunting/domain/usecases/unsave_candidate_usecase.dart';
+import 'features/headhunting/domain/usecases/get_saved_candidates_usecase.dart';
 import 'features/headhunting/presentation/providers/headhunting_provider.dart';
 import 'features/headhunting/presentation/providers/candidate_search_provider.dart';
 
@@ -384,6 +387,9 @@ Future<void> init() async {
       declineInvitationUseCase: sl(),
       getJobApplicationsUseCase: sl(),
       getEmployerInvitationsUseCase: sl(),
+      saveCandidateUseCase: sl(),
+      unsaveCandidateUseCase: sl(),
+      getSavedCandidatesUseCase: sl(),
     ),
   );
 
@@ -402,6 +408,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AcceptInvitationUseCase(sl()));
   sl.registerLazySingleton(() => DeclineInvitationUseCase(sl()));
   sl.registerLazySingleton(() => GetEmployerInvitationsUseCase(sl()));
+  sl.registerLazySingleton(() => SaveCandidateUseCase(repository: sl()));
+  sl.registerLazySingleton(() => UnsaveCandidateUseCase(repository: sl()));
+  sl.registerLazySingleton(() => GetSavedCandidatesUseCase(repository: sl()));
 
   // Repository
   sl.registerLazySingleton<HeadhuntingRepository>(
