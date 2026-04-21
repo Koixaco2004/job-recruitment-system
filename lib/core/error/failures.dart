@@ -29,3 +29,8 @@ class AuthenticationFailure extends Failure {
 class NetworkFailure extends Failure {
   const NetworkFailure(super.message);
 }
+
+/// Lỗi chưa xác thực email
+class EmailVerificationFailure extends Failure {
+  const EmailVerificationFailure(super.message);
+}

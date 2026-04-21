@@ -5,6 +5,9 @@ import '../../domain/usecases/register_employer_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 
 import '../../domain/usecases/logout_usecase.dart';
+import '../../domain/usecases/verify_email_usecase.dart';
+import '../../domain/usecases/resend_verification_usecase.dart';
+import '../../domain/usecases/get_status_usecase.dart';
 
 /// Provider quản lý state cho Authentication
 class AuthProvider extends ChangeNotifier {
@@ -12,12 +15,18 @@ class AuthProvider extends ChangeNotifier {
   final RegisterUseCase registerUseCase;
   final RegisterEmployerUseCase registerEmployerUseCase;
   final LogoutUseCase logoutUseCase;
+  final VerifyEmailUseCase verifyEmailUseCase;
+  final ResendVerificationUseCase resendVerificationUseCase;
+  final GetStatusUseCase getStatusUseCase;
 
   AuthProvider({
     required this.loginUseCase,
     required this.registerUseCase,
     required this.registerEmployerUseCase,
     required this.logoutUseCase,
+    required this.verifyEmailUseCase,
+    required this.resendVerificationUseCase,
+    required this.getStatusUseCase,
   });
 
   // State
@@ -152,5 +161,70 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  /// Verify Email method
+  Future<bool> verifyEmail(String token) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await verifyEmailUseCase.execute(token);
+
+      return await result.fold(
+        (failure) async {
+          _errorMessage = failure.message;
+          return false;
+        },
+        (_) async {
+          // Xác thực thành công, refresh status để cập nhật emailVerified flag
+          await refreshUserStatus();
+          return true;
+        },
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Resend Verification Email method
+  Future<bool> resendVerification() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await resendVerificationUseCase.execute();
+
+      return result.fold(
+        (failure) {
+          _errorMessage = failure.message;
+          return false;
+        },
+        (_) => true,
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Refresh user status from server
+  Future<bool> refreshUserStatus() async {
+    final result = await getStatusUseCase.execute();
+    return result.fold(
+      (failure) {
+        debugPrint('DEBUG: Failed to refresh user status: ${failure.message}');
+        _errorMessage = failure.message;
+        return false;
+      },
+      (user) {
+        _user = user;
+        notifyListeners();
+        return true;
+      },
+    );
   }
 }

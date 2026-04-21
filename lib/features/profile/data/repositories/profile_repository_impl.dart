@@ -32,6 +32,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final profile = await remoteDataSource.getProfile();
       return Right(profile);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -49,6 +51,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final model = CandidateProfileModel.fromEntity(profile);
       final updated = await remoteDataSource.updateProfile(model);
       return Right(updated);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -79,6 +83,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final url = await remoteDataSource.uploadAvatar(bytes, fileName);
       return Right(url);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -95,6 +101,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final list = await remoteDataSource.getWorkExperiences();
       final entities = list.map((e) => e as WorkExperienceEntity).toList();
       return Right(entities);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -110,6 +118,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final model = WorkExperienceModel.fromEntity(exp);
       final result = await remoteDataSource.createWorkExperience(model);
       return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -125,6 +135,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final model = WorkExperienceModel.fromEntity(exp);
       final result = await remoteDataSource.updateWorkExperience(id, model);
       return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -139,6 +151,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.deleteWorkExperience(id);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -156,6 +170,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final list = await remoteDataSource.getEducations();
       final entities = list.map((e) => e as EducationEntity).toList();
       return Right(entities);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -171,6 +187,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final model = EducationModel.fromEntity(edu);
       final result = await remoteDataSource.createEducation(model);
       return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -186,6 +204,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final model = EducationModel.fromEntity(edu);
       final result = await remoteDataSource.updateEducation(id, model);
       return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -200,6 +220,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.deleteEducation(id);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -217,6 +239,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final list = await remoteDataSource.getCertificates();
       final entities = list.map((e) => e as CertificateEntity).toList();
       return Right(entities);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -239,6 +263,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
         fileName: fileName,
       );
       return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -263,6 +289,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
         fileName: fileName,
       );
       return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -277,6 +305,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.deleteCertificate(id);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -294,6 +324,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final list = await remoteDataSource.getProjects();
       final entities = list.map((e) => e as ProjectEntity).toList();
       return Right(entities);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -309,6 +341,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final model = ProjectModel.fromEntity(project);
       final result = await remoteDataSource.createProject(model);
       return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -324,6 +358,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final model = ProjectModel.fromEntity(project);
       final result = await remoteDataSource.updateProject(id, model);
       return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -338,6 +374,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.deleteProject(id);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -354,6 +392,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       // Chuyển đổi List<JobTypeModel> sang List<JobTypeEntity> để tránh lỗi type mismatch ở runtime
       final entities = result.map((e) => e as JobTypeEntity).toList();
       return Right(entities);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -370,6 +410,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       // Chuyển đổi List<JobCategoryModel> sang List<JobCategoryEntity> để tránh lỗi type mismatch ở runtime
       final entities = result.map((e) => e as JobCategoryEntity).toList();
       return Right(entities);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -384,6 +426,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await remoteDataSource.getCandidateJobCategories();
       return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -398,6 +442,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.addCandidateJobCategories(categoryIds);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -412,6 +458,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.deleteCandidateJobCategory(mappingId);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -429,6 +477,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final results = await remoteDataSource.searchSkills(query);
       final entities = results.map((e) => e as SkillEntity).toList();
       return Right(entities);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -442,6 +492,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final results = await remoteDataSource.getCandidateSkills();
       final entities = results.map((e) => e as CandidateSkillEntity).toList();
       return Right(entities);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -454,6 +506,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.addCandidateSkills(skills);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -466,6 +520,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.deleteCandidateSkill(mappingId);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -478,6 +534,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.updateVisibility(isVisible);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {
@@ -492,6 +550,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await remoteDataSource.parseCv();
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthenticationException catch (e) {

@@ -86,7 +86,7 @@ class JobProvider extends ChangeNotifier {
   List<JobPostEntity> get employerJobs => _allEmployerJobs;
   List<JobPostEntity> get publishedJobs => _publishedEmployerJobs;
   List<JobPostEntity> get draftJobs => _draftEmployerJobs;
-  
+
   List<JobPostEntity> getEmployerJobsByStatus(String? status) {
     if (status == 'published') return _publishedEmployerJobs;
     if (status == 'draft') return _draftEmployerJobs;
@@ -101,7 +101,7 @@ class JobProvider extends ChangeNotifier {
   bool get isSavingJob => _isSavingJob;
   bool get saveJobSuccess => _saveJobSuccess;
   String? get saveJobError => _saveJobError;
-  
+
   List<JobStatusHistoryEntity> get jobHistory => _jobHistory;
   bool get isLoadingHistory => _isLoadingHistory;
 
@@ -124,10 +124,10 @@ class JobProvider extends ChangeNotifier {
     int? jobTypeId,
   }) async {
     if (_isLoading) return; // Chặn yêu cầu nếu đang thực hiện
-    
+
     _isLoading = true;
     _errorMessage = null;
-    
+
     if (refresh) {
       _currentPublicPage = 1;
       _totalPublicJobs = 0;
@@ -138,7 +138,7 @@ class JobProvider extends ChangeNotifier {
       page: refresh ? 1 : page,
       limit: limit,
       keyword: keyword ?? _filter.keyword,
-      provinceId: provinceId ?? _filter.provinceId, 
+      provinceId: provinceId ?? _filter.provinceId,
       categoryId: categoryId ?? _filter.categoryId,
       jobTypeId: jobTypeId ?? _filter.jobTypeId,
     );
@@ -152,13 +152,15 @@ class JobProvider extends ChangeNotifier {
       (paginatedResponse) {
         _isLoading = false;
         final newJobs = paginatedResponse.data;
-        
+
         if (refresh) {
           _allJobs = List.from(newJobs);
         } else {
           // Tránh trùng lặp ID khi addAll
           final existingIds = _allJobs.map((j) => j.jobPostId).toSet();
-          final uniqueNewJobs = newJobs.where((j) => !existingIds.contains(j.jobPostId)).toList();
+          final uniqueNewJobs = newJobs
+              .where((j) => !existingIds.contains(j.jobPostId))
+              .toList();
           _allJobs.addAll(uniqueNewJobs);
         }
 
@@ -269,10 +271,7 @@ class JobProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final result = await getEmployerJobsUseCase(
-      page: page,
-      status: status,
-    );
+    final result = await getEmployerJobsUseCase(page: page, status: status);
 
     result.fold(
       (failure) {
@@ -283,7 +282,7 @@ class JobProvider extends ChangeNotifier {
       (paginatedResponse) {
         _isLoadingEmployerJobs = false;
         final jobs = paginatedResponse.data;
-        
+
         if (status == 'published') {
           if (page == 1) {
             _publishedEmployerJobs = List.from(jobs);
@@ -303,7 +302,7 @@ class JobProvider extends ChangeNotifier {
             _allEmployerJobs.addAll(jobs);
           }
         }
-        
+
         _totalEmployerJobs = paginatedResponse.total;
         _currentEmployerPage = paginatedResponse.page;
         _lastEmployerPage = paginatedResponse.lastPage;

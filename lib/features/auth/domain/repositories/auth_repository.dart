@@ -36,4 +36,13 @@ abstract class AuthRepository {
 
   /// Kiểm tra user đã đăng nhập chưa
   Future<bool> isLoggedIn();
+
+  /// Lấy trạng thái user hiện tại từ server
+  Future<Either<Failure, UserEntity>> getStatus();
+
+  /// Xác thực email qua token
+  Future<Either<Failure, void>> verifyEmail({required String token});
+
+  /// Gửi lại email xác thực
+  Future<Either<Failure, void>> resendVerification();
 }

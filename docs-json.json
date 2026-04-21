@@ -187,6 +187,174 @@
                 ]
             }
         },
+        "/api/auth/forgot-password": {
+            "post": {
+                "operationId": "AuthController_forgotPassword",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ForgotPasswordDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Đã gửi mã xác minh (nếu có)"
+                    }
+                },
+                "summary": "Yêu cầu gửi mã đặt lại mật khẩu",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/api/auth/reset-password": {
+            "post": {
+                "operationId": "AuthController_resetPassword",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResetPasswordDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật mật khẩu thành công"
+                    },
+                    "400": {
+                        "description": "Mã xác nhận sai hoặc hết hạn"
+                    }
+                },
+                "summary": "Đặt lại mật khẩu với mã PIN 6 số",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/api/auth/change-password": {
+            "patch": {
+                "operationId": "AuthController_changePassword",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangePasswordDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Đổi mật khẩu thành công"
+                    },
+                    "400": {
+                        "description": "Mật khẩu cũ không chính xác"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Đổi mật khẩu (yêu cầu đăng nhập)",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/api/auth/logout-all": {
+            "post": {
+                "operationId": "AuthController_logoutAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Đã force logout mọi phiên"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Đăng xuất khỏi tất cả thiết bị",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/api/auth/verify-email": {
+            "get": {
+                "operationId": "AuthController_verifyEmail",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xác thực thành công"
+                    },
+                    "400": {
+                        "description": "Token không hợp lệ"
+                    },
+                    "404": {
+                        "description": "Token không tồn tại hoặc đã dùng"
+                    }
+                },
+                "summary": "Xác thực email qua token (click link từ email)",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/api/auth/resend-verification": {
+            "post": {
+                "operationId": "AuthController_resendVerification",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Email xác thực đã được gửi lại"
+                    },
+                    "400": {
+                        "description": "Email đã được xác thực rồi"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Gửi lại email xác thực (yêu cầu đăng nhập)",
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
         "/api/candidates/profile": {
             "get": {
                 "operationId": "CandidateProfileController_getProfile",
@@ -319,6 +487,9 @@
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Vui lòng xác thực email để sử dụng tính năng này"
                     }
                 },
                 "security": [
@@ -1479,7 +1650,7 @@
                         "required": true,
                         "in": "query",
                         "schema": {
-                            "type": "string"
+                            "type": "number"
                         }
                     },
                     {
@@ -1487,15 +1658,23 @@
                         "required": true,
                         "in": "query",
                         "schema": {
-                            "type": "string"
+                            "type": "number"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
                     }
                 },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "tags": [
                     "Notifications"
                 ]
@@ -1508,8 +1687,16 @@
                 "responses": {
                     "200": {
                         "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
                     }
                 },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "tags": [
                     "Notifications"
                 ]
@@ -1522,8 +1709,16 @@
                 "responses": {
                     "200": {
                         "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
                     }
                 },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "tags": [
                     "Notifications"
                 ]
@@ -1538,15 +1733,23 @@
                         "required": true,
                         "in": "path",
                         "schema": {
-                            "type": "string"
+                            "type": "number"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
                     }
                 },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
                 "tags": [
                     "Notifications"
                 ]
@@ -2820,7 +3023,7 @@
                         "description": "Chưa đăng nhập"
                     },
                     "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
+                        "description": "Vui lòng xác thực email để sử dụng tính năng này\n\nKhông có quyền truy cập (Sai Role)"
                     }
                 },
                 "security": [
@@ -3177,7 +3380,7 @@
                         "description": "Chưa đăng nhập"
                     },
                     "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
+                        "description": "Vui lòng xác thực email để sử dụng tính năng này\n\nKhông có quyền truy cập (Sai Role)"
                     },
                     "409": {
                         "description": "Đã ứng tuyển công việc này"
@@ -3798,6 +4001,73 @@
                 "required": [
                     "email",
                     "password"
+                ]
+            },
+            "ForgotPasswordDto": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "minLength": 1,
+                        "format": "email",
+                        "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                        "description": "Email đăng ký tài khoản cần khôi phục mật khẩu",
+                        "example": "user@example.com"
+                    }
+                },
+                "required": [
+                    "email"
+                ]
+            },
+            "ResetPasswordDto": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "minLength": 1,
+                        "format": "email",
+                        "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                        "description": "Email của người dùng",
+                        "example": "user@example.com"
+                    },
+                    "token": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Mã PIN gồm 6 số gửi qua email",
+                        "example": "123456"
+                    },
+                    "newPassword": {
+                        "type": "string",
+                        "minLength": 6,
+                        "description": "Mật khẩu mới (tối thiểu 6 ký tự)",
+                        "example": "newpassword123"
+                    }
+                },
+                "required": [
+                    "email",
+                    "token",
+                    "newPassword"
+                ]
+            },
+            "ChangePasswordDto": {
+                "type": "object",
+                "properties": {
+                    "oldPassword": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Mật khẩu hiện tại",
+                        "example": "oldpassword123"
+                    },
+                    "newPassword": {
+                        "type": "string",
+                        "minLength": 6,
+                        "description": "Mật khẩu mới (tối thiểu 6 ký tự)",
+                        "example": "newpassword123"
+                    }
+                },
+                "required": [
+                    "oldPassword",
+                    "newPassword"
                 ]
             },
             "UpdateProfileDto": {
@@ -5291,6 +5561,22 @@
                             "locked"
                         ]
                     },
+                    "isEmailVerified": {
+                        "type": "boolean"
+                    },
+                    "emailVerificationToken": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "resetPasswordToken": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "resetPasswordExpires": {
+                        "format": "date-time",
+                        "type": "string",
+                        "nullable": true
+                    },
                     "created_at": {
                         "format": "date-time",
                         "type": "string"
@@ -5308,6 +5594,10 @@
                     "password",
                     "role",
                     "status",
+                    "isEmailVerified",
+                    "emailVerificationToken",
+                    "resetPasswordToken",
+                    "resetPasswordExpires",
                     "created_at",
                     "candidate",
                     "employer"

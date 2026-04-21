@@ -13,6 +13,10 @@ import 'features/applications/presentation/providers/employer_application_provid
 import 'features/headhunting/presentation/providers/headhunting_provider.dart';
 import 'features/headhunting/presentation/providers/candidate_search_provider.dart';
 import 'features/notifications/presentation/providers/notification_provider.dart';
+import 'features/auth/presentation/pages/email_verification_page.dart';
+import 'features/auth/presentation/pages/verify_email_landing_page.dart';
+import 'core/pages/main_page.dart';
+import 'features/employer/presentation/pages/employer_main_page.dart';
 import 'injection_container.dart' as di;
 
 
@@ -66,6 +70,15 @@ class MyApp extends StatelessWidget {
           fontFamily: 'Roboto',
         ),
         home: const LoginPage(),
+        routes: {
+          '/verify-email-landing': (context) {
+            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            return VerifyEmailLandingPage(token: args?['token']);
+          },
+          '/email-verification': (context) => const EmailVerificationPage(),
+          '/candidate-main': (context) => const MainPage(),
+          '/employer-main': (context) => const EmployerMainPage(),
+        },
       ),
     );
   }

@@ -41,7 +41,7 @@ class UserModel extends UserEntity {
       avatarUrl: json['avatar_url'] ?? json['avatarUrl'] as String?,
       userType: json['user_type'] ?? json['userType'] ?? json['role'] ?? 'candidate',
       status: json['status'] ?? 'active',
-      emailVerified: json['email_verified'] ?? json['emailVerified'] ?? false,
+      emailVerified: json['email_verified'] ?? json['emailVerified'] ?? json['isEmailVerified'] ?? false,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) 
                : json['createdAt'] != null ? DateTime.parse(json['createdAt']) 
                : DateTime.now(),

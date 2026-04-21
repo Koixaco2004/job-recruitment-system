@@ -7,6 +7,7 @@ import '../../features/jobs/presentation/providers/my_jobs_provider.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/providers/profile_provider.dart';
 import '../../features/notifications/presentation/providers/notification_provider.dart';
+import '../../features/auth/presentation/widgets/verification_banner.dart';
 
 /// Màn hình chính với Bottom Navigation Bar
 class MainPage extends StatefulWidget {
@@ -62,7 +63,14 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: Column(
+        children: [
+          const VerificationBanner(),
+          Expanded(
+            child: IndexedStack(index: _currentIndex, children: _pages),
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,

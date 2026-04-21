@@ -108,6 +108,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       }
       throw const ServerException('Lấy danh sách công việc thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {
       throw ServerException(e.toString());
@@ -125,6 +126,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       }
       throw const ServerException('Không tìm thấy thông tin công việc');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {
       throw ServerException(e.toString());
@@ -219,6 +221,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       }
       throw const ServerException('Tạo tin tuyển dụng thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {
       throw ServerException(e.toString());
@@ -235,6 +238,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       }
       throw const ServerException('Cập nhật tin tuyển dụng thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {
       throw ServerException(e.toString());
@@ -264,6 +268,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       }
       throw const ServerException('Lấy danh sách tin tuyển dụng thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {
       throw ServerException(e.toString());
@@ -290,6 +295,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       }
       throw const ServerException('Lấy lịch sử tin tuyển dụng thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {
       throw ServerException(e.toString());

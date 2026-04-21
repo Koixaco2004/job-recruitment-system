@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
+import '../error/exceptions.dart';
 
 class ApiClient {
   final Dio dio;
@@ -65,6 +66,16 @@ class ApiClient {
               // Nếu refresh thất bại (Refresh Token hết hạn), xóa cache và yêu cầu đăng nhập lại
               await authLocalDataSource.clearCache();
             }
+          }
+          // Xử lý lỗi 403: Chưa xác thực email
+          if (e.response?.statusCode == 403) {
+            final message = e.response?.data?['message']?.toString() ?? 'Vui lòng xác thực email để sử dụng tính năng này';
+            return handler.next(DioException(
+              requestOptions: e.requestOptions,
+              response: e.response,
+              type: e.type,
+              error: EmailVerificationException(message),
+            ));
           }
           return handler.next(e);
         },

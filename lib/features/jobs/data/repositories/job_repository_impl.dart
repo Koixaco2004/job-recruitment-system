@@ -82,6 +82,8 @@ class JobRepositoryImpl implements JobRepository {
         coverLetter: coverLetter,
       );
       return Right(application);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -98,6 +100,8 @@ class JobRepositoryImpl implements JobRepository {
     try {
       final savedJobs = await remoteDataSource.getSavedJobs(candidateId);
       return Right(savedJobs);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -118,6 +122,8 @@ class JobRepositoryImpl implements JobRepository {
         jobPostId: jobPostId,
       );
       return Right(savedJob);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -130,6 +136,8 @@ class JobRepositoryImpl implements JobRepository {
     try {
       await remoteDataSource.unsaveJob(savedJobId);
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -148,6 +156,8 @@ class JobRepositoryImpl implements JobRepository {
         jobPostId: jobPostId,
       );
       return const Right(null);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -164,6 +174,8 @@ class JobRepositoryImpl implements JobRepository {
         candidateId,
       );
       return Right(applications);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -184,6 +196,8 @@ class JobRepositoryImpl implements JobRepository {
         jobPostId: jobPostId,
       );
       return Right(isSaved);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -202,6 +216,8 @@ class JobRepositoryImpl implements JobRepository {
     try {
       final job = await remoteDataSource.createJob(data);
       return Right(job);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -217,6 +233,8 @@ class JobRepositoryImpl implements JobRepository {
     try {
       final job = await remoteDataSource.updateJob(jobId, data);
       return Right(job);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -244,6 +262,8 @@ class JobRepositoryImpl implements JobRepository {
         page: result.page,
         lastPage: result.lastPage,
       ));
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -258,6 +278,8 @@ class JobRepositoryImpl implements JobRepository {
     try {
       final history = await remoteDataSource.getJobHistory(jobId);
       return Right(history);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

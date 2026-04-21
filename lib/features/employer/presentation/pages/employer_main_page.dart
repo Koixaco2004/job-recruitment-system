@@ -15,6 +15,7 @@ import 'package:test1/features/headhunting/presentation/pages/employer_invitatio
 import 'package:test1/features/headhunting/presentation/pages/employer_saved_candidates_page.dart';
 import 'package:test1/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:test1/features/notifications/presentation/widgets/notification_bell.dart';
+import 'package:test1/features/auth/presentation/widgets/verification_banner.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -90,7 +91,12 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
     ];
 
     return Scaffold(
-      body: pages[_selectedIndex],
+      body: Column(
+        children: [
+          const VerificationBanner(),
+          Expanded(child: pages[_selectedIndex]),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Tổng quan'),

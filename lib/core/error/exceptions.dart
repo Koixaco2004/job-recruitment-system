@@ -24,3 +24,12 @@ class AuthenticationException implements Exception {
   @override
   String toString() => message;
 }
+
+/// Exception khi chưa xác thực email
+class EmailVerificationException implements Exception {
+  final String message;
+  const EmailVerificationException(this.message);
+
+  @override
+  String toString() => message;
+}

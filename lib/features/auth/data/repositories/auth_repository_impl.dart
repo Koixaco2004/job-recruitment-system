@@ -138,4 +138,46 @@ class AuthRepositoryImpl implements AuthRepository {
       return false;
     }
   }
+
+  @override
+  Future<Either<Failure, UserEntity>> getStatus() async {
+    try {
+      final user = await remoteDataSource.getStatus();
+      // Update cache
+      await localDataSource.cacheUser(user);
+      return Right(user);
+    } on AuthenticationException catch (e) {
+      return Left(AuthenticationFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi hệ thống: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyEmail({required String token}) async {
+    try {
+      await remoteDataSource.verifyEmail(token: token);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi hệ thống: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resendVerification() async {
+    try {
+      await remoteDataSource.resendVerification();
+      return const Right(null);
+    } on AuthenticationException catch (e) {
+      return Left(AuthenticationFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi hệ thống: ${e.toString()}'));
+    }
+  }
 }

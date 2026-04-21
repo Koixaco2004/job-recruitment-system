@@ -24,6 +24,15 @@ abstract class AuthRemoteDataSource {
     required String email,
     required String password,
   });
+
+  /// Lấy trạng thái user hiện tại
+  Future<UserModel> getStatus();
+
+  /// Xác thực email qua token
+  Future<void> verifyEmail({required String token});
+
+  /// Gửi lại email xác thực
+  Future<void> resendVerification();
 }
 
 /// Implementation với Real API
@@ -154,6 +163,79 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
       if (e is AuthenticationException || e is ServerException) rethrow;
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<UserModel> getStatus() async {
+    try {
+      final response = await apiClient.dio.get('/api/auth/status');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> userData = response.data;
+        // Lấy token cũ từ local storage vì API status không trả token
+        final token = await apiClient.authLocalDataSource.getToken();
+        userData['token'] = token ?? '';
+        return UserModel.fromJson(userData);
+      } else {
+        throw ServerException('Không thể lấy thông tin trạng thái: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw const AuthenticationException('Chưa đăng nhập hoặc phiên làm việc hết hạn');
+      }
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is AuthenticationException || e is ServerException) rethrow;
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> verifyEmail({required String token}) async {
+    try {
+      final response = await apiClient.dio.get(
+        '/api/auth/verify-email',
+        queryParameters: {'token': token},
+      );
+
+      if (response.statusCode != 200) {
+        throw ServerException('Xác thực email thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw ServerException('Mã xác thực không tồn tại hoặc đã hết hạn');
+      }
+      if (e.response?.statusCode == 400) {
+        throw ServerException('Mã xác thực không hợp lệ');
+      }
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> resendVerification() async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/auth/resend-verification',
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException('Gửi lại email xác thực thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        throw ServerException('Email này đã được xác thực rồi');
+      }
+      if (e.response?.statusCode == 401) {
+        throw const AuthenticationException('Vui lòng đăng nhập để thực hiện hành động này');
+      }
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is AuthenticationException) rethrow;
       throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
     }
   }

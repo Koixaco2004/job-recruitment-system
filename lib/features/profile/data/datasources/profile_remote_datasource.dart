@@ -87,6 +87,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Không thể lấy thông tin hồ sơ cá nhân');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       print('DioException in getProfile: ${e.response?.data}');
       if (e.response?.statusCode == 401) {
         throw const AuthenticationException('Phiên đăng nhập hết hạn');
@@ -120,6 +121,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Cập nhật hồ sơ thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) {
         throw const AuthenticationException('Phiên đăng nhập hết hạn');
       }
@@ -148,6 +150,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Không thể lấy danh sách kinh nghiệm');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -169,6 +172,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Tạo kinh nghiệm thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -190,6 +194,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Cập nhật kinh nghiệm thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -206,6 +211,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Xóa kinh nghiệm thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -229,6 +235,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Không thể lấy danh sách học vấn');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -250,6 +257,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Tạo học vấn thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -271,6 +279,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Cập nhật học vấn thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -287,6 +296,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Xóa học vấn thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -310,6 +320,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Không thể lấy danh sách chứng chỉ');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -347,6 +358,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Tạo chứng chỉ thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -385,6 +397,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Cập nhật chứng chỉ thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -402,6 +415,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Xóa chứng chỉ thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -425,6 +439,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Không thể lấy danh sách dự án');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -446,6 +461,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Tạo dự án thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -467,6 +483,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Cập nhật dự án thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -483,6 +500,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Xóa dự án thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -502,6 +520,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       return [];
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -532,6 +551,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Không thể lấy danh sách ngành nghề');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -560,6 +580,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Không thể lấy ngành nghề ứng viên đã chọn');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -579,6 +600,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Thêm ngành nghề thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -595,6 +617,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Xóa ngành nghề thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -626,6 +649,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Không thể tìm kiếm kỹ năng');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -652,6 +676,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Không thể lấy danh sách kỹ năng');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -671,6 +696,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Thêm kỹ năng thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -687,6 +713,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Xóa kỹ năng thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -717,6 +744,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       }
       throw ServerException('Upload avatar thất bại');
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       throw ServerException(e.message ?? 'Lỗi kết nối server');
     } catch (e) {
@@ -736,6 +764,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Cập nhật trạng thái hiển thị thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) {
         throw const AuthenticationException('Phiên đăng nhập hết hạn');
       }
@@ -759,6 +788,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         throw ServerException('Phân tích CV thất bại');
       }
     } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
       
       final data = e.response?.data;
