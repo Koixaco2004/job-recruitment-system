@@ -5,6 +5,7 @@ import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../../profile/domain/entities/skill_entity.dart';
 import '../../domain/entities/job_post_entity.dart';
 import '../providers/job_provider.dart';
+import '../../../employer/presentation/providers/employer_provider.dart';
 
 class EmployerJobEditPage extends StatefulWidget {
   final int? jobId;
@@ -193,12 +194,14 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   Widget build(BuildContext context) {
     final jobProvider = context.watch<JobProvider>();
     final profileProvider = context.watch<ProfileProvider>();
+    final employerProvider = context.watch<EmployerProvider>();
+    final bool isAdmin = employerProvider.employer?.isAdminCompany ?? false;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.jobId == null ? 'Đăng tin mới' : 'Chỉnh sửa tin'),
+        title: Text(widget.jobId == null ? 'Đăng tin mới' : (isAdmin ? 'Chỉnh sửa tin' : 'Chi tiết tin')),
         actions: [
-          if (widget.jobId == null) // Chỉ hiện Lưu nháp khi tạo tin mới
+          if (widget.jobId == null && isAdmin) // Chỉ hiện Lưu nháp khi tạo tin mới và là admin
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
               child: TextButton(
@@ -223,7 +226,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('Thông tin chung'),
-                  _buildTextField(_titleController, 'Tiêu đề công việc', Icons.work, required: true),
+                  _buildTextField(_titleController, 'Tiêu đề công việc', Icons.work, required: true, enabled: isAdmin),
                   const SizedBox(height: 16),
                   
                   _buildDropdown<int>(
@@ -234,7 +237,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                         value: c.id, 
                         child: Text(c.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))
                       )).toList(),
-                    onChanged: (val) => setState(() => _selectedCategoryId = val),
+                    onChanged: isAdmin ? (val) => setState(() => _selectedCategoryId = val) : null,
                     icon: Icons.category,
                   ),
                   const SizedBox(height: 16),
@@ -247,7 +250,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                         value: t.id, 
                         child: Text(t.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))
                       )).toList(),
-                    onChanged: (val) => setState(() => _selectedJobTypeId = val),
+                    onChanged: isAdmin ? (val) => setState(() => _selectedJobTypeId = val) : null,
                     icon: Icons.access_time,
                   ),
                   const SizedBox(height: 16),
@@ -260,31 +263,31 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                         value: p.id, 
                         child: Text(p.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))
                       )).toList(),
-                    onChanged: (val) => setState(() => _selectedProvinceId = val),
+                    onChanged: isAdmin ? (val) => setState(() => _selectedProvinceId = val) : null,
                     icon: Icons.location_city,
                   ),
                   const SizedBox(height: 16),
                   
-                  _buildSkillSelector(profileProvider),
+                  _buildSkillSelector(profileProvider, isAdmin),
                   const SizedBox(height: 16),
-
-                  _buildTextField(_slotsController, 'Số lượng tuyển', Icons.people, isNumber: true),
+                  
+                  _buildTextField(_slotsController, 'Số lượng tuyển', Icons.people, isNumber: true, enabled: isAdmin),
 
                   const SizedBox(height: 24),
                   _buildSectionTitle('Yêu cầu & Lương'),
-                  _buildTextField(_salaryMinController, 'Lương tối thiểu (VND)', Icons.money, isNumber: true),
+                  _buildTextField(_salaryMinController, 'Lương tối thiểu (VND)', Icons.money, isNumber: true, enabled: isAdmin),
                   const SizedBox(height: 16),
-                  _buildTextField(_salaryMaxController, 'Lương tối đa (VND)', Icons.money, isNumber: true),
+                  _buildTextField(_salaryMaxController, 'Lương tối đa (VND)', Icons.money, isNumber: true, enabled: isAdmin),
                   const SizedBox(height: 16),
-                  _buildTextField(_expController, 'Năm kinh nghiệm yêu cầu', Icons.history, isNumber: true),
+                  _buildTextField(_expController, 'Năm kinh nghiệm yêu cầu', Icons.history, isNumber: true, enabled: isAdmin),
 
                   const SizedBox(height: 24),
                   _buildSectionTitle('Chi tiết nội dung'),
-                  _buildTextField(_descriptionController, 'Mô tả công việc', Icons.description, maxLines: 5, required: true),
+                  _buildTextField(_descriptionController, 'Mô tả công việc', Icons.description, maxLines: 5, required: true, enabled: isAdmin),
                   const SizedBox(height: 16),
-                  _buildTextField(_requirementsController, 'Yêu cầu ứng viên', Icons.list, maxLines: 5),
+                  _buildTextField(_requirementsController, 'Yêu cầu ứng viên', Icons.list, maxLines: 5, enabled: isAdmin),
                   const SizedBox(height: 16),
-                  _buildTextField(_benefitsController, 'Quyền lợi', Icons.card_giftcard, maxLines: 5),
+                  _buildTextField(_benefitsController, 'Quyền lợi', Icons.card_giftcard, maxLines: 5, enabled: isAdmin),
 
                   const SizedBox(height: 24),
                   _buildSectionTitle('Thời hạn'),
@@ -295,12 +298,12 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                     subtitle: Text(_selectedDeadline == null 
                         ? 'Chưa chọn ngày' 
                         : DateFormat('dd/MM/yyyy').format(_selectedDeadline!)),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: _selectDeadline,
+                    trailing: isAdmin ? const Icon(Icons.chevron_right) : null,
+                    onTap: isAdmin ? _selectDeadline : null,
                   ),
                   
                   const SizedBox(height: 40),
-                  if (widget.jobId != null) // Chỉ hiện Đăng tin khi đang sửa bản ghi đã tồn tại
+                  if (widget.jobId != null && isAdmin) // Chỉ hiện Đăng tin khi đang sửa và là admin
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -337,13 +340,14 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     );
   }
 
-  Widget _buildSkillSelector(ProfileProvider provider) {
+  Widget _buildSkillSelector(ProfileProvider provider, bool isAdmin) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Kỹ năng yêu cầu', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
         const SizedBox(height: 8),
-        _buildSkillChips(),
+        _buildSkillChips(isAdmin),
+        if (isAdmin)
         TextField(
           controller: _skillSearchController,
           decoration: InputDecoration(
@@ -423,7 +427,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     );
   }
 
-  Widget _buildSkillChips() {
+  Widget _buildSkillChips(bool isAdmin) {
     if (_selectedJobSkills.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -440,8 +444,8 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
           
           return Chip(
             label: Text(name, style: const TextStyle(fontSize: 12)),
-            deleteIcon: const Icon(Icons.close, size: 14),
-            onDeleted: () => setState(() => _selectedJobSkills.remove(skill)),
+            deleteIcon: isAdmin ? const Icon(Icons.close, size: 14) : null,
+            onDeleted: isAdmin ? () => setState(() => _selectedJobSkills.remove(skill)) : null,
             backgroundColor: Colors.blue[50],
             side: BorderSide(color: Colors.blue[100]!),
             padding: EdgeInsets.zero,
@@ -453,9 +457,10 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   }
 
   Widget _buildTextField(TextEditingController controller, String label, IconData icon,
-      {bool isNumber = false, int maxLines = 1, bool required = false}) {
+      {bool isNumber = false, int maxLines = 1, bool required = false, bool enabled = true}) {
     return TextFormField(
       controller: controller,
+      enabled: enabled,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.blue),
@@ -478,7 +483,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     required String label,
     required T? value,
     required List<DropdownMenuItem<T>> items,
-    required ValueChanged<T?> onChanged,
+    required ValueChanged<T?>? onChanged,
     required IconData icon,
   }) {
     // Safety check: ensure value exists in items to avoid Flutter assertion error

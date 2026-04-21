@@ -22,6 +22,14 @@ abstract class EmployerRemoteDataSource {
     required Uint8List imageBytes,
     required String fileName,
   });
+  Future<List<EmployerModel>> getMembers();
+  Future<void> addMember({
+    required String email,
+    required String fullName,
+    required String role,
+    required String password,
+  });
+  Future<void> removeMember(int id);
 }
 
 class EmployerRemoteDataSourceImpl implements EmployerRemoteDataSource {
@@ -120,6 +128,56 @@ class EmployerRemoteDataSourceImpl implements EmployerRemoteDataSource {
       } else {
         throw ServerException('Upload ảnh đại diện thất bại');
       }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<EmployerModel>> getMembers() async {
+    try {
+      final response = await apiClient.dio.get('/api/employers/members');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((item) => EmployerModel.fromJson(item)).toList();
+      } else {
+        throw ServerException('Không thể lấy danh sách thành viên');
+      }
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> addMember({
+    required String email,
+    required String fullName,
+    required String role,
+    required String password,
+  }) async {
+    try {
+      await apiClient.dio.post(
+        '/api/employers/members',
+        data: {
+          'email': email,
+          'fullName': fullName,
+          'role': role,
+          'password': password,
+        },
+      );
+    } catch (e) {
+      if (e is DioException) {
+        final message = e.response?.data?['message'] ?? e.message;
+        throw ServerException(message.toString());
+      }
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> removeMember(int id) async {
+    try {
+      await apiClient.dio.delete('/api/employers/members/$id');
     } catch (e) {
       throw ServerException(e.toString());
     }

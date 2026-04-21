@@ -24,6 +24,11 @@ class EmployerProvider extends ChangeNotifier {
   final UploadCompanyGalleryImageUseCase uploadCompanyGalleryImageUseCase;
   final UploadCompanyBusinessLicenseUseCase uploadCompanyBusinessLicenseUseCase;
 
+  // Member management use cases
+  final GetMembersUseCase getMembersUseCase;
+  final AddMemberUseCase addMemberUseCase;
+  final RemoveMemberUseCase removeMemberUseCase;
+
   EmployerProvider({
     required this.getEmployerProfileUseCase,
     required this.setupCompanyUseCase,
@@ -34,16 +39,28 @@ class EmployerProvider extends ChangeNotifier {
     required this.uploadCompanyBannerUseCase,
     required this.uploadCompanyGalleryImageUseCase,
     required this.uploadCompanyBusinessLicenseUseCase,
+    required this.getMembersUseCase,
+    required this.addMemberUseCase,
+    required this.removeMemberUseCase,
   });
 
   EmployerEntity? _employer;
   EmployerEntity? get employer => _employer;
+
+  List<EmployerEntity> _members = [];
+  List<EmployerEntity> get members => _members;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   bool _isSaving = false;
   bool get isSaving => _isSaving;
+
+  bool _isMemberLoading = false;
+  bool get isMemberLoading => _isMemberLoading;
+
+  bool _isAddingMember = false;
+  bool get isAddingMember => _isAddingMember;
 
   bool _isUploadingAvatar = false;
   bool get isUploadingAvatar => _isUploadingAvatar;
@@ -364,5 +381,84 @@ class EmployerProvider extends ChangeNotifier {
       _errorMessage = 'Lỗi upload ảnh: $e';
       notifyListeners();
     }
+  }
+
+  // --- Member Management ---
+
+  Future<void> fetchMembers() async {
+    _isMemberLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await getMembersUseCase();
+
+    result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _isMemberLoading = false;
+        notifyListeners();
+      },
+      (members) {
+        _members = members;
+        _isMemberLoading = false;
+        notifyListeners();
+      },
+    );
+  }
+
+  Future<bool> addMember({
+    required String email,
+    required String fullName,
+    required String role,
+    required String password,
+  }) async {
+    _isAddingMember = true;
+    _errorMessage = null;
+    _successMessage = null;
+    notifyListeners();
+
+    final result = await addMemberUseCase(
+      email: email,
+      fullName: fullName,
+      role: role,
+      password: password,
+    );
+
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _isAddingMember = false;
+        notifyListeners();
+        return false;
+      },
+      (_) async {
+        _successMessage = 'Thêm thành viên thành công!';
+        await fetchMembers();
+        _isAddingMember = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> removeMember(int id) async {
+    _errorMessage = null;
+    _successMessage = null;
+    notifyListeners();
+
+    final result = await removeMemberUseCase(id);
+
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        notifyListeners();
+        return false;
+      },
+      (_) async {
+        _successMessage = 'Gỡ thành viên thành công!';
+        await fetchMembers();
+        return true;
+      },
+    );
   }
 }

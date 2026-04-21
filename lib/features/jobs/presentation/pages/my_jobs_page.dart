@@ -13,6 +13,7 @@ import '../widgets/audit_log_modal.dart';
 import '../pages/job_detail_page.dart';
 import '../../../applications/presentation/pages/job_kanban_page.dart';
 import '../../../headhunting/presentation/pages/suggested_candidates_page.dart';
+import '../../../employer/presentation/providers/employer_provider.dart';
 
 /// Màn hình "Việc của tôi" với 2 tabs: Đã lưu & Đã ứng tuyển
 class MyJobsPage extends StatefulWidget {
@@ -156,7 +157,7 @@ class _MyJobsPageState extends State<MyJobsPage>
             ]
           : [_buildSavedJobsTab(), _buildApplicationsTab()],
       ),
-      floatingActionButton: isEmployer
+      floatingActionButton: (isEmployer && (context.watch<EmployerProvider>().employer?.isAdminCompany ?? false))
           ? FloatingActionButton.extended(
               onPressed: () {
                 Navigator.push(
@@ -466,7 +467,7 @@ class _MyJobsPageState extends State<MyJobsPage>
                                       visualDensity: VisualDensity.compact,
                                     ),
                                   ),
-                                if (job.status == 'draft')
+                                if (job.status == 'draft' && (context.read<EmployerProvider>().employer?.isAdminCompany ?? false))
                                   TextButton.icon(
                                     onPressed: () => provider.publishJob(job.jobPostId),
                                     icon: const Icon(Icons.publish, size: 18),

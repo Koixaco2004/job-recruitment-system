@@ -84,4 +84,50 @@ class EmployerRepositoryImpl implements EmployerRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<EmployerEntity>>> getMembers() async {
+    try {
+      final members = await remoteDataSource.getMembers();
+      return Right(members);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> addMember({
+    required String email,
+    required String fullName,
+    required String role,
+    required String password,
+  }) async {
+    try {
+      await remoteDataSource.addMember(
+        email: email,
+        fullName: fullName,
+        role: role,
+        password: password,
+      );
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeMember(int id) async {
+    try {
+      await remoteDataSource.removeMember(id);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

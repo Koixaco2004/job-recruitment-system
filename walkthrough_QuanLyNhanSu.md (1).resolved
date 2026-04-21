@@ -1,0 +1,54 @@
+# Walkthrough - Quản lý thành viên công ty
+
+Tôi đã hoàn thành việc triển khai tính năng quản lý thành viên cho Nhà tuyển dụng, cho phép Admin của công ty thêm Recruitment Team một cách thủ công.
+
+## Các thay đổi chính
+
+### 1. API Endpoints mới
+
+Tôi đã bổ sung các endpoint sau vào `EmployersController`:
+
+- **`POST /employers/members`**: Thêm thành viên mới hoặc liên kết tài khoản Employer có sẵn vào công ty.
+- **`GET /employers/members`**: Lấy danh sách toàn bộ thành viên (HR/Recruiter) thuộc công ty.
+- **`DELETE /employers/members/:id`**: Gỡ thành viên khỏi công ty (chuyển `companyId` về `null`).
+
+### 2. Logic nghiệp vụ trong `EmployersService`
+
+- **Xác thực quyền**: Chỉ những Employer có `isAdminCompany: true` mới có quyền gọi các API quản trị thành viên.
+- **Xử lý tài khoản có sẵn**:
+    - Nếu email đã tồn tại và là `EMPLOYER`, hệ thống sẽ kiểm tra xem họ có thuộc công ty nào chưa. Nếu chưa, sẽ tự động gán vào công ty hiện tại mà không cần đổi mật khẩu.
+    - Nếu email đã tồn tại nhưng là `CANDIDATE`, hệ thống sẽ chặn hành động này (tuân thủ quy tắc 1 email - 1 chức năng).
+- **Tạo mới**: Nếu email chưa tồn tại, hệ thống sẽ tạo đồng thời `User` và `Employer` trong một transaction an toàn.
+
+### 3. Cấu trúc dữ liệu (DTO)
+
+Sử dụng **Zod** để validate dữ liệu đầu vào, đồng bộ với kiến trúc hiện tại của dự án:
+- `email`: Cần đúng định dạng email.
+- `fullName`: Không được để trống.
+- `role`: Chọn giữa `ADMIN` hoặc `RECRUITER`.
+- `password`: Bắt buộc khi tạo mới, độ dài tối thiểu 6 ký tự.
+
+---
+
+## Kết quả kiểm thử
+
+Tôi đã viết và chạy bộ Unit Test cho `EmployersService` (`src/employers/employers.service.spec.ts`):
+
+```bash
+PASS src/employers/employers.service.spec.ts
+  EmployersService
+    addMember
+      √ should throw BadRequest if inviter is not an admin
+      √ should throw Conflict if email is used by a Candidate
+      √ should link existing Employer to company if they are currently unlinked
+      √ should create a new User and Employer if email does not exist
+    removeMember
+      √ should unlink member from company
+```
+
+> [!NOTE]
+> Tất cả các trường hợp biên (edge cases) như tự xóa chính mình, hoặc thêm người đã có công ty khác đều đã được xử lý bằng các Exception tương ứng (`ConflictException`, `BadRequestException`).
+
+---
+
+Bạn có thể bắt đầu tích hợp các API này vào Dashboard của phía Employer. Nếu cần hỗ trợ thêm về tài liệu API (Swagger), hãy cho tôi biết!

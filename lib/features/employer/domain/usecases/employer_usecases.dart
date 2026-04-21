@@ -69,3 +69,43 @@ class UploadEmployerAvatarUseCase {
     );
   }
 }
+
+class GetMembersUseCase {
+  final EmployerRepository repository;
+
+  GetMembersUseCase(this.repository);
+
+  Future<Either<Failure, List<EmployerEntity>>> call() async {
+    return await repository.getMembers();
+  }
+}
+
+class AddMemberUseCase {
+  final EmployerRepository repository;
+
+  AddMemberUseCase(this.repository);
+
+  Future<Either<Failure, void>> call({
+    required String email,
+    required String fullName,
+    required String role,
+    required String password,
+  }) async {
+    return await repository.addMember(
+      email: email,
+      fullName: fullName,
+      role: role,
+      password: password,
+    );
+  }
+}
+
+class RemoveMemberUseCase {
+  final EmployerRepository repository;
+
+  RemoveMemberUseCase(this.repository);
+
+  Future<Either<Failure, void>> call(int id) async {
+    return await repository.removeMember(id);
+  }
+}

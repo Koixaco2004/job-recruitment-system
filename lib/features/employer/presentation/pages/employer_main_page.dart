@@ -16,6 +16,7 @@ import 'package:test1/features/headhunting/presentation/pages/employer_saved_can
 import 'package:test1/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:test1/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:test1/features/auth/presentation/widgets/verification_banner.dart';
+import 'package:test1/features/employer/presentation/pages/member_management_page.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -493,6 +494,16 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const EmployerCompanyEditPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.people_outline, color: Theme.of(context).primaryColor),
+            title: const Text('Quản lý nhân sự'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const MemberManagementPage()),
               );
             },
           ),

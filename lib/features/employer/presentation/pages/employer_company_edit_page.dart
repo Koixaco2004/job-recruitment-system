@@ -138,6 +138,7 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
       appBar: AppBar(
         title: const Text('Hồ sơ công ty'),
         actions: [
+          if (context.watch<EmployerProvider>().employer?.isAdminCompany ?? false)
           IconButton(
             onPressed: context.watch<EmployerProvider>().isSavingCompany ? null : _save,
             icon: const Icon(Icons.check),
@@ -148,6 +149,8 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
         builder: (context, provider, child) {
           final company = provider.employer?.company;
           if (company == null) return const Center(child: Text('Không tìm thấy thông tin công ty'));
+
+          final bool isAdmin = provider.employer?.isAdminCompany ?? false;
 
           return SingleChildScrollView(
             child: Column(
@@ -164,57 +167,59 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildVerificationStatusAlert(company),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Thông tin cơ bản',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(_nameController, 'Tên công ty', Icons.business, validator: (v) => v!.isEmpty ? 'Vui lòng nhập tên' : null),
-                        const SizedBox(height: 16),
-                        _buildTextField(_emailContactController, 'Email liên hệ', Icons.email, keyboardType: TextInputType.emailAddress),
-                        const SizedBox(height: 16),
-                        _buildTextField(_phoneContactController, 'Số điện thoại', Icons.phone, keyboardType: TextInputType.phone),
-                        const SizedBox(height: 16),
-                        _buildTextField(_websiteController, 'Website', Icons.link),
-                        const SizedBox(height: 16),
-                        _buildTextField(_facebookUrlController, 'Facebook URL', Icons.facebook),
-                        const SizedBox(height: 16),
-                        _buildTextField(_linkedinUrlController, 'LinkedIn URL', Icons.link),
-                        const SizedBox(height: 16),
-                        _buildTextField(_companySizeController, 'Quy mô (ví dụ: 50-100 nhân viên)', Icons.people),
-                        const SizedBox(height: 16),
-                        _buildDropdown<int>(
-                          label: 'Lĩnh vực',
-                          icon: Icons.category,
-                          value: _selectedCategoryId,
-                          items: _categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
-                          onChanged: (val) => setState(() => _selectedCategoryId = val),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildDropdown<int>(
-                          label: 'Tỉnh / Thành phố',
-                          icon: Icons.location_on,
-                          value: _selectedProvinceId,
-                          items: _provinces.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
-                          onChanged: (val) => setState(() => _selectedProvinceId = val),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(_addressController, 'Địa chỉ cụ thể', Icons.map),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          _descriptionController, 
-                          'Mô tả ngắn', 
-                          Icons.description, 
-                          maxLines: 3,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          _contentController, 
-                          'Nội dung chi tiết', 
-                          Icons.article, 
-                          maxLines: 8,
-                        ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Thông tin cơ bản',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(_nameController, 'Tên công ty', Icons.business, validator: (v) => v!.isEmpty ? 'Vui lòng nhập tên' : null, enabled: isAdmin),
+                            const SizedBox(height: 16),
+                            _buildTextField(_emailContactController, 'Email liên hệ', Icons.email, keyboardType: TextInputType.emailAddress, enabled: isAdmin),
+                            const SizedBox(height: 16),
+                            _buildTextField(_phoneContactController, 'Số điện thoại', Icons.phone, keyboardType: TextInputType.phone, enabled: isAdmin),
+                            const SizedBox(height: 16),
+                            _buildTextField(_websiteController, 'Website', Icons.link, enabled: isAdmin),
+                            const SizedBox(height: 16),
+                            _buildTextField(_facebookUrlController, 'Facebook URL', Icons.facebook, enabled: isAdmin),
+                            const SizedBox(height: 16),
+                            _buildTextField(_linkedinUrlController, 'LinkedIn URL', Icons.link, enabled: isAdmin),
+                            const SizedBox(height: 16),
+                            _buildTextField(_companySizeController, 'Quy mô (ví dụ: 50-100 nhân viên)', Icons.people, enabled: isAdmin),
+                            const SizedBox(height: 16),
+                            _buildDropdown<int>(
+                              label: 'Lĩnh vực',
+                              icon: Icons.category,
+                              value: _selectedCategoryId,
+                              items: _categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
+                              onChanged: isAdmin ? (val) => setState(() => _selectedCategoryId = val) : null,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildDropdown<int>(
+                              label: 'Tỉnh / Thành phố',
+                              icon: Icons.location_on,
+                              value: _selectedProvinceId,
+                              items: _provinces.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
+                              onChanged: isAdmin ? (val) => setState(() => _selectedProvinceId = val) : null,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(_addressController, 'Địa chỉ cụ thể', Icons.map, enabled: isAdmin),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              _descriptionController, 
+                              'Mô tả ngắn', 
+                              Icons.description, 
+                              maxLines: 3,
+                              enabled: isAdmin,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              _contentController, 
+                              'Nội dung chi tiết', 
+                              Icons.article, 
+                              maxLines: 8,
+                              enabled: isAdmin,
+                            ),
                         const SizedBox(height: 32),
 
                         // Business License Section
@@ -252,7 +257,7 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
                                   ),
                                   if (provider.isUploadingBusinessLicense)
                                     const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                                  else
+                                  else if (isAdmin)
                                     IconButton(
                                       icon: const Icon(Icons.upload_file, color: Colors.blue),
                                       onPressed: provider.pickAndUploadBusinessLicense,
@@ -309,7 +314,7 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
                             ),
                             if (provider.isUploadingGallery)
                               const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                            else
+                            else if (isAdmin)
                               IconButton(
                                 icon: const Icon(Icons.add_a_photo, color: Colors.blue),
                                 onPressed: provider.pickAndUploadGalleryImage,
@@ -351,7 +356,7 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
         children: [
           // Banner
           GestureDetector(
-            onTap: provider.pickAndUploadBanner,
+            onTap: (provider.employer?.isAdminCompany ?? false) ? provider.pickAndUploadBanner : null,
             child: Container(
               height: 160,
               width: double.infinity,
@@ -386,7 +391,7 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
             left: 20,
             bottom: 0,
             child: GestureDetector(
-              onTap: provider.pickAndUploadLogo,
+              onTap: (provider.employer?.isAdminCompany ?? false) ? provider.pickAndUploadLogo : null,
               child: Stack(
                 children: [
                   Container(
@@ -493,9 +498,10 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {int maxLines = 1, String? Function(String?)? validator, TextInputType? keyboardType}) {
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {int maxLines = 1, String? Function(String?)? validator, TextInputType? keyboardType, bool enabled = true}) {
     return TextFormField(
       controller: controller,
+      enabled: enabled,
       maxLines: maxLines,
       keyboardType: keyboardType,
       decoration: InputDecoration(
@@ -509,7 +515,7 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
     );
   }
 
-  Widget _buildDropdown<T>({required String label, required IconData icon, required T? value, required List<DropdownMenuItem<T>> items, required Function(T?) onChanged}) {
+  Widget _buildDropdown<T>({required String label, required IconData icon, required T? value, required List<DropdownMenuItem<T>> items, required Function(T?)? onChanged}) {
     // Safety check: ensure value exists in items to avoid Flutter assertion error
     final bool valueExists = items.any((item) => item.value == value);
     final T? safeValue = valueExists ? value : null;

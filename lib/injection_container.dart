@@ -311,6 +311,9 @@ Future<void> init() async {
       uploadCompanyBannerUseCase: sl(),
       uploadCompanyGalleryImageUseCase: sl(),
       uploadCompanyBusinessLicenseUseCase: sl(),
+      getMembersUseCase: sl(),
+      addMemberUseCase: sl(),
+      removeMemberUseCase: sl(),
     ),
   );
 
@@ -319,6 +322,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SetupCompanyUseCase(sl()));
   sl.registerLazySingleton(() => UpdateEmployerProfileUseCase(sl()));
   sl.registerLazySingleton(() => UploadEmployerAvatarUseCase(sl()));
+  sl.registerLazySingleton(() => GetMembersUseCase(sl()));
+  sl.registerLazySingleton(() => AddMemberUseCase(sl()));
+  sl.registerLazySingleton(() => RemoveMemberUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<EmployerRepository>(

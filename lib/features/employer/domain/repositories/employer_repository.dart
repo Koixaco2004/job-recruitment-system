@@ -24,4 +24,14 @@ abstract class EmployerRepository {
     required Uint8List imageBytes,
     required String fileName,
   });
+
+  // Member Management
+  Future<Either<Failure, List<EmployerEntity>>> getMembers();
+  Future<Either<Failure, void>> addMember({
+    required String email,
+    required String fullName,
+    required String role,
+    required String password,
+  });
+  Future<Either<Failure, void>> removeMember(int id);
 }
