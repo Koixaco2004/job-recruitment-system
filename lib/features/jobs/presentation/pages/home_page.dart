@@ -4,7 +4,8 @@ import '../providers/job_provider.dart';
 import '../widgets/job_card.dart';
 import 'job_detail_page.dart';
 import 'search_page.dart';
-import '../../../headhunting/presentation/widgets/notification_bell.dart';
+import '../../../notifications/presentation/widgets/notification_bell.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,6 +22,14 @@ class _HomePageState extends State<HomePage> {
       final jobProvider = context.read<JobProvider>();
       // Luôn load tất cả việc làm công khai khi vào trang (Bỏ phần gợi ý theo hồ sơ)
       await jobProvider.fetchPublicJobs(refresh: true);
+      
+      // Khởi tạo thông báo
+      if (mounted) {
+        final notificationProvider = context.read<NotificationProvider>();
+        notificationProvider.initSocket();
+        notificationProvider.fetchUnreadCount();
+        notificationProvider.fetchNotifications(refresh: true);
+      }
     });
   }
 

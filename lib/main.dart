@@ -12,6 +12,7 @@ import 'features/applications/presentation/providers/application_provider.dart';
 import 'features/applications/presentation/providers/employer_application_provider.dart';
 import 'features/headhunting/presentation/providers/headhunting_provider.dart';
 import 'features/headhunting/presentation/providers/candidate_search_provider.dart';
+import 'features/notifications/presentation/providers/notification_provider.dart';
 import 'injection_container.dart' as di;
 
 
@@ -51,6 +52,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<HeadhuntingProvider>()),
         // Candidate Search Provider
         ChangeNotifierProvider(create: (_) => di.sl<CandidateSearchProvider>()),
+        // Notification Provider
+        ChangeNotifierProvider(create: (_) => di.sl<NotificationProvider>()),
       ],
       child: MaterialApp(
         title: 'Recruitment App',

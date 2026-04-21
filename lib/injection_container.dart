@@ -93,6 +93,11 @@ import 'features/headhunting/domain/usecases/unsave_candidate_usecase.dart';
 import 'features/headhunting/domain/usecases/get_saved_candidates_usecase.dart';
 import 'features/headhunting/presentation/providers/headhunting_provider.dart';
 import 'features/headhunting/presentation/providers/candidate_search_provider.dart';
+import 'features/notifications/data/datasources/notification_remote_datasource.dart';
+import 'features/notifications/data/repositories/notification_repository_impl.dart';
+import 'features/notifications/domain/repositories/notification_repository.dart';
+import 'features/notifications/domain/usecases/notification_usecases.dart';
+import 'features/notifications/presentation/providers/notification_provider.dart';
 
 final sl = GetIt.instance; // Service Locator
 
@@ -420,5 +425,37 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<HeadhuntingRemoteDataSource>(
     () => HeadhuntingRemoteDataSourceImpl(apiClient: sl()),
+  );
+
+  // ========================
+  // Features - Notifications
+  // ========================
+
+  // Providers
+  sl.registerLazySingleton(
+    () => NotificationProvider(
+      getNotificationsUseCase: sl(),
+      getUnreadCountUseCase: sl(),
+      markAsReadUseCase: sl(),
+      markAllReadUseCase: sl(),
+      authLocalDataSource: sl(),
+      apiClient: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
+  sl.registerLazySingleton(() => GetUnreadCountUseCase(sl()));
+  sl.registerLazySingleton(() => MarkAsReadUseCase(sl()));
+  sl.registerLazySingleton(() => MarkAllReadUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(sl()),
   );
 }

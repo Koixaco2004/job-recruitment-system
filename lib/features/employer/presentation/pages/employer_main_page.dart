@@ -13,6 +13,8 @@ import 'package:test1/features/headhunting/presentation/providers/headhunting_pr
 import 'package:test1/features/headhunting/presentation/pages/candidate_search_page.dart';
 import 'package:test1/features/headhunting/presentation/pages/employer_invitation_list_page.dart';
 import 'package:test1/features/headhunting/presentation/pages/employer_saved_candidates_page.dart';
+import 'package:test1/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:test1/features/notifications/presentation/widgets/notification_bell.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -29,6 +31,10 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkStatus();
+      final notificationProvider = context.read<NotificationProvider>();
+      notificationProvider.initSocket();
+      notificationProvider.fetchUnreadCount();
+      notificationProvider.fetchNotifications(refresh: true);
     });
   }
 
@@ -105,7 +111,13 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
   Widget _buildDashboardTab(dynamic employer) {
     final jobProvider = context.watch<JobProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+        actions: [
+          const NotificationBell(iconColor: Colors.black),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _checkStatus,
         child: SingleChildScrollView(

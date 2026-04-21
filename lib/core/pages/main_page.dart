@@ -6,6 +6,7 @@ import '../../features/jobs/presentation/pages/my_jobs_page.dart';
 import '../../features/jobs/presentation/providers/my_jobs_provider.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/providers/profile_provider.dart';
+import '../../features/notifications/presentation/providers/notification_provider.dart';
 
 /// Màn hình chính với Bottom Navigation Bar
 class MainPage extends StatefulWidget {
@@ -23,6 +24,18 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo thông báo và socket
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final notificationProvider = context.read<NotificationProvider>();
+      notificationProvider.initSocket();
+      notificationProvider.fetchUnreadCount();
+      notificationProvider.fetchNotifications(refresh: true);
+    });
+  }
 
   final List<Widget> _pages = const [
     HomePage(),

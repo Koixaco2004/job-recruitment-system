@@ -1,0 +1,33 @@
+Analyzing 3 items...                                            
+
+  error - Target of URI doesn't exist: '../../applications/presentation/pages/application_detail_page.dart' - lib\features\notifications\presentation\pages\notification_list_page.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../headhunting/presentation/pages/candidate_invitation_list_page.dart' - lib\features\notifications\presentation\pages\notification_list_page.dart:7:8 - uri_does_not_exist
+  error - The method 'ApplicationDetailPage' isn't defined for the type '_NotificationItem' - lib\features\notifications\presentation\pages\notification_list_page.dart:172:39 - undefined_method
+  error - The name 'CandidateInvitationListPage' isn't a class - lib\features\notifications\presentation\pages\notification_list_page.dart:181:43 - creation_with_non_type
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\notifications\presentation\pages\notification_list_page.dart:191:71 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\notifications\presentation\pages\notification_list_page.dart:196:48 - deprecated_member_use
+   info - The prefix 'IO' isn't a lower_case_with_underscores identifier - lib\features\notifications\presentation\providers\notification_provider.dart:3:60 - library_prefixes
+  error - Target of URI doesn't exist: '../../../core/network/api_client.dart' - lib\features\notifications\presentation\providers\notification_provider.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../auth/data/datasources/auth_local_datasource.dart' - lib\features\notifications\presentation\providers\notification_provider.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../domain/entities/notification_entity.dart' - lib\features\notifications\presentation\providers\notification_provider.dart:7:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../domain/usecases/notification_usecases.dart' - lib\features\notifications\presentation\providers\notification_provider.dart:8:8 - uri_does_not_exist
+  error - Undefined class 'GetNotificationsUseCase' - lib\features\notifications\presentation\providers\notification_provider.dart:11:9 - undefined_class
+  error - Undefined class 'GetUnreadCountUseCase' - lib\features\notifications\presentation\providers\notification_provider.dart:12:9 - undefined_class
+  error - Undefined class 'MarkAsReadUseCase' - lib\features\notifications\presentation\providers\notification_provider.dart:13:9 - undefined_class
+  error - Undefined class 'MarkAllReadUseCase' - lib\features\notifications\presentation\providers\notification_provider.dart:14:9 - undefined_class
+  error - Undefined class 'AuthLocalDataSource' - lib\features\notifications\presentation\providers\notification_provider.dart:15:9 - undefined_class
+  error - Undefined class 'ApiClient' - lib\features\notifications\presentation\providers\notification_provider.dart:16:9 - undefined_class
+  error - The name 'NotificationEntity' isn't a type, so it can't be used as a type argument - lib\features\notifications\presentation\providers\notification_provider.dart:27:8 - non_type_as_type_argument
+  error - The name 'NotificationEntity' isn't a type, so it can't be used as a type argument - lib\features\notifications\presentation\providers\notification_provider.dart:34:8 - non_type_as_type_argument
+  error - The property 'id' can't be unconditionally accessed because the receiver can be 'null' - lib\features\notifications\presentation\providers\notification_provider.dart:92:60 - unchecked_use_of_nullable_value
+  error - The method 'NotificationEntity' isn't defined for the type 'NotificationProvider' - lib\features\notifications\presentation\providers\notification_provider.dart:94:37 - undefined_method
+  error - The method 'NotificationEntity' isn't defined for the type 'NotificationProvider' - lib\features\notifications\presentation\providers\notification_provider.dart:120:20 - undefined_method
+  error - The property 'id' can't be unconditionally accessed because the receiver can be 'null' - lib\features\notifications\presentation\providers\notification_provider.dart:121:21 - unchecked_use_of_nullable_value
+  error - The property 'userId' can't be unconditionally accessed because the receiver can be 'null' - lib\features\notifications\presentation\providers\notification_provider.dart:122:25 - unchecked_use_of_nullable_value
+  error - The property 'type' can't be unconditionally accessed because the receiver can be 'null' - lib\features\notifications\presentation\providers\notification_provider.dart:123:23 - unchecked_use_of_nullable_value
+  error - The property 'title' can't be unconditionally accessed because the receiver can be 'null' - lib\features\notifications\presentation\providers\notification_provider.dart:124:24 - unchecked_use_of_nullable_value
+  error - The property 'content' can't be unconditionally accessed because the receiver can be 'null' - lib\features\notifications\presentation\providers\notification_provider.dart:125:26 - unchecked_use_of_nullable_value
+  error - The property 'metadata' can't be unconditionally accessed because the receiver can be 'null' - lib\features\notifications\presentation\providers\notification_provider.dart:126:27 - unchecked_use_of_nullable_value
+  error - The property 'createdAt' can't be unconditionally accessed because the receiver can be 'null' - lib\features\notifications\presentation\providers\notification_provider.dart:128:28 - unchecked_use_of_nullable_value
+
+29 issues found. (ran in 2.3s)

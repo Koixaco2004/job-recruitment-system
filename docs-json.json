@@ -314,9 +314,6 @@
                     "200": {
                         "description": "Upload CV thành công"
                     },
-                    "201": {
-                        "description": ""
-                    },
                     "400": {
                         "description": "File không hợp lệ"
                     },
@@ -344,9 +341,6 @@
                 "responses": {
                     "200": {
                         "description": "Phân tích và cập nhật thành công"
-                    },
-                    "201": {
-                        "description": ""
                     },
                     "400": {
                         "description": "Chưa upload CV | File không đọc được | AI chưa cấu hình"
@@ -397,9 +391,6 @@
                 "responses": {
                     "200": {
                         "description": "Upload avatar thành công"
-                    },
-                    "201": {
-                        "description": ""
                     },
                     "400": {
                         "description": "File không hợp lệ"
@@ -1276,9 +1267,6 @@
                     "200": {
                         "description": "Chấp nhận thành công"
                     },
-                    "201": {
-                        "description": ""
-                    },
                     "401": {
                         "description": "Chưa đăng nhập"
                     }
@@ -1310,9 +1298,6 @@
                 "responses": {
                     "200": {
                         "description": "Từ chối thành công"
-                    },
-                    "201": {
-                        "description": ""
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
@@ -1485,6 +1470,88 @@
                 ]
             }
         },
+        "/api/notifications": {
+            "get": {
+                "operationId": "NotificationsController_getMyNotifications",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Notifications"
+                ]
+            }
+        },
+        "/api/notifications/unread-count": {
+            "get": {
+                "operationId": "NotificationsController_getUnreadCount",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Notifications"
+                ]
+            }
+        },
+        "/api/notifications/mark-all-read": {
+            "patch": {
+                "operationId": "NotificationsController_markAllAsRead",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Notifications"
+                ]
+            }
+        },
+        "/api/notifications/{id}/read": {
+            "patch": {
+                "operationId": "NotificationsController_markAsRead",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Notifications"
+                ]
+            }
+        },
         "/api/employers/setup-company": {
             "post": {
                 "operationId": "EmployersController_setupCompany",
@@ -1637,6 +1704,111 @@
                 ]
             }
         },
+        "/api/employers/members": {
+            "post": {
+                "operationId": "EmployersController_addMember",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddMemberDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thêm thành viên mới vào công ty (Chỉ dành cho Admin công ty)",
+                "tags": [
+                    "Employers - Quản lý HR"
+                ]
+            },
+            "get": {
+                "operationId": "EmployersController_getMembers",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EmployerEntity"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách thành viên trong công ty",
+                "tags": [
+                    "Employers - Quản lý HR"
+                ]
+            }
+        },
+        "/api/employers/members/{id}": {
+            "delete": {
+                "operationId": "EmployersController_removeMember",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Gỡ thành viên khỏi công ty",
+                "tags": [
+                    "Employers - Quản lý HR"
+                ]
+            }
+        },
         "/api/employers/headhunting/jobs/{jobId}/suggested-candidates": {
             "get": {
                 "operationId": "EmployerHeadhuntingController_getSuggestedCandidates",
@@ -1656,6 +1828,9 @@
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
                     }
                 },
                 "security": [
@@ -1762,6 +1937,9 @@
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
                     }
                 },
                 "security": [
@@ -1794,6 +1972,9 @@
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
                     }
                 },
                 "security": [
@@ -1817,6 +1998,9 @@
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
                     }
                 },
                 "security": [
@@ -1859,6 +2043,9 @@
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
                     }
                 },
                 "security": [
@@ -1889,6 +2076,9 @@
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
                     }
                 },
                 "security": [
@@ -1922,6 +2112,9 @@
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
                     }
                 },
                 "security": [
@@ -1943,6 +2136,9 @@
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
                     }
                 },
                 "security": [
@@ -3473,7 +3669,7 @@
                         "description": "Chưa đăng nhập"
                     },
                     "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
+                        "description": "Không có quyền sửa\n\nKhông có quyền truy cập (Sai Role)"
                     },
                     "404": {
                         "description": "Ghi chú không tồn tại"
@@ -4374,7 +4570,8 @@
                         "type": "number"
                     },
                     "companyId": {
-                        "type": "number"
+                        "type": "number",
+                        "nullable": true
                     },
                     "fullName": {
                         "type": "string"
@@ -5128,6 +5325,49 @@
                         "description": "Số điện thoại liên hệ"
                     }
                 }
+            },
+            "AddMemberDto": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                        "example": "new.member@company.com"
+                    },
+                    "fullName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "example": "Nguyễn Văn A"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "ADMIN",
+                            "RECRUITER"
+                        ],
+                        "example": "RECRUITER"
+                    },
+                    "password": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "minLength": 6
+                            },
+                            {
+                                "type": "string",
+                                "const": ""
+                            }
+                        ],
+                        "x-nestjs_zod-empty-type": true,
+                        "example": "Password123!"
+                    }
+                },
+                "required": [
+                    "email",
+                    "fullName",
+                    "role"
+                ]
             },
             "SaveCandidateDto": {
                 "type": "object",
