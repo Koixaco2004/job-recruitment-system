@@ -7,11 +7,49 @@ import '../../domain/entities/application_note_entity.dart';
 import '../../../../features/profile/presentation/providers/profile_provider.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
 
-class ApplicationDetailDrawer extends StatelessWidget {
+class ApplicationDetailDrawer extends StatefulWidget {
   const ApplicationDetailDrawer({
     super.key,
   });
+
+  @override
+  State<ApplicationDetailDrawer> createState() => _ApplicationDetailDrawerState();
+}
+
+class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
+  int? _lastSubscribedId;
+  NotificationProvider? _notificationProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+  }
+
+  @override
+  void dispose() {
+    _cleanupSubscription();
+    super.dispose();
+  }
+
+  void _cleanupSubscription() {
+    if (_lastSubscribedId != null && _notificationProvider != null) {
+      _notificationProvider!.unsubscribeApplicationDetail(_lastSubscribedId!);
+      _lastSubscribedId = null;
+    }
+  }
+
+  void _updateSubscription(int applicationId) {
+    if (_lastSubscribedId == applicationId) return;
+    if (_notificationProvider == null) return;
+    
+    _cleanupSubscription();
+    _notificationProvider!.subscribeApplicationDetail(applicationId);
+    _lastSubscribedId = applicationId;
+    debugPrint('📡 Subscribed to Application Detail room: application_detail_$applicationId');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +65,11 @@ class ApplicationDetailDrawer extends StatelessWidget {
           if (app == null) {
             return const Center(child: Text('Không tìm thấy dữ liệu hồ sơ'));
           }
+
+          // Handle subscription after build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _updateSubscription(app.id);
+          });
 
           // Đảm bảo metadata đã được tải
           WidgetsBinding.instance.addPostFrameCallback((_) {

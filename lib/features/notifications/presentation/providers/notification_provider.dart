@@ -31,6 +31,10 @@ class NotificationProvider extends ChangeNotifier {
   String? _errorMessage;
   IO.Socket? _socket;
   bool _isConnected = false;
+  
+  // Stream for real-time kanban updates
+  final _kanbanUpdateController = StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get kanbanUpdateStream => _kanbanUpdateController.stream;
 
   List<NotificationEntity> get notifications => _notifications;
   int get unreadCount => _unreadCount;
@@ -212,6 +216,24 @@ class NotificationProvider extends ChangeNotifier {
         fetchNotifications(refresh: true);
       }
     });
+
+    // Listen for Kanban updates
+    _socket!.on('kanban_update', (data) {
+      debugPrint('📊 KANBAN EVENT: Kanban updated: $data');
+      _kanbanUpdateController.add({'type': 'update', ...data});
+    });
+
+    // Listen for Kanban note updates
+    _socket!.on('kanban_note', (data) {
+      debugPrint('📝 KANBAN EVENT: Kanban note updated: $data');
+      _kanbanUpdateController.add({'type': 'note', ...data});
+    });
+
+    // Listen for new application notes (Application Detail)
+    _socket!.on('new_note', (data) {
+      debugPrint('📝 DETAIL EVENT: New note received: $data');
+      _kanbanUpdateController.add({'type': 'new_note', ...data});
+    });
   }
 
   void subscribeJobKanban(int jobId) {
@@ -234,6 +256,7 @@ class NotificationProvider extends ChangeNotifier {
   void dispose() {
     _socket?.disconnect();
     _socket?.dispose();
+    _kanbanUpdateController.close();
     super.dispose();
   }
 }

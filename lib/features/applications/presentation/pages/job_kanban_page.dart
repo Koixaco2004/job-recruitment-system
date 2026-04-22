@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/employer_application_provider.dart';
 import '../widgets/application_detail_drawer.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
 
 class JobKanbanPage extends StatefulWidget {
   final int jobId;
@@ -19,13 +21,54 @@ class JobKanbanPage extends StatefulWidget {
 
 class _JobKanbanPageState extends State<JobKanbanPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  StreamSubscription? _kanbanSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchData();
+      _initSocket();
     });
+  }
+
+  @override
+  void dispose() {
+    _cleanupSocket();
+    _kanbanSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _initSocket() {
+    final notificationProvider = context.read<NotificationProvider>();
+    notificationProvider.subscribeJobKanban(widget.jobId);
+    
+    _kanbanSubscription = notificationProvider.kanbanUpdateStream.listen((data) {
+      final type = data['type'];
+      final updateJobId = data['jobId'];
+      final applicationId = data['applicationId'];
+      
+      final appProvider = context.read<EmployerApplicationProvider>();
+      
+      if (type == 'new_note') {
+        // If we are looking at this specific application detail, refresh it
+        if (appProvider.selectedApplication?.id == applicationId || 
+            appProvider.selectedApplication?.id.toString() == applicationId.toString()) {
+          debugPrint('🔄 Real-time Application Detail refresh triggered for app: $applicationId');
+          appProvider.fetchApplicationDetail(int.parse(applicationId.toString()));
+        }
+      } else {
+        // Refresh board for 'update' or 'note'
+        if (updateJobId == null || updateJobId == widget.jobId || updateJobId == widget.jobId.toString()) {
+          debugPrint('🔄 Real-time Kanban refresh triggered for jobId: ${widget.jobId}');
+          _fetchData();
+        }
+      }
+    });
+  }
+
+  void _cleanupSocket() {
+    context.read<NotificationProvider>().unsubscribeJobKanban(widget.jobId);
   }
 
   void _fetchData() {
