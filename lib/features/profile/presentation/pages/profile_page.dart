@@ -8,6 +8,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../providers/profile_provider.dart';
 import 'edit_profile_page.dart';
+import '../../../auth/presentation/pages/change_password_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -167,6 +168,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildJobCategorySection(provider),
                 _buildCVSection(profile, provider),
                 const SizedBox(height: 24),
+                _buildChangePasswordButton(context),
+                const SizedBox(height: 12),
                 _buildLogoutButton(context),
                 const SizedBox(height: 32),
               ],
@@ -939,6 +942,38 @@ class _ProfilePageState extends State<ProfilePage> {
       default:
         return 'Chưa cập nhật';
     }
+  }
+
+  Widget _buildChangePasswordButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Theme.of(context).primaryColor,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.5), width: 1.5),
+            ),
+          ),
+          icon: const Icon(Icons.lock_outline),
+          label: const Text(
+            'Đổi mật khẩu',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildLogoutButton(BuildContext context) {

@@ -8,6 +8,9 @@ import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/verify_email_usecase.dart';
 import '../../domain/usecases/resend_verification_usecase.dart';
 import '../../domain/usecases/get_status_usecase.dart';
+import '../../domain/usecases/forgot_password_usecase.dart';
+import '../../domain/usecases/reset_password_usecase.dart';
+import '../../domain/usecases/change_password_usecase.dart';
 
 /// Provider quản lý state cho Authentication
 class AuthProvider extends ChangeNotifier {
@@ -18,6 +21,9 @@ class AuthProvider extends ChangeNotifier {
   final VerifyEmailUseCase verifyEmailUseCase;
   final ResendVerificationUseCase resendVerificationUseCase;
   final GetStatusUseCase getStatusUseCase;
+  final ForgotPasswordUseCase forgotPasswordUseCase;
+  final ResetPasswordUseCase resetPasswordUseCase;
+  final ChangePasswordUseCase changePasswordUseCase;
 
   AuthProvider({
     required this.loginUseCase,
@@ -27,6 +33,9 @@ class AuthProvider extends ChangeNotifier {
     required this.verifyEmailUseCase,
     required this.resendVerificationUseCase,
     required this.getStatusUseCase,
+    required this.forgotPasswordUseCase,
+    required this.resetPasswordUseCase,
+    required this.changePasswordUseCase,
   });
 
   // State
@@ -226,5 +235,85 @@ class AuthProvider extends ChangeNotifier {
         return true;
       },
     );
+  }
+
+  /// Forgot Password method
+  Future<bool> forgotPassword(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await forgotPasswordUseCase(email);
+
+      return result.fold(
+        (failure) {
+          _errorMessage = failure.message;
+          return false;
+        },
+        (_) => true,
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Reset Password method
+  Future<bool> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await resetPasswordUseCase(
+        email: email,
+        token: token,
+        newPassword: newPassword,
+      );
+
+      return result.fold(
+        (failure) {
+          _errorMessage = failure.message;
+          return false;
+        },
+        (_) => true,
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Change Password method (when logged in)
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await changePasswordUseCase(
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      );
+
+      return result.fold(
+        (failure) {
+          _errorMessage = failure.message;
+          return false;
+        },
+        (_) => true,
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

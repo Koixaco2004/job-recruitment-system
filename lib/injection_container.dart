@@ -14,6 +14,9 @@ import 'features/auth/domain/usecases/register_employer_usecase.dart';
 import 'features/auth/domain/usecases/register_usecase.dart';
 import 'features/auth/domain/usecases/verify_email_usecase.dart';
 import 'features/auth/domain/usecases/resend_verification_usecase.dart';
+import 'features/auth/domain/usecases/forgot_password_usecase.dart';
+import 'features/auth/domain/usecases/reset_password_usecase.dart';
+import 'features/auth/domain/usecases/change_password_usecase.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/companies/data/datasources/company_remote_datasource.dart';
 import 'features/companies/data/repositories/company_repository_impl.dart';
@@ -120,6 +123,9 @@ Future<void> init() async {
       verifyEmailUseCase: sl(),
       resendVerificationUseCase: sl(),
       getStatusUseCase: sl(),
+      forgotPasswordUseCase: sl(),
+      resetPasswordUseCase: sl(),
+      changePasswordUseCase: sl(),
     ),
   );
 
@@ -131,6 +137,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => VerifyEmailUseCase(sl()));
   sl.registerLazySingleton(() => ResendVerificationUseCase(sl()));
   sl.registerLazySingleton(() => GetStatusUseCase(sl()));
+  sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
+  sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
+  sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(

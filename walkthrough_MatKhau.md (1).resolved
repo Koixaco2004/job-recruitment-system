@@ -1,0 +1,35 @@
+# 🔐 Thay đổi: Tính năng Quản lý Tài Khoản (Account Management)
+
+Gói thay đổi Account Management (Phase 2) đã được triển khai hoàn tất với mức độ tuân thủ nghiêm ngặt chuẩn cấu trúc và logic bảo mật mà chúng ta đã hoạch định. 
+
+Sau đây là báo cáo về những điểm nổi bật:
+
+---
+
+## 1. Nâng cấp Database (TypeORM Migrations)
+- Thêm 2 field mới vào bảng `user`:
+  - `reset_password_token`: Lưu trữ **mã OTP đã bị hash** (chứ không lưu mã gốc) nhằm đề phòng lộ lọt Database.
+  - `reset_password_expires`: Quản lý thời gian sống của token (chuẩn 15 phút).
+- Đã build và chạy file migration thành công lên Server Database Supabase mà không để lại lỗi rác.
+
+## 2. API Quên Mật Khẩu (Forgot Password) vặn bảo mật bằng mã 6 số
+- Các file DTO như `ForgotPasswordDto`, `ResetPasswordDto` dùng Zod validation đã được quy hoạch gọn gàng trong folder `src/auth/dto/`.
+- Thay vì gửi dạng Link, **1 mã OTP gồm 6 chữ số ngẫu nhiên** sẽ được sinh ra, Hash lại bằng thư viện `bcrypt`, ghim lên Database giới hạn 15 phút tuổi thọ, song song gửi nguyên bản xuống Email của người dùng bằng Handlebars. (`src/mail/templates/reset-password.hbs`).
+- Mẹo chống Dò quét hệ thống (Information Disclosure): Tại API *gửi yêu cầu gửi mã PIN*, đối với những Email giả không tồn tại, Backend vẫn trả về Status Code 200 thông báo "Nếu email tồn tại..." giống như các User thật. 
+
+## 3. Hệ thống đổi mật khẩu chặn thiết bị (Force Logout Device Rotation)
+Khi User đã gọi thành công tới **1 trong 2 Endpoint** này:
+- `POST /auth/reset-password`
+- `PATCH /auth/change-password`
+
+Thì mật khẩu mới sẽ tức khắc được băm (hash) và cập nhật, kèm xoá bỏ mọi dữ liệu OTP của user đó. 
+Ngay lập tức, **Cơ chế Force Logout** được gián tiếp kích hoạt (bằng cách gọi API xoá mọi refresh token thuộc sở hữu của User trong bảng `refresh_token`). Access Token trên các thiết bị cũ sẽ tự chết trong <15 phút còn Refresh Token sẽ lỗi ngay khi Token Rotation cố gắng request Refresh, từ đó tống cổ các trình duyệt nghi vấn ra cửa ngõ hệ thống.
+
+## 4. API Endpoints mới trong bộ API `/auth/...`
+Dưới đây là các đường dẫn sẵn sàng phục vụ Frontend Team:
+- `POST /auth/forgot-password`
+- `POST /auth/reset-password`
+- `PATCH /auth/change-password` - Dùng JWT Guard (Yêu cầu login). Bắt buộc nhập pass cũ để xác nhận uỷ quyền vật lý từ người dùng.
+- `POST /auth/logout-all` - Chức năng "Đăng xuất khỏi mọi thiết bị" (Yêu cầu login). Mở cửa cho Setting Tab của người dùng có thể kích hoạt bằng tay.
+
+> 😎 Code đã build thành công không phát sinh bất kỳ lỗi Typescript, eslint hay Query Failed nào. Việc Testing thủ công giờ sẽ rất nhẹ nhàng. Mọi logic đã đi vào quỹ đạo!

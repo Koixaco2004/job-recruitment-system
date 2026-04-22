@@ -6,6 +6,7 @@ import '../../../../core/pages/main_page.dart';
 import 'package:test1/features/auth/presentation/providers/auth_provider.dart';
 import 'package:test1/features/employer/presentation/pages/employer_main_page.dart';
 import 'package:test1/features/auth/presentation/pages/register_page.dart';
+import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -169,7 +170,12 @@ class _LoginPageState extends State<LoginPage> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      // TODO: Navigate to forgot password
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordPage(),
+                        ),
+                      );
                     },
                     child: Text(
                       'Quên mật khẩu?',

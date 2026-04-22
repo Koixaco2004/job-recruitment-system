@@ -17,6 +17,7 @@ import 'package:test1/features/notifications/presentation/providers/notification
 import 'package:test1/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:test1/features/auth/presentation/widgets/verification_banner.dart';
 import 'package:test1/features/employer/presentation/pages/member_management_page.dart';
+import 'package:test1/features/auth/presentation/pages/change_password_page.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -504,6 +505,16 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const MemberManagementPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.lock_outline, color: Theme.of(context).primaryColor),
+            title: const Text('Đổi mật khẩu'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
               );
             },
           ),

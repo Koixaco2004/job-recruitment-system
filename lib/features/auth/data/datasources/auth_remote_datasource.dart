@@ -33,6 +33,22 @@ abstract class AuthRemoteDataSource {
 
   /// Gửi lại email xác thực
   Future<void> resendVerification();
+
+  /// Quên mật khẩu - gửi email lấy OTP
+  Future<void> forgotPassword({required String email});
+
+  /// Đặt lại mật khẩu bằng OTP
+  Future<void> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  });
+
+  /// Đổi mật khẩu (khi đã login)
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  });
 }
 
 /// Implementation với Real API
@@ -234,6 +250,81 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const AuthenticationException('Vui lòng đăng nhập để thực hiện hành động này');
       }
       throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is AuthenticationException) rethrow;
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> forgotPassword({required String email}) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/auth/forgot-password',
+        data: {'email': email},
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException('Gửi yêu cầu khôi phục mật khẩu thất bại');
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'];
+      throw ServerException(message ?? e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/auth/reset-password',
+        data: {
+          'email': email,
+          'token': token,
+          'newPassword': newPassword,
+        },
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException('Đặt lại mật khẩu thất bại');
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'];
+      throw ServerException(message ?? e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      throw ServerException('Đã xảy ra lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await apiClient.dio.patch(
+        '/api/auth/change-password',
+        data: {
+          'oldPassword': oldPassword,
+          'newPassword': newPassword,
+        },
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw ServerException('Đổi mật khẩu thất bại');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw const AuthenticationException('Mật khẩu cũ không chính xác');
+      }
+      final message = e.response?.data?['message'];
+      throw ServerException(message ?? e.message ?? 'Lỗi kết nối server');
     } catch (e) {
       if (e is AuthenticationException) rethrow;
       throw ServerException('Đã xảy ra lỗi: ${e.toString()}');

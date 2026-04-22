@@ -45,4 +45,20 @@ abstract class AuthRepository {
 
   /// Gửi lại email xác thực
   Future<Either<Failure, void>> resendVerification();
+
+  /// Quên mật khẩu - gửi email lấy OTP
+  Future<Either<Failure, void>> forgotPassword({required String email});
+
+  /// Đặt lại mật khẩu bằng OTP
+  Future<Either<Failure, void>> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  });
+
+  /// Đổi mật khẩu (khi đã login)
+  Future<Either<Failure, void>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  });
 }
