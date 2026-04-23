@@ -210,6 +210,7 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
                               'Mô tả ngắn', 
                               Icons.description, 
                               maxLines: 3,
+                              maxLength: 2000,
                               enabled: isAdmin,
                             ),
                             const SizedBox(height: 16),
@@ -218,6 +219,7 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
                               'Nội dung chi tiết', 
                               Icons.article, 
                               maxLines: 8,
+                              maxLength: 10000,
                               enabled: isAdmin,
                             ),
                         const SizedBox(height: 32),
@@ -498,11 +500,12 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {int maxLines = 1, String? Function(String?)? validator, TextInputType? keyboardType, bool enabled = true}) {
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {int maxLines = 1, int? maxLength, String? Function(String?)? validator, TextInputType? keyboardType, bool enabled = true}) {
     return TextFormField(
       controller: controller,
       enabled: enabled,
       maxLines: maxLines,
+      maxLength: maxLength,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
@@ -510,6 +513,7 @@ class _EmployerCompanyEditPageState extends State<EmployerCompanyEditPage> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.grey[50],
+        counterText: '', // Hide default counter
       ),
       validator: validator,
     );

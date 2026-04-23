@@ -63,7 +63,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _phoneCtrl = TextEditingController(text: profile.phone ?? '');
     _bioCtrl = TextEditingController(text: profile.bio ?? '');
     _yearsOfExperienceCtrl = TextEditingController(
-      text: profile.yearsOfExperience.toString(),
+      text: profile.yearsOfExperience >= 0 ? profile.yearsOfExperience.toString() : '0',
     );
     _desiredJobTitleCtrl = TextEditingController(
       text: profile.desiredJobTitle ?? '',
@@ -248,11 +248,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
           'Giới thiệu bản thân (Bio)',
           _bioCtrl,
           maxLines: 4,
+          maxLength: 2000,
         ),
         _buildTextField(
           'Số năm kinh nghiệm',
           _yearsOfExperienceCtrl,
           keyboardType: TextInputType.number,
+          validator: (v) {
+            if (v != null && v.isNotEmpty) {
+              final val = int.tryParse(v);
+              if (val == null || val < 0) return 'Kinh nghiệm không được âm';
+            }
+            return null;
+          },
         ),
         Consumer<ProfileProvider>(
           builder: (context, provider, _) {
@@ -278,6 +286,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 'Lương min',
                 _salaryMinCtrl,
                 keyboardType: TextInputType.number,
+                validator: (v) {
+                  if (v != null && v.isNotEmpty) {
+                    final min = int.tryParse(v);
+                    final max = int.tryParse(_salaryMaxCtrl.text);
+                    if (min != null && max != null && min > max) {
+                      return 'Min > Max';
+                    }
+                  }
+                  return null;
+                },
               ),
             ),
             const SizedBox(width: 12),
@@ -286,6 +304,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 'Lương max',
                 _salaryMaxCtrl,
                 keyboardType: TextInputType.number,
+                validator: (v) {
+                  if (v != null && v.isNotEmpty) {
+                    final max = int.tryParse(v);
+                    final min = int.tryParse(_salaryMinCtrl.text);
+                    if (max != null && min != null && max < min) {
+                      return 'Max < Min';
+                    }
+                  }
+                  return null;
+                },
               ),
             ),
           ],
@@ -752,6 +780,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     bool required = false,
     TextInputType? keyboardType,
     int maxLines = 1,
+    int? maxLength,
+    String? Function(String?)? validator,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -759,17 +789,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
         controller: ctrl,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        maxLength: maxLength,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
+          counterText: '', // Hide default counter
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
             vertical: 12,
           ),
         ),
-        validator: required
-            ? (v) => v == null || v.isEmpty ? 'Trường này bắt buộc' : null
-            : null,
+        validator: (v) {
+          if (required && (v == null || v.isEmpty)) {
+            return 'Trường này bắt buộc';
+          }
+          if (validator != null) {
+            return validator(v);
+          }
+          return null;
+        },
       ),
     );
   }
@@ -958,6 +996,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   controller: descCtrl,
                   decoration: const InputDecoration(labelText: 'Mô tả'),
                   maxLines: 3,
+                  maxLength: 2000,
                 ),
                 const SizedBox(height: 8),
                 ListTile(
@@ -1111,6 +1150,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   controller: descCtrl,
                   decoration: const InputDecoration(labelText: 'Mô tả'),
                   maxLines: 2,
+                  maxLength: 2000,
                 ),
                 const SizedBox(height: 8),
                 ListTile(
@@ -1416,6 +1456,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   controller: descCtrl,
                   decoration: const InputDecoration(labelText: 'Mô tả'),
                   maxLines: 3,
+                  maxLength: 2000,
                 ),
                 const SizedBox(height: 8),
                 ListTile(

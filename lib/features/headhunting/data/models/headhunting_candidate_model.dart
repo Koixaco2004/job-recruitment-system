@@ -24,6 +24,8 @@ class HeadhuntingCandidateModel extends HeadhuntingCandidateEntity {
     super.skills,
     super.matchedSkillsCount,
     super.certificateBonusCount,
+    super.matchScore,
+    super.scoreBreakdown,
   });
 
   factory HeadhuntingCandidateModel.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,30 @@ class HeadhuntingCandidateModel extends HeadhuntingCandidateEntity {
           const [],
       matchedSkillsCount: json['matchedSkillsCount'] as int? ?? 0,
       certificateBonusCount: json['certificateBonusCount'] as int? ?? 0,
+      matchScore: json['matchScore'] as int?,
+      scoreBreakdown: json['scoreBreakdown'] != null
+          ? ScoreBreakdownModel.fromJson(json['scoreBreakdown'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
+class ScoreBreakdownModel extends ScoreBreakdownEntity {
+  const ScoreBreakdownModel({
+    required super.skillScore,
+    required super.experienceScore,
+    required super.salaryScore,
+    required super.profileScore,
+    required super.locationScore,
+  });
+
+  factory ScoreBreakdownModel.fromJson(Map<String, dynamic> json) {
+    return ScoreBreakdownModel(
+      skillScore: json['skillScore'] as int? ?? 0,
+      experienceScore: json['experienceScore'] as int? ?? 0,
+      salaryScore: json['salaryScore'] as int? ?? 0,
+      profileScore: json['profileScore'] as int? ?? 0,
+      locationScore: json['locationScore'] as int? ?? 0,
     );
   }
 }

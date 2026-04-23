@@ -93,9 +93,11 @@ class _SearchPageState extends State<SearchPage> {
                   child: TextField(
                     controller: _searchController,
                     onChanged: _onSearchChanged,
+                    maxLength: 100,
                     decoration: InputDecoration(
                       hintText: 'Tìm theo tên việc làm, công ty...',
                       prefixIcon: const Icon(Icons.search),
+                      counterText: '', // Hide counter
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.clear),

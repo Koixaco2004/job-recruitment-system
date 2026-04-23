@@ -132,8 +132,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     if (value == null || value.isEmpty) {
                       return 'Vui lòng nhập mật khẩu mới';
                     }
-                    if (value.length < 6) {
-                      return 'Mật khẩu phải ít nhất 6 ký tự';
+                    if (value.length < 8) {
+                      return 'Mật khẩu phải ít nhất 8 ký tự';
+                    }
+                    if (!RegExp(r'^(?=.*[A-Z])(?=.*[0-9])').hasMatch(value)) {
+                      return 'Mật khẩu phải có ít nhất 1 chữ hoa và 1 chữ số';
                     }
                     return null;
                   },

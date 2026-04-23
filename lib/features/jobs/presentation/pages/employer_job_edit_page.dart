@@ -28,7 +28,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   final _salaryMinController = TextEditingController();
   final _salaryMaxController = TextEditingController();
   final _slotsController = TextEditingController();
-  final _expController = TextEditingController();
+  final _expController = TextEditingController(text: '0');
   final _skillSearchController = TextEditingController();
   
   final List<dynamic> _selectedJobSkills = [];
@@ -39,6 +39,15 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   DateTime? _selectedDeadline;
 
   bool _isInit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.jobId == null) {
+      _slotsController.text = '1';
+      _expController.text = '0';
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -75,8 +84,8 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       _benefitsController.text = job.benefits;
       _salaryMinController.text = job.salaryMin?.toString() ?? '';
       _salaryMaxController.text = job.salaryMax?.toString() ?? '';
-      _slotsController.text = (job.numberOfPositions > 0) ? job.numberOfPositions.toString() : '';
-      _expController.text = (job.experienceRequired > 0) ? job.experienceRequired.toString() : '';
+      _slotsController.text = (job.numberOfPositions > 0) ? job.numberOfPositions.toString() : '1';
+      _expController.text = (job.experienceRequired >= 0) ? job.experienceRequired.toString() : '0';
       _selectedDeadline = job.deadline;
       
       _selectedProvinceId = (job.provinceId == 0) ? null : job.provinceId;
@@ -271,23 +280,80 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                   _buildSkillSelector(profileProvider, isAdmin),
                   const SizedBox(height: 16),
                   
-                  _buildTextField(_slotsController, 'Số lượng tuyển', Icons.people, isNumber: true, enabled: isAdmin),
+                  _buildTextField(
+                    _slotsController, 
+                    'Số lượng tuyển', 
+                    Icons.people, 
+                    isNumber: true, 
+                    enabled: isAdmin,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Vui lòng nhập số lượng';
+                      final val = int.tryParse(v);
+                      if (val == null || val <= 0) return 'Số lượng phải > 0';
+                      return null;
+                    },
+                  ),
 
                   const SizedBox(height: 24),
                   _buildSectionTitle('Yêu cầu & Lương'),
-                  _buildTextField(_salaryMinController, 'Lương tối thiểu (VND)', Icons.money, isNumber: true, enabled: isAdmin),
+                  _buildTextField(
+                    _salaryMinController, 
+                    'Lương tối thiểu (VND)', 
+                    Icons.money, 
+                    isNumber: true, 
+                    enabled: isAdmin,
+                    validator: (v) {
+                      if (v != null && v.isNotEmpty) {
+                        final min = int.tryParse(v);
+                        final max = int.tryParse(_salaryMaxController.text);
+                        if (min != null && max != null && min > max) {
+                          return 'Min > Max';
+                        }
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 16),
-                  _buildTextField(_salaryMaxController, 'Lương tối đa (VND)', Icons.money, isNumber: true, enabled: isAdmin),
+                  _buildTextField(
+                    _salaryMaxController, 
+                    'Lương tối đa (VND)', 
+                    Icons.money, 
+                    isNumber: true, 
+                    enabled: isAdmin,
+                    validator: (v) {
+                      if (v != null && v.isNotEmpty) {
+                        final max = int.tryParse(v);
+                        final min = int.tryParse(_salaryMinController.text);
+                        if (max != null && min != null && max < min) {
+                          return 'Max < Min';
+                        }
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 16),
-                  _buildTextField(_expController, 'Năm kinh nghiệm yêu cầu', Icons.history, isNumber: true, enabled: isAdmin),
+                  _buildTextField(
+                    _expController, 
+                    'Năm kinh nghiệm yêu cầu', 
+                    Icons.history, 
+                    isNumber: true, 
+                    enabled: isAdmin,
+                    validator: (v) {
+                      if (v != null && v.isNotEmpty) {
+                        final val = int.tryParse(v);
+                        if (val == null || val < 0) return 'Kinh nghiệm không được âm';
+                      }
+                      return null;
+                    },
+                  ),
 
                   const SizedBox(height: 24),
                   _buildSectionTitle('Chi tiết nội dung'),
-                  _buildTextField(_descriptionController, 'Mô tả công việc', Icons.description, maxLines: 5, required: true, enabled: isAdmin),
+                  _buildTextField(_descriptionController, 'Mô tả công việc', Icons.description, maxLines: 5, required: true, maxLength: 10000, enabled: isAdmin),
                   const SizedBox(height: 16),
-                  _buildTextField(_requirementsController, 'Yêu cầu ứng viên', Icons.list, maxLines: 5, enabled: isAdmin),
+                  _buildTextField(_requirementsController, 'Yêu cầu ứng viên', Icons.list, maxLines: 5, maxLength: 10000, enabled: isAdmin),
                   const SizedBox(height: 16),
-                  _buildTextField(_benefitsController, 'Quyền lợi', Icons.card_giftcard, maxLines: 5, enabled: isAdmin),
+                  _buildTextField(_benefitsController, 'Quyền lợi', Icons.card_giftcard, maxLines: 5, maxLength: 10000, enabled: isAdmin),
 
                   const SizedBox(height: 24),
                   _buildSectionTitle('Thời hạn'),
@@ -457,22 +523,27 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   }
 
   Widget _buildTextField(TextEditingController controller, String label, IconData icon,
-      {bool isNumber = false, int maxLines = 1, bool required = false, bool enabled = true}) {
+      {bool isNumber = false, int maxLines = 1, int? maxLength, bool required = false, bool enabled = true, String? Function(String?)? validator}) {
     return TextFormField(
       controller: controller,
       enabled: enabled,
+      maxLines: maxLines,
+      maxLength: maxLength,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.blue),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.grey[50],
+        counterText: '', // Hide default counter
       ),
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      maxLines: maxLines,
       validator: (value) {
         if (required && (value == null || value.isEmpty)) {
           return 'Vui lòng nhập $label';
+        }
+        if (validator != null) {
+          return validator(value);
         }
         return null;
       },

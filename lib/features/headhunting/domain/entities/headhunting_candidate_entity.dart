@@ -23,6 +23,8 @@ class HeadhuntingCandidateEntity extends Equatable {
   final List<HeadhuntingSkillEntity> skills;
   final int matchedSkillsCount;
   final int certificateBonusCount;
+  final int? matchScore;
+  final ScoreBreakdownEntity? scoreBreakdown;
 
   const HeadhuntingCandidateEntity({
     required this.id,
@@ -46,6 +48,8 @@ class HeadhuntingCandidateEntity extends Equatable {
     this.skills = const [],
     this.matchedSkillsCount = 0,
     this.certificateBonusCount = 0,
+    this.matchScore,
+    this.scoreBreakdown,
   });
 
   @override
@@ -71,6 +75,33 @@ class HeadhuntingCandidateEntity extends Equatable {
         skills,
         matchedSkillsCount,
         certificateBonusCount,
+        matchScore,
+        scoreBreakdown,
+      ];
+}
+
+class ScoreBreakdownEntity extends Equatable {
+  final int skillScore;
+  final int experienceScore;
+  final int salaryScore;
+  final int profileScore;
+  final int locationScore;
+
+  const ScoreBreakdownEntity({
+    required this.skillScore,
+    required this.experienceScore,
+    required this.salaryScore,
+    required this.profileScore,
+    required this.locationScore,
+  });
+
+  @override
+  List<Object?> get props => [
+        skillScore,
+        experienceScore,
+        salaryScore,
+        profileScore,
+        locationScore,
       ];
 }
 

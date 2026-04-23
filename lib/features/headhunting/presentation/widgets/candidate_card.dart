@@ -135,30 +135,34 @@ class CandidateCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         // Match Score Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green[50],
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.green[200]!),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.flash_on,
-                                  size: 14, color: Colors.green),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Khớp ${candidate.matchedSkillsCount} kỹ năng',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green[700],
-                                ),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.green[200]!),
                               ),
-                            ],
-                          ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.flash_on,
+                                      size: 14, color: Colors.green),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Độ phù hợp: ${candidate.matchScore ?? 0}%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -182,6 +186,25 @@ class CandidateCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (candidate.scoreBreakdown != null) ...[
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildScoreSmallBadge('Kỹ năng', candidate.scoreBreakdown!.skillScore, Colors.purple),
+                      const SizedBox(width: 8),
+                      _buildScoreSmallBadge('Kinh nghiệm', candidate.scoreBreakdown!.experienceScore, Colors.orange),
+                      const SizedBox(width: 8),
+                      _buildScoreSmallBadge('Lương', candidate.scoreBreakdown!.salaryScore, Colors.blue),
+                      const SizedBox(width: 8),
+                      _buildScoreSmallBadge('Hồ sơ', candidate.scoreBreakdown!.profileScore, Colors.teal),
+                      const SizedBox(width: 8),
+                      _buildScoreSmallBadge('Vị trí', candidate.scoreBreakdown!.locationScore, Colors.red),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               // Skills Tags
               if (candidate.skills.isNotEmpty) ...[
@@ -257,6 +280,39 @@ class CandidateCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildScoreSmallBadge(String label, int score, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: color.withOpacity(0.8),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '$score',
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

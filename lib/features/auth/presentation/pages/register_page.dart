@@ -392,7 +392,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 CustomTextField(
                   controller: _passwordController,
                   label: 'Mật khẩu',
-                  hint: 'Nhập mật khẩu (tối thiểu 6 ký tự)',
+                  hint: 'Nhập mật khẩu (tối thiểu 8 ký tự, có chữ hoa và số)',
                   obscureText: _obscurePassword,
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
@@ -411,8 +411,11 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (value == null || value.isEmpty) {
                       return 'Vui lòng nhập mật khẩu';
                     }
-                    if (value.length < 6) {
-                      return 'Mật khẩu phải chứa ít nhất 6 ký tự';
+                    if (value.length < 8) {
+                      return 'Mật khẩu phải chứa ít nhất 8 ký tự';
+                    }
+                    if (!RegExp(r'^(?=.*[A-Z])(?=.*[0-9])').hasMatch(value)) {
+                      return 'Mật khẩu phải có ít nhất 1 chữ hoa và 1 chữ số';
                     }
                     return null;
                   },
