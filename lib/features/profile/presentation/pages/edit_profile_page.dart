@@ -1317,7 +1317,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       OutlinedButton.icon(
                         onPressed: () async {
                           final result = await FilePicker.platform.pickFiles(
-                            type: FileType.image,
+                            type: FileType.custom,
+                            allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
                             withData: true,
                           );
                           if (result != null && result.files.single.bytes != null) {

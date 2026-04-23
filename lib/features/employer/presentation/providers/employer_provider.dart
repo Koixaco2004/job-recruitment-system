@@ -199,7 +199,8 @@ class EmployerProvider extends ChangeNotifier {
   Future<void> pickAndUploadAvatar() async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
         withData: true,
       );
 
@@ -341,7 +342,8 @@ class EmployerProvider extends ChangeNotifier {
   }) async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'bmp'],
         withData: true,
       );
 

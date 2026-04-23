@@ -68,8 +68,15 @@ class ProfileRepositoryImpl implements ProfileRepository {
     String fileName,
   ) async {
     try {
-      final url = await cloudinaryService.uploadFileBytes(bytes, fileName);
-      return Right(url);
+      final url = await remoteDataSource.uploadCv(bytes, fileName);
+      if (url != null) {
+        return Right(url);
+      }
+      return Left(ServerFailure('Upload CV không trả về URL'));
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Không thể upload CV: $e'));
     }

@@ -59,6 +59,7 @@ abstract class ProfileRemoteDataSource {
   Future<void> addCandidateSkills(List<dynamic> skills);
   Future<void> deleteCandidateSkill(int mappingId);
   Future<String?> uploadAvatar(Uint8List bytes, String fileName);
+  Future<String?> uploadCv(Uint8List bytes, String fileName);
   Future<void> updateVisibility(bool isVisible);
   Future<void> parseCv();
 }
@@ -743,6 +744,34 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return url;
       }
       throw ServerException('Upload avatar thất bại');
+    } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
+      if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
+      throw ServerException(e.message ?? 'Lỗi kết nối server');
+    } catch (e) {
+      if (e is ServerException || e is AuthenticationException) rethrow;
+      throw ServerException('Lỗi: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<String?> uploadCv(Uint8List bytes, String fileName) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: fileName),
+      });
+
+      final response = await apiClient.dio.post(
+        '/api/candidates/cv',
+        data: formData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        final String? url = data['url'] ?? data['data']?['url'] ?? data['cvUrl'] ?? data['data']?['cvUrl'];
+        return url;
+      }
+      throw ServerException('Upload CV thất bại');
     } on DioException catch (e) {
       if (e.error is EmailVerificationException) rethrow;
       if (e.response?.statusCode == 401) throw const AuthenticationException('Phiên đăng nhập hết hạn');
