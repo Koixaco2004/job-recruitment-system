@@ -25,12 +25,11 @@ class VerificationBanner extends StatelessWidget {
             margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.shade200),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -38,63 +37,58 @@ class VerificationBanner extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.shade100,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.warning_amber_rounded, color: Colors.amber.shade900, size: 20),
-                ),
+                Icon(Icons.warning_amber_rounded, color: Colors.orange.shade400, size: 24),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Tài khoản chưa xác thực',
+                      const Text(
+                        'Chưa xác thực email',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.amber.shade900,
+                          color: Colors.black87,
                           fontSize: 13,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Vui lòng xác thực email để sử dụng đầy đủ tính năng.',
+                        'Xác thực để trải nghiệm đầy đủ tính năng.',
                         style: TextStyle(
-                          color: Colors.amber.shade800,
+                          color: Colors.grey.shade600,
                           fontSize: 11,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Material(
-                  color: Colors.amber.shade900,
-                  borderRadius: BorderRadius.circular(8),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EmailVerificationPage(),
-                        ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(8),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      child: Text(
-                        'Xác thực',
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EmailVerificationPage(),
+                      ),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    foregroundColor: Colors.orange,
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Xác thực ngay',
                         style: TextStyle(
-                          color: Colors.white,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
+                      Icon(Icons.chevron_right, size: 16),
+                    ],
                   ),
                 ),
               ],

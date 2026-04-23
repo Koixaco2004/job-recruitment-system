@@ -68,6 +68,8 @@ class NotificationProvider extends ChangeNotifier {
       (notifications) {
         if (refresh) {
           _notifications = notifications;
+          // Sync unread count when refreshing list
+          fetchUnreadCount();
         } else {
           _notifications.addAll(notifications);
         }
@@ -80,8 +82,11 @@ class NotificationProvider extends ChangeNotifier {
   Future<void> fetchUnreadCount() async {
     final result = await getUnreadCountUseCase.execute();
     result.fold(
-      (failure) => null,
+      (failure) {
+        debugPrint('⚠️ Error fetching unread count: ${failure.message}');
+      },
       (count) {
+        debugPrint('🔢 Updated Unread Count: $count');
         _unreadCount = count;
         notifyListeners();
       },
@@ -204,11 +209,12 @@ class NotificationProvider extends ChangeNotifier {
     _socket!.on('notification', (data) {
       debugPrint('🔔 REAL-TIME EVENT: New notification received: $data');
       try {
-        _unreadCount++;
-        
         // Add new notification to the top of the list immediately
         final newNotification = NotificationModel.fromJson(data);
         _notifications.insert(0, newNotification);
+        
+        // Fetch fresh unread count from server
+        fetchUnreadCount();
         
         notifyListeners();
       } catch (e) {

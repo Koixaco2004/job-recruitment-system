@@ -75,127 +75,51 @@ class _SearchPageState extends State<SearchPage> {
       appBar: AppBar(
         title: const Text(
           'Tìm kiếm việc làm',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
         ),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         elevation: 0,
+        scrolledUnderElevation: 0,
       ),
       body: Column(
         children: [
-          // Search bar + Filter button
+          // Search bar
           Container(
-            color: Theme.of(context).primaryColor,
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: _onSearchChanged,
-                    maxLength: 100,
-                    decoration: InputDecoration(
-                      hintText: 'Tìm theo tên việc làm, công ty...',
-                      prefixIcon: const Icon(Icons.search),
-                      counterText: '', // Hide counter
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: _clearSearch,
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              maxLength: 100,
+              decoration: InputDecoration(
+                hintText: 'Tìm theo tên việc làm, công ty...',
+                prefixIcon: const Icon(Icons.search),
+                counterText: '', // Hide counter
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clearSearch,
+                      )
+                    : null,
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
-                const SizedBox(width: 12),
-                Consumer<JobProvider>(
-                  builder: (context, provider, child) {
-                    final filterCount = provider.filter.activeFilterCount;
-                    return Stack(
-                      children: [
-                        IconButton(
-                          onPressed: _showFilterBottomSheet,
-                          icon: const Icon(Icons.filter_list),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Theme.of(context).primaryColor,
-                            padding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                        if (filterCount > 0)
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              constraints: const BoxConstraints(
-                                minWidth: 20,
-                                minHeight: 20,
-                              ),
-                              child: Text(
-                                '$filterCount',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-              ],
+              ),
             ),
           ),
 
-          // Active filter chips
-          Consumer<JobProvider>(
-            builder: (context, provider, child) {
-              if (!provider.filter.hasActiveFilters) {
-                return const SizedBox.shrink();
-              }
-
-              return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                color: Colors.white,
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ..._buildActiveFilterChips(provider),
-                    if (provider.filter.hasActiveFilters)
-                      ActionChip(
-                        label: const Text('Xóa tất cả'),
-                        onPressed: () {
-                          provider.clearFilter();
-                          _searchController.clear();
-                        },
-                        avatar: const Icon(Icons.clear_all, size: 16),
-                      ),
-                  ],
-                ),
-              );
+          // Filter Bar
+          Consumer2<JobProvider, ProfileProvider>(
+            builder: (context, jobProvider, profileProvider, child) {
+              return _buildFilterBar(jobProvider, profileProvider);
             },
           ),
 
@@ -204,15 +128,27 @@ class _SearchPageState extends State<SearchPage> {
             builder: (context, provider, child) {
               return Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                color: Colors.white,
-                child: Text(
-                  'Tìm thấy ${provider.jobs.length} việc làm',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Tìm thấy ${provider.jobs.length} việc làm',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -222,7 +158,7 @@ class _SearchPageState extends State<SearchPage> {
           Expanded(
             child: Consumer<JobProvider>(
               builder: (context, provider, child) {
-                if (provider.isLoading) {
+                if (provider.isLoading && provider.jobs.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
@@ -240,11 +176,6 @@ class _SearchPageState extends State<SearchPage> {
                         const Text(
                           'Không tìm thấy việc làm phù hợp',
                           style: TextStyle(color: Colors.grey, fontSize: 16),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm',
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ],
                     ),
@@ -287,62 +218,127 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  List<Widget> _buildActiveFilterChips(JobProvider provider) {
-    final chips = <Widget>[];
-    final filter = provider.filter;
-    final profileProvider = context.read<ProfileProvider>();
+  Widget _buildFilterBar(JobProvider jobProvider, ProfileProvider profileProvider) {
+    return Container(
+      height: 50,
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          // Job Type Filter
+          _buildDropdownFilter<int?>(
+            label: 'Loại hình',
+            isSelected: jobProvider.filter.jobTypeId != null,
+            value: jobProvider.filter.jobTypeId,
+            options: [
+              const PopupMenuItem(value: null, child: Text('Tất cả loại hình')),
+              ...profileProvider.jobTypes.map((type) => PopupMenuItem(
+                value: type.id,
+                child: Text(type.name, style: const TextStyle(fontSize: 14)),
+              )),
+            ],
+            onSelected: (id) {
+              jobProvider.updateFilter(jobProvider.filter.copyWith(jobTypeId: id));
+            },
+          ),
+          
+          // Province Filter
+          _buildDropdownFilter<int?>(
+            label: 'Địa điểm',
+            isSelected: jobProvider.filter.provinceId != null,
+            value: jobProvider.filter.provinceId,
+            options: [
+              const PopupMenuItem(value: null, child: Text('Toàn quốc')),
+              ...profileProvider.provinces.map((province) => PopupMenuItem(
+                value: province.id,
+                child: Text(province.name, style: const TextStyle(fontSize: 14)),
+              )),
+            ],
+            onSelected: (id) {
+              jobProvider.updateFilter(jobProvider.filter.copyWith(provinceId: id));
+            },
+          ),
 
-    // Province
-    if (filter.provinceId != null) {
-      final name = profileProvider.getProvinceName(filter.provinceId);
-      if (name != null) {
-        chips.add(
-          _buildFilterChip(name, () {
-            provider.updateFilter(filter.clearField(province: true));
-          }),
-        );
-      }
-    }
+          // Category Filter
+          _buildDropdownFilter<int?>(
+            label: 'Ngành nghề',
+            isSelected: jobProvider.filter.categoryId != null,
+            value: jobProvider.filter.categoryId,
+            options: [
+              const PopupMenuItem(value: null, child: Text('Tất cả ngành nghề')),
+              ...profileProvider.allJobCategories.map((cat) => PopupMenuItem(
+                value: cat.id,
+                child: Text(cat.name, style: const TextStyle(fontSize: 14)),
+              )),
+            ],
+            onSelected: (id) {
+              jobProvider.updateFilter(jobProvider.filter.copyWith(categoryId: id));
+            },
+          ),
 
-    // Category
-    if (filter.categoryId != null) {
-      final category = profileProvider.allJobCategories.firstWhere(
-        (c) => c.id == filter.categoryId,
-        orElse: () => const JobCategoryModel(id: -1, name: ''),
-      );
-      if (category.id != -1) {
-        chips.add(
-          _buildFilterChip(category.name, () {
-            provider.updateFilter(filter.clearField(category: true));
-          }),
-        );
-      }
-    }
-
-    // Job Type
-    if (filter.jobTypeId != null) {
-      final name = profileProvider.getJobTypeName(filter.jobTypeId);
-      if (name != null) {
-        chips.add(
-          _buildFilterChip(name, () {
-            provider.updateFilter(filter.clearField(jobType: true));
-          }),
-        );
-      }
-    }
-
-    return chips;
+          _buildAdvanceFilterButton(),
+        ],
+      ),
+    );
   }
 
-  Widget _buildFilterChip(String label, VoidCallback onDeleted) {
-    return Chip(
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      onDeleted: onDeleted,
-      deleteIcon: const Icon(Icons.close, size: 14),
-      backgroundColor: Colors.blue.withValues(alpha: 0.1),
-      side: BorderSide.none,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      visualDensity: VisualDensity.compact,
+  Widget _buildDropdownFilter<T>({
+    required String label,
+    required bool isSelected,
+    required T value,
+    required List<PopupMenuEntry<T>> options,
+    required Function(T) onSelected,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: PopupMenuButton<T>(
+        onSelected: onSelected,
+        itemBuilder: (context) => options,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? Colors.blue.withOpacity(0.5) : Colors.transparent,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.blue : Colors.black54,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 16,
+                color: isSelected ? Colors.blue : Colors.black54,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdvanceFilterButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.tune, size: 20),
+        onPressed: _showFilterBottomSheet,
+      ),
     );
   }
 }

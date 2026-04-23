@@ -6,6 +6,8 @@ import 'job_detail_page.dart';
 import 'search_page.dart';
 import '../../../notifications/presentation/widgets/notification_bell.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
+import '../widgets/filter_bottom_sheet.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,9 +22,16 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final jobProvider = context.read<JobProvider>();
-      // Luôn load tất cả việc làm công khai khi vào trang (Bỏ phần gợi ý theo hồ sơ)
+      final profileProvider = context.read<ProfileProvider>();
+
+      // Load public jobs
       await jobProvider.fetchPublicJobs(refresh: true);
-      
+
+      // Fetch metadata
+      profileProvider.fetchProvincesIfEmpty();
+      profileProvider.fetchJobTypesIfEmpty();
+      profileProvider.fetchJobCategoriesMetadata();
+
       // Khởi tạo thông báo
       if (mounted) {
         final notificationProvider = context.read<NotificationProvider>();
@@ -39,16 +48,23 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
-          'Khám phá',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          'Khám phá ',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            color: Colors.black87,
+          ),
         ),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
-          const NotificationBell(),
-          IconButton(
-            icon: const Icon(Icons.search),
+          _buildCircleIconButton(
+            icon: const NotificationBell(),
+            onPressed: () {}, // Handled inside NotificationBell
+          ),
+          _buildCircleIconButton(
+            icon: const Icon(Icons.search, size: 24),
             onPressed: () {
               Navigator.push(
                 context,
@@ -56,166 +72,372 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Consumer<JobProvider>(
-        builder: (context, jobProvider, child) {
-          // Loading state
-          if (jobProvider.isLoading) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text(
-                    'Đang tải danh sách việc làm...',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
+      body: Consumer2<JobProvider, ProfileProvider>(
+        builder: (context, jobProvider, profileProvider, child) {
+          return Column(
+            children: [
+              // Search Results Info + Dot
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tìm thấy ${jobProvider.totalPublicJobs} việc làm',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Cập nhật mới nhất',
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            );
-          }
 
-          // Error state
-          if (jobProvider.errorMessage != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                  const SizedBox(height: 16),
-                  Text(
-                    jobProvider.errorMessage!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      jobProvider.fetchJobs();
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Thử lại'),
-                  ),
-                ],
-              ),
-            );
-          }
+              // Filter Bar
+              _buildFilterBar(jobProvider, profileProvider),
 
-          // Empty state
-          if (!jobProvider.hasJobs) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.work_off, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Không có việc làm nào',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                ],
-              ),
-            );
-          }
+              // Content Area
+              Expanded(child: _buildContent(jobProvider)),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
-          // Success state - Job list
-          return RefreshIndicator(
-            onRefresh: () => jobProvider.fetchJobs(),
+  Widget _buildContent(JobProvider jobProvider) {
+    if (jobProvider.isLoading && jobProvider.jobs.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (jobProvider.errorMessage != null && jobProvider.jobs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              jobProvider.errorMessage!,
+              style: const TextStyle(color: Colors.red),
+            ),
+            ElevatedButton(
+              onPressed: () => jobProvider.fetchPublicJobs(refresh: true),
+              child: const Text('Thử lại'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!jobProvider.hasJobs) {
+      return ListView(
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+          const Center(
             child: Column(
               children: [
-                // Stats header
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  color: Theme.of(context).primaryColor,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Tìm thấy ${jobProvider.totalPublicJobs} việc làm',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Cập nhật mới nhất',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-                // Job list
-                Expanded(
-                  child: RefreshIndicator(
-                  onRefresh: () => jobProvider.fetchPublicJobs(refresh: true),
-                  child: jobProvider.jobs.isEmpty && !jobProvider.isLoading
-                    ? ListView(
-                        children: [
-                          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-                          const Center(
-                            child: Column(
-                              children: [
-                                Icon(Icons.work_off_outlined, size: 80, color: Colors.grey),
-                                SizedBox(height: 16),
-                                const Text(
-                                  'Không có việc làm nào',
-                                  style: TextStyle(color: Colors.grey, fontSize: 16),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(top: 8, bottom: 16),
-                        itemCount: jobProvider.jobs.length + (jobProvider.hasMoreJobs ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == jobProvider.jobs.length) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              child: OutlinedButton(
-                                onPressed: jobProvider.isLoading 
-                                    ? null 
-                                    : () => jobProvider.fetchJobs(refresh: false),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  side: BorderSide(color: Theme.of(context).primaryColor),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                child: jobProvider.isLoading
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      )
-                                    : const Text('Xem thêm việc làm'),
-                              ),
-                            );
-                          }
-                          
-                          final job = jobProvider.jobs[index];
-                          return JobCard(
-                            job: job,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => JobDetailPage(job: job),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                ),
+                Icon(Icons.work_off_outlined, size: 80, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'Không có việc làm nào',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
                 ),
               ],
             ),
+          ),
+        ],
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => jobProvider.fetchPublicJobs(refresh: true),
+      child: ListView.builder(
+        padding: const EdgeInsets.only(top: 8, bottom: 16),
+        itemCount: jobProvider.jobs.length + (jobProvider.hasMoreJobs ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == jobProvider.jobs.length) {
+            return _buildLoadMoreButton(jobProvider);
+          }
+          final job = jobProvider.jobs[index];
+          return JobCard(
+            job: job,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => JobDetailPage(job: job)),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLoadMoreButton(JobProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: OutlinedButton(
+        onPressed: provider.isLoading
+            ? null
+            : () => provider.fetchJobs(refresh: false),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          side: BorderSide(color: Theme.of(context).primaryColor),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: provider.isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Text('Xem thêm việc làm'),
+      ),
+    );
+  }
+
+  Widget _buildCircleIconButton({
+    required Widget icon,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: icon,
+        onPressed: onPressed,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildFilterBar(
+    JobProvider jobProvider,
+    ProfileProvider profileProvider,
+  ) {
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _buildFilterChip(
+            label: 'Tất cả',
+            isSelected:
+                jobProvider.filter.jobTypeId == null &&
+                jobProvider.filter.categoryId == null &&
+                jobProvider.filter.provinceId == null,
+            onTap: () {
+              jobProvider.clearFilter();
+              jobProvider.fetchPublicJobs(refresh: true);
+            },
+          ),
+
+          // Job Type Filter
+          _buildDropdownFilter<int?>(
+            label: 'Loại hình',
+            isSelected: jobProvider.filter.jobTypeId != null,
+            value: jobProvider.filter.jobTypeId,
+            options: [
+              const PopupMenuItem(value: null, child: Text('Tất cả loại hình')),
+              ...profileProvider.jobTypes.map(
+                (type) => PopupMenuItem(
+                  value: type.id,
+                  child: Text(type.name, style: const TextStyle(fontSize: 14)),
+                ),
+              ),
+            ],
+            onSelected: (id) {
+              jobProvider.updateFilter(
+                jobProvider.filter.copyWith(jobTypeId: id),
+              );
+              jobProvider.fetchPublicJobs(refresh: true);
+            },
+          ),
+
+          // Province Filter
+          _buildDropdownFilter<int?>(
+            label: 'Địa điểm',
+            isSelected: jobProvider.filter.provinceId != null,
+            value: jobProvider.filter.provinceId,
+            options: [
+              const PopupMenuItem(value: null, child: Text('Toàn quốc')),
+              ...profileProvider.provinces.map(
+                (province) => PopupMenuItem(
+                  value: province.id,
+                  child: Text(
+                    province.name,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
+            onSelected: (id) {
+              jobProvider.updateFilter(
+                jobProvider.filter.copyWith(provinceId: id),
+              );
+              jobProvider.fetchPublicJobs(refresh: true);
+            },
+          ),
+
+          // Category Filter
+          _buildDropdownFilter<int?>(
+            label: 'Ngành nghề',
+            isSelected: jobProvider.filter.categoryId != null,
+            value: jobProvider.filter.categoryId,
+            options: [
+              const PopupMenuItem(
+                value: null,
+                child: Text('Tất cả ngành nghề'),
+              ),
+              ...profileProvider.allJobCategories.map(
+                (cat) => PopupMenuItem(
+                  value: cat.id,
+                  child: Text(cat.name, style: const TextStyle(fontSize: 14)),
+                ),
+              ),
+            ],
+            onSelected: (id) {
+              jobProvider.updateFilter(
+                jobProvider.filter.copyWith(categoryId: id),
+              );
+              jobProvider.fetchPublicJobs(refresh: true);
+            },
+          ),
+
+          _buildAdvanceFilterButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdownFilter<T>({
+    required String label,
+    required bool isSelected,
+    required T value,
+    required List<PopupMenuEntry<T>> options,
+    required Function(T) onSelected,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: PopupMenuButton<T>(
+        onSelected: onSelected,
+        itemBuilder: (context) => options,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? Colors.blue.withOpacity(0.5)
+                  : Colors.grey.withOpacity(0.2),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.blue : Colors.black54,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 16,
+                color: isSelected ? Colors.blue : Colors.black54,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? Colors.blue.withOpacity(0.5)
+                  : Colors.grey.withOpacity(0.2),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.blue : Colors.black54,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdvanceFilterButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.tune, size: 20),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const FilterBottomSheet(),
           );
         },
       ),
