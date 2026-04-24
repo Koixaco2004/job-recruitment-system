@@ -24,6 +24,10 @@ class JobRepositoryImpl implements JobRepository {
     int? categoryId,
     int? jobTypeId,
     int? levelId,
+    int? salaryMin,
+    int? salaryMax,
+    String? requiredDegree,
+    int? maxYearsRequired,
   }) async {
     try {
       final result = await remoteDataSource.getJobs(
@@ -34,6 +38,10 @@ class JobRepositoryImpl implements JobRepository {
         categoryId: categoryId,
         jobTypeId: jobTypeId,
         levelId: levelId,
+        salaryMin: salaryMin,
+        salaryMax: salaryMax,
+        requiredDegree: requiredDegree,
+        maxYearsRequired: maxYearsRequired,
       );
       // Map model to entity (PaginatedResponse is covariant on data)
       return Right(PaginatedResponse<JobPostEntity>(

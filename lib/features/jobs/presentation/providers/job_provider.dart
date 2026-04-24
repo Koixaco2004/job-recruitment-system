@@ -134,6 +134,10 @@ class JobProvider extends ChangeNotifier {
     int? categoryId,
     int? jobTypeId,
     int? levelId,
+    int? salaryMin,
+    int? salaryMax,
+    String? requiredDegree,
+    int? maxYearsRequired,
   }) async {
     if (_isLoading) return; // Chặn yêu cầu nếu đang thực hiện
 
@@ -154,6 +158,10 @@ class JobProvider extends ChangeNotifier {
       categoryId: categoryId ?? _filter.categoryId,
       jobTypeId: jobTypeId ?? _filter.jobTypeId,
       levelId: levelId ?? _filter.levelId,
+      salaryMin: salaryMin ?? _filter.salaryMin,
+      salaryMax: salaryMax ?? _filter.salaryMax,
+      requiredDegree: requiredDegree ?? _filter.requiredDegree,
+      maxYearsRequired: maxYearsRequired ?? _filter.maxYearsRequired,
     );
 
     result.fold(

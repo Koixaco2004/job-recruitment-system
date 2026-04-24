@@ -104,7 +104,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             ],
                             onChanged: (val) {
                               setState(() {
-                                _tempFilter = _tempFilter.copyWith(provinceId: val);
+                                _tempFilter = _tempFilter.copyWith(
+                                  provinceId: val,
+                                  clearProvince: val == null,
+                                );
                               });
                             },
                           ),
@@ -131,7 +134,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             ],
                             onChanged: (val) {
                               setState(() {
-                                _tempFilter = _tempFilter.copyWith(categoryId: val);
+                                _tempFilter = _tempFilter.copyWith(
+                                  categoryId: val,
+                                  clearCategory: val == null,
+                                );
                               });
                             },
                           ),
@@ -158,7 +164,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             ],
                             onChanged: (val) {
                               setState(() {
-                                _tempFilter = _tempFilter.copyWith(jobTypeId: val);
+                                _tempFilter = _tempFilter.copyWith(
+                                  jobTypeId: val,
+                                  clearJobType: val == null,
+                                );
                               });
                             },
                           ),
@@ -185,9 +194,110 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             ],
                             onChanged: (val) {
                               setState(() {
-                                _tempFilter = _tempFilter.copyWith(levelId: val);
+                                _tempFilter = _tempFilter.copyWith(
+                                  levelId: val,
+                                  clearLevel: val == null,
+                                );
                               });
                             },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Required Degree Dropdown ---
+                        _buildDropdownSection(
+                          title: 'Yêu cầu bằng cấp',
+                          icon: Icons.school_outlined,
+                          child: DropdownButtonFormField<String>(
+                            value: _tempFilter.requiredDegree,
+                            isExpanded: true,
+                            decoration: _dropdownDecoration('Chọn bằng cấp'),
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('Tất cả bằng cấp'),
+                              ),
+                              const DropdownMenuItem<String>(value: 'postgraduate', child: Text('Trên đại học')),
+                              const DropdownMenuItem<String>(value: 'university', child: Text('Đại học')),
+                              const DropdownMenuItem<String>(value: 'college', child: Text('Cao đẳng')),
+                              const DropdownMenuItem<String>(value: 'intermediate', child: Text('Trung cấp')),
+                              const DropdownMenuItem<String>(value: 'high_school', child: Text('Trung học')),
+                              const DropdownMenuItem<String>(value: 'certificate', child: Text('Chứng chỉ / Bằng nghề')),
+                              const DropdownMenuItem<String>(value: 'none', child: Text('Không yêu cầu')),
+                            ],
+                            onChanged: (val) {
+                              setState(() {
+                                _tempFilter = _tempFilter.copyWith(
+                                  requiredDegree: val,
+                                  clearRequiredDegree: val == null,
+                                );
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Max Years Required ---
+                        _buildDropdownSection(
+                          title: 'Kinh nghiệm tối đa (Số năm)',
+                          icon: Icons.history_edu_outlined,
+                          child: TextFormField(
+                            initialValue: _tempFilter.maxYearsRequired?.toString(),
+                            keyboardType: TextInputType.number,
+                            decoration: _dropdownDecoration('Nhập số năm kinh nghiệm tối đa'),
+                            onChanged: (val) {
+                              setState(() {
+                                _tempFilter = _tempFilter.copyWith(
+                                  maxYearsRequired: int.tryParse(val),
+                                  clearMaxYearsRequired: val.isEmpty,
+                                );
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Salary Range ---
+                        _buildDropdownSection(
+                          title: 'Mức lương mong muốn (VNĐ)',
+                          icon: Icons.monetization_on_outlined,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  initialValue: _tempFilter.salaryMin?.toString(),
+                                  keyboardType: TextInputType.number,
+                                  decoration: _dropdownDecoration('Tối thiểu'),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _tempFilter = _tempFilter.copyWith(
+                                        salaryMin: int.tryParse(val),
+                                        clearSalaryMin: val.isEmpty,
+                                      );
+                                    });
+                                  },
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('—', style: TextStyle(color: Colors.grey)),
+                              ),
+                              Expanded(
+                                child: TextFormField(
+                                  initialValue: _tempFilter.salaryMax?.toString(),
+                                  keyboardType: TextInputType.number,
+                                  decoration: _dropdownDecoration('Tối đa'),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _tempFilter = _tempFilter.copyWith(
+                                        salaryMax: int.tryParse(val),
+                                        clearSalaryMax: val.isEmpty,
+                                      );
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 40),

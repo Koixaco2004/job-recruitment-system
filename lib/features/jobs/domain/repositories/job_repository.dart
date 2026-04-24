@@ -17,6 +17,10 @@ abstract class JobRepository {
     int? categoryId,
     int? jobTypeId,
     int? levelId,
+    int? salaryMin,
+    int? salaryMax,
+    String? requiredDegree,
+    int? maxYearsRequired,
   });
 
   /// Lấy job post theo ID

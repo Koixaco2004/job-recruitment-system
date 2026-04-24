@@ -7,6 +7,10 @@ class JobFilterModel extends Equatable {
   final int? categoryId; // ID danh mục ngành nghề
   final int? jobTypeId; // ID hình thức làm việc
   final int? levelId; // ID cấp bậc
+  final int? salaryMin; // Lương tối thiểu
+  final int? salaryMax; // Lương tối đa
+  final String? requiredDegree; // Yêu cầu bằng cấp
+  final int? maxYearsRequired; // Số năm kinh nghiệm tối đa
 
   const JobFilterModel({
     this.keyword = '',
@@ -14,6 +18,10 @@ class JobFilterModel extends Equatable {
     this.categoryId,
     this.jobTypeId,
     this.levelId,
+    this.salaryMin,
+    this.salaryMax,
+    this.requiredDegree,
+    this.maxYearsRequired,
   });
 
   /// Check if any filter is active (excluding keyword usually, but for UI badge let's count)
@@ -21,7 +29,11 @@ class JobFilterModel extends Equatable {
     return provinceId != null ||
         categoryId != null ||
         jobTypeId != null ||
-        levelId != null;
+        levelId != null ||
+        salaryMin != null ||
+        salaryMax != null ||
+        requiredDegree != null ||
+        maxYearsRequired != null;
   }
 
   /// Count active filters
@@ -31,32 +43,23 @@ class JobFilterModel extends Equatable {
     if (categoryId != null) count++;
     if (jobTypeId != null) count++;
     if (levelId != null) count++;
+    if (salaryMin != null) count++;
+    if (salaryMax != null) count++;
+    if (requiredDegree != null) count++;
+    if (maxYearsRequired != null) count++;
     return count;
   }
 
-  /// Copy with method
-  JobFilterModel copyWith({
-    String? keyword,
-    int? provinceId,
-    int? categoryId,
-    int? jobTypeId,
-    int? levelId,
-  }) {
-    return JobFilterModel(
-      keyword: keyword ?? this.keyword,
-      provinceId: provinceId ?? this.provinceId,
-      categoryId: categoryId ?? this.categoryId,
-      jobTypeId: jobTypeId ?? this.jobTypeId,
-      levelId: levelId ?? this.levelId,
-    );
-  }
-
-  /// Reset một trường cụ thể về null (Dùng cho copyWith khi muốn xóa lọc)
+  /// Reset một trường cụ thể về null
   JobFilterModel clearField({
     bool province = false,
     bool category = false,
     bool jobType = false,
     bool level = false,
+    bool salaryMin = false,
+    bool salaryMax = false,
+    bool requiredDegree = false,
+    bool maxYearsRequired = false,
   }) {
     return JobFilterModel(
       keyword: keyword,
@@ -64,6 +67,44 @@ class JobFilterModel extends Equatable {
       categoryId: category ? null : categoryId,
       jobTypeId: jobType ? null : jobTypeId,
       levelId: level ? null : levelId,
+      salaryMin: salaryMin ? null : this.salaryMin,
+      salaryMax: salaryMax ? null : this.salaryMax,
+      requiredDegree: requiredDegree ? null : this.requiredDegree,
+      maxYearsRequired: maxYearsRequired ? null : this.maxYearsRequired,
+    );
+  }
+
+  /// Copy with method supporting null values via special logic if needed
+  /// For simplicity in this case, we can use clearField for nulls or update copyWith
+  JobFilterModel copyWith({
+    String? keyword,
+    int? provinceId,
+    int? categoryId,
+    int? jobTypeId,
+    int? levelId,
+    int? salaryMin,
+    int? salaryMax,
+    String? requiredDegree,
+    int? maxYearsRequired,
+    bool? clearProvince,
+    bool? clearCategory,
+    bool? clearJobType,
+    bool? clearLevel,
+    bool? clearSalaryMin,
+    bool? clearSalaryMax,
+    bool? clearRequiredDegree,
+    bool? clearMaxYearsRequired,
+  }) {
+    return JobFilterModel(
+      keyword: keyword ?? this.keyword,
+      provinceId: clearProvince == true ? null : (provinceId ?? this.provinceId),
+      categoryId: clearCategory == true ? null : (categoryId ?? this.categoryId),
+      jobTypeId: clearJobType == true ? null : (jobTypeId ?? this.jobTypeId),
+      levelId: clearLevel == true ? null : (levelId ?? this.levelId),
+      salaryMin: clearSalaryMin == true ? null : (salaryMin ?? this.salaryMin),
+      salaryMax: clearSalaryMax == true ? null : (salaryMax ?? this.salaryMax),
+      requiredDegree: clearRequiredDegree == true ? null : (requiredDegree ?? this.requiredDegree),
+      maxYearsRequired: clearMaxYearsRequired == true ? null : (maxYearsRequired ?? this.maxYearsRequired),
     );
   }
 
@@ -79,5 +120,9 @@ class JobFilterModel extends Equatable {
     categoryId,
     jobTypeId,
     levelId,
+    salaryMin,
+    salaryMax,
+    requiredDegree,
+    maxYearsRequired,
   ];
 }

@@ -19,6 +19,10 @@ class GetJobsUseCase {
     int? categoryId,
     int? jobTypeId,
     int? levelId,
+    int? salaryMin,
+    int? salaryMax,
+    String? requiredDegree,
+    int? maxYearsRequired,
   }) async {
     return await repository.getJobs(
       page: page,
@@ -28,6 +32,10 @@ class GetJobsUseCase {
       categoryId: categoryId,
       jobTypeId: jobTypeId,
       levelId: levelId,
+      salaryMin: salaryMin,
+      salaryMax: salaryMax,
+      requiredDegree: requiredDegree,
+      maxYearsRequired: maxYearsRequired,
     );
   }
 }
