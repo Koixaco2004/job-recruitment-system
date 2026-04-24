@@ -22,6 +22,8 @@ abstract class JobRepository {
     String? requiredDegree,
     int? maxYearsRequired,
     List<int>? skillIds,
+    String? sortBy,
+    String? sortOrder,
   });
 
   /// Lấy job post theo ID

@@ -97,18 +97,97 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
+                        Icon(Icons.sort, color: Colors.blue[600], size: 18),
+                        const SizedBox(width: 8),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            jobProvider.updateFilter(
+                              jobProvider.filter.copyWith(
+                                sortBy: value,
+                              ),
+                            );
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'createdAt',
+                              child: Text('Mới nhất'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'deadline',
+                              child: Text('Hạn nộp'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'salaryMin',
+                              child: Text('Mức lương'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'relevance',
+                              child: Text('Phù hợp nhất'),
+                            ),
+                          ],
+                          child: Row(
+                            children: [
+                              Text(
+                                _getSortLabel(jobProvider.filter.sortBy),
+                                style: TextStyle(color: Colors.blue[700], fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                              Icon(Icons.arrow_drop_down, color: Colors.blue[700], size: 20),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Cập nhật mới nhất',
-                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                        const SizedBox(width: 12),
+                        // Sort Order Dropdown
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            jobProvider.updateFilter(
+                              jobProvider.filter.copyWith(
+                                sortOrder: value,
+                              ),
+                            );
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'DESC',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.south, size: 16),
+                                  SizedBox(width: 8),
+                                  Text('Giảm dần'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'ASC',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.north, size: 16),
+                                  SizedBox(width: 8),
+                                  Text('Tăng dần'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  jobProvider.filter.sortOrder == 'DESC' ? Icons.south : Icons.north,
+                                  color: Colors.blue[700],
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  jobProvider.filter.sortOrder == 'DESC' ? 'Giảm dần' : 'Tăng dần',
+                                  style: TextStyle(color: Colors.blue[700], fontSize: 12, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -469,5 +548,13 @@ class _HomePageState extends State<HomePage> {
         },
       ),
     );
+  }
+
+  String _getSortLabel(String sortBy) {
+    if (sortBy == 'createdAt') return 'Mới nhất';
+    if (sortBy == 'deadline') return 'Hạn nộp';
+    if (sortBy == 'salaryMin') return 'Mức lương';
+    if (sortBy == 'relevance') return 'Phù hợp nhất';
+    return 'Cơ bản';
   }
 }

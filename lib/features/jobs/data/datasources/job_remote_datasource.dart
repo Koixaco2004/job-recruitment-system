@@ -23,6 +23,8 @@ abstract class JobRemoteDataSource {
     String? requiredDegree,
     int? maxYearsRequired,
     List<int>? skillIds,
+    String? sortBy,
+    String? sortOrder,
   });
 
   /// Lấy job theo ID
@@ -99,6 +101,8 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
     String? requiredDegree,
     int? maxYearsRequired,
     List<int>? skillIds,
+    String? sortBy,
+    String? sortOrder,
   }) async {
     try {
       final queryParams = {
@@ -114,6 +118,8 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
         if (requiredDegree != null) 'requiredDegree': requiredDegree,
         if (maxYearsRequired != null) 'maxYearsRequired': maxYearsRequired,
         if (skillIds != null && skillIds!.isNotEmpty) 'skillIds': skillIds,
+        if (sortBy != null) 'sortBy': sortBy,
+        if (sortOrder != null) 'sortOrder': sortOrder,
       };
 
       final response = await apiClient.dio.get('/api/jobs/public', queryParameters: queryParams);

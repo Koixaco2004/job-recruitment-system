@@ -24,6 +24,8 @@ class GetJobsUseCase {
     String? requiredDegree,
     int? maxYearsRequired,
     List<int>? skillIds,
+    String? sortBy,
+    String? sortOrder,
   }) async {
     return await repository.getJobs(
       page: page,
@@ -38,6 +40,8 @@ class GetJobsUseCase {
       requiredDegree: requiredDegree,
       maxYearsRequired: maxYearsRequired,
       skillIds: skillIds,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
     );
   }
 }

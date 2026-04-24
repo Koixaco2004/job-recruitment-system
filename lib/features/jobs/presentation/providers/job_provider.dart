@@ -142,6 +142,8 @@ class JobProvider extends ChangeNotifier {
     String? requiredDegree,
     int? maxYearsRequired,
     List<int>? skillIds,
+    String? sortBy,
+    String? sortOrder,
   }) async {
     if (_isLoading) return; // Chặn yêu cầu nếu đang thực hiện
 
@@ -167,6 +169,8 @@ class JobProvider extends ChangeNotifier {
       requiredDegree: requiredDegree ?? _filter.requiredDegree,
       maxYearsRequired: maxYearsRequired ?? _filter.maxYearsRequired,
       skillIds: skillIds ?? _filter.skillIds,
+      sortBy: sortBy ?? _filter.sortBy,
+      sortOrder: sortOrder ?? _filter.sortOrder,
     );
 
     result.fold(

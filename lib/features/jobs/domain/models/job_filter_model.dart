@@ -12,6 +12,9 @@ class JobFilterModel extends Equatable {
   final String? requiredDegree; // Yêu cầu bằng cấp
   final int? maxYearsRequired; // Số năm kinh nghiệm tối đa
   final List<int>? skillIds; // Danh sách ID kỹ năng
+  final String sortBy;
+  final String sortOrder;
+  final int page;
 
   const JobFilterModel({
     this.keyword = '',
@@ -24,6 +27,9 @@ class JobFilterModel extends Equatable {
     this.requiredDegree,
     this.maxYearsRequired,
     this.skillIds,
+    this.sortBy = 'createdAt',
+    this.sortOrder = 'DESC',
+    this.page = 1,
   });
 
   /// Check if any filter is active (excluding keyword usually, but for UI badge let's count)
@@ -36,7 +42,10 @@ class JobFilterModel extends Equatable {
         salaryMax != null ||
         requiredDegree != null ||
         maxYearsRequired != null ||
-        (skillIds != null && skillIds!.isNotEmpty);
+        (skillIds != null && skillIds!.isNotEmpty) ||
+        sortBy != 'createdAt' ||
+        sortOrder != 'DESC' ||
+        page != 1;
   }
 
   /// Count active filters
@@ -51,6 +60,9 @@ class JobFilterModel extends Equatable {
     if (requiredDegree != null) count++;
     if (maxYearsRequired != null) count++;
     if (skillIds != null && skillIds!.isNotEmpty) count++;
+    if (sortBy != 'createdAt') count++;
+    if (sortOrder != 'DESC') count++;
+    if (page != 1) count++;
     return count;
   }
 
@@ -77,6 +89,9 @@ class JobFilterModel extends Equatable {
       requiredDegree: requiredDegree ? null : this.requiredDegree,
       maxYearsRequired: maxYearsRequired ? null : this.maxYearsRequired,
       skillIds: skills ? null : this.skillIds,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
+      page: page,
     );
   }
 
@@ -93,6 +108,9 @@ class JobFilterModel extends Equatable {
     String? requiredDegree,
     int? maxYearsRequired,
     List<int>? skillIds,
+    String? sortBy,
+    String? sortOrder,
+    int? page,
     bool? clearProvince,
     bool? clearCategory,
     bool? clearJobType,
@@ -114,6 +132,9 @@ class JobFilterModel extends Equatable {
       requiredDegree: clearRequiredDegree == true ? null : (requiredDegree ?? this.requiredDegree),
       maxYearsRequired: clearMaxYearsRequired == true ? null : (maxYearsRequired ?? this.maxYearsRequired),
       skillIds: clearSkillIds == true ? null : (skillIds ?? this.skillIds),
+      sortBy: sortBy ?? this.sortBy,
+      sortOrder: sortOrder ?? this.sortOrder,
+      page: page ?? this.page,
     );
   }
 
@@ -134,5 +155,8 @@ class JobFilterModel extends Equatable {
     requiredDegree,
     maxYearsRequired,
     skillIds,
+    sortBy,
+    sortOrder,
+    page,
   ];
 }
