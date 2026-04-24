@@ -7,6 +7,7 @@ import 'package:test1/features/auth/presentation/providers/auth_provider.dart';
 import 'package:test1/features/employer/presentation/pages/employer_main_page.dart';
 import 'package:test1/features/auth/presentation/pages/register_page.dart';
 import 'forgot_password_page.dart';
+import 'package:test1/features/notifications/presentation/providers/notification_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -40,6 +41,11 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (success) {
+        // Khởi tạo lại socket cho người dùng mới
+        if (mounted) {
+          context.read<NotificationProvider>().initSocket(forceReinit: true);
+        }
+
         // Login thành công - Navigate to home
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

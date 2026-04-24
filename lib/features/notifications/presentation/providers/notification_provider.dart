@@ -31,6 +31,7 @@ class NotificationProvider extends ChangeNotifier {
   String? _errorMessage;
   IO.Socket? _socket;
   bool _isConnected = false;
+  bool _isInitializing = false;
   
   // Stream for real-time kanban updates
   final _kanbanUpdateController = StreamController<Map<String, dynamic>>.broadcast();
@@ -152,13 +153,14 @@ class NotificationProvider extends ChangeNotifier {
   // ─── SOCKET.IO METHODS ─────────────────────────────────────────────────────
 
   Future<void> initSocket({bool forceReinit = false}) async {
+    if (_isInitializing) return;
     if (_socket != null && !forceReinit) return;
     
-    if (forceReinit && _socket != null) {
-      _socket!.disconnect();
-      _socket!.dispose();
-      _socket = null;
-    }
+    _isInitializing = true;
+    try {
+      if (forceReinit) {
+        disconnectSocket();
+      }
 
     final token = await authLocalDataSource.getToken();
     if (token == null) {
@@ -176,8 +178,18 @@ class NotificationProvider extends ChangeNotifier {
     _socket = IO.io(socketUrl, IO.OptionBuilder()
       .setTransports(['websocket'])
       .setAuth({'token': token})
+      .setQuery({'token': token}) // Thêm cả vào query cho chắc chắn
+      .enableForceNew() // QUAN TRỌNG: Ép buộc tạo kết nối mới
       .enableAutoConnect()
       .build());
+
+    // Clear old listeners if any (though disconnectSocket should handle this)
+    _socket!.off('connect');
+    _socket!.off('disconnect');
+    _socket!.off('notification');
+    _socket!.off('kanban_update');
+    _socket!.off('kanban_note');
+    _socket!.off('new_note');
 
     _socket!.onConnect((_) async {
       _isConnected = true;
@@ -240,6 +252,9 @@ class NotificationProvider extends ChangeNotifier {
       debugPrint('📝 DETAIL EVENT: New note received: $data');
       _kanbanUpdateController.add({'type': 'new_note', ...data});
     });
+    } finally {
+      _isInitializing = false;
+    }
   }
 
   void subscribeJobKanban(int jobId) {
@@ -258,10 +273,17 @@ class NotificationProvider extends ChangeNotifier {
     _socket?.emit('unsubscribe_application_detail', {'applicationId': applicationId});
   }
 
-  @override
-  void dispose() {
+  void disconnectSocket() {
     _socket?.disconnect();
     _socket?.dispose();
+    _socket = null;
+    _isConnected = false;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    disconnectSocket();
     _kanbanUpdateController.close();
     super.dispose();
   }

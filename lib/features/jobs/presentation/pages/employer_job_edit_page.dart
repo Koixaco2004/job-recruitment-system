@@ -37,6 +37,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   int? _selectedCategoryId;
   int? _selectedJobTypeId;
   int? _selectedLevelId;
+  String? _selectedRequiredDegree;
   DateTime? _selectedDeadline;
 
   bool _isInit = false;
@@ -96,6 +97,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       _selectedCategoryId = (job.categoryId == 0) ? null : job.categoryId;
       _selectedJobTypeId = (job.jobTypeId == 0) ? null : job.jobTypeId;
       _selectedLevelId = (job.levelId == 0) ? null : job.levelId;
+      _selectedRequiredDegree = job.requiredDegree;
       
       if (job.skills != null) {
         _selectedJobSkills.clear();
@@ -145,6 +147,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       'categoryId': _selectedCategoryId,
       'jobTypeId': _selectedJobTypeId,
       'levelId': _selectedLevelId,
+      'requiredDegree': _selectedRequiredDegree,
       'slots': int.tryParse(_slotsController.text) ?? 1,
       'deadline': _selectedDeadline?.toUtc().toIso8601String(),
       'skills': _selectedJobSkills.map((s) {
@@ -293,6 +296,23 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                       )).toList(),
                     onChanged: isAdmin ? (val) => setState(() => _selectedProvinceId = val) : null,
                     icon: Icons.location_city,
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildDropdown<String>(
+                    label: 'Bằng cấp yêu cầu',
+                    value: _selectedRequiredDegree,
+                    items: const [
+                      DropdownMenuItem(value: 'postgraduate', child: Text('Trên đại học', style: TextStyle(fontSize: 13))),
+                      DropdownMenuItem(value: 'university', child: Text('Đại học', style: TextStyle(fontSize: 13))),
+                      DropdownMenuItem(value: 'college', child: Text('Cao đẳng', style: TextStyle(fontSize: 13))),
+                      DropdownMenuItem(value: 'intermediate', child: Text('Trung cấp', style: TextStyle(fontSize: 13))),
+                      DropdownMenuItem(value: 'high_school', child: Text('Trung học', style: TextStyle(fontSize: 13))),
+                      DropdownMenuItem(value: 'certificate', child: Text('Chứng chỉ / Bằng nghề', style: TextStyle(fontSize: 13))),
+                      DropdownMenuItem(value: 'none', child: Text('Không yêu cầu', style: TextStyle(fontSize: 13))),
+                    ],
+                    onChanged: isAdmin ? (val) => setState(() => _selectedRequiredDegree = val) : null,
+                    icon: Icons.school,
                   ),
                   const SizedBox(height: 16),
                   

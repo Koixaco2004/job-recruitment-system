@@ -531,6 +531,7 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
             onTap: () async {
+              context.read<NotificationProvider>().disconnectSocket();
               context.read<EmployerProvider>().clear(); // Clear local employer state
               await authProvider.logout();
               if (context.mounted) {

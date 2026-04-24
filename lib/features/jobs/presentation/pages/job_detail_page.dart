@@ -64,6 +64,27 @@ class _JobDetailPageState extends State<JobDetailPage> {
     }
   }
 
+  String _formatDegree(String degree) {
+    switch (degree) {
+      case 'postgraduate':
+        return 'Trên đại học';
+      case 'university':
+        return 'Đại học';
+      case 'college':
+        return 'Cao đẳng';
+      case 'intermediate':
+        return 'Trung cấp';
+      case 'high_school':
+        return 'Trung học';
+      case 'certificate':
+        return 'Chứng chỉ / Bằng nghề';
+      case 'none':
+        return 'Không yêu cầu';
+      default:
+        return degree;
+    }
+  }
+
 
   int _daysRemaining(DateTime deadline) {
     return deadline.difference(DateTime.now()).inDays;
@@ -410,6 +431,13 @@ class _JobDetailPageState extends State<JobDetailPage> {
                                   'Cấp bậc',
                                   job.levelName!,
                                   Colors.purple,
+                                ),
+                              if (job.requiredDegree != null)
+                                _buildInfoChip(
+                                  Icons.school_outlined,
+                                  'Bằng cấp',
+                                  _formatDegree(job.requiredDegree!),
+                                  Colors.indigo,
                                 ),
                             ],
                           ),

@@ -31,6 +31,7 @@ class JobPostModel extends JobPostEntity {
     super.jobTypeId,
     super.levelId,
     super.levelName,
+    super.requiredDegree,
     super.skills,
     super.rejectionReason,
   });
@@ -72,6 +73,7 @@ class JobPostModel extends JobPostEntity {
       jobTypeId: _asInt(json['job_type_id'] ?? json['jobTypeId'] ?? (json['jobType'] is Map ? (json['jobType'] as Map)['id'] : null)),
       levelId: _asInt(json['level_id'] ?? json['levelId'] ?? (json['jobLevel'] is Map ? (json['jobLevel'] as Map)['id'] : (json['level'] is Map ? (json['level'] as Map)['id'] : null))),
       levelName: _asString(json['level_name'] ?? json['levelName'] ?? (json['jobLevel'] is Map ? (json['jobLevel'] as Map)['name'] : (json['level'] is Map ? (json['level'] as Map)['name'] : null))),
+      requiredDegree: _asString(json['required_degree'] ?? json['requiredDegree']),
       skills: json['skills'] as List?,
       rejectionReason: _asString(json['rejection_reason'] ?? json['rejectionReason'] ?? json['reason']),
     );
@@ -124,6 +126,7 @@ class JobPostModel extends JobPostEntity {
       'job_type_id': jobTypeId,
       'level_id': levelId,
       'level_name': levelName,
+      'required_degree': requiredDegree,
       'skills': skills,
       'rejection_reason': rejectionReason,
     };

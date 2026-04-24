@@ -10,6 +10,7 @@ import '../../../auth/presentation/pages/login_page.dart';
 import '../providers/profile_provider.dart';
 import 'edit_profile_page.dart';
 import '../../../auth/presentation/pages/change_password_page.dart';
+import 'package:test1/features/notifications/presentation/providers/notification_provider.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -1050,6 +1051,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
+              context.read<NotificationProvider>().disconnectSocket();
               final authProvider = context.read<AuthProvider>();
               await authProvider.logout();
               if (mounted) {
