@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/widgets/pdf_viewer_page.dart';
 import '../../domain/entities/candidate_profile_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -442,12 +443,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 : 'Thỏa thuận',
           ),
           _infoRow('Hình thức', provider.getJobTypeName(profile.jobTypeId) ?? _jobTypeLabel(profile.desiredJobType)),
+          if (profile.linkedinUrl != null) _infoRow('LinkedIn', profile.linkedinUrl!, isLink: true),
+          if (profile.githubUrl != null) _infoRow('GitHub', profile.githubUrl!, isLink: true),
+          if (profile.portfolioUrl != null) _infoRow('Portfolio', profile.portfolioUrl!, isLink: true),
         ],
       ),
     );
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(String label, String value, {bool isLink = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -461,10 +465,28 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
+            child: isLink
+                ? InkWell(
+                    onTap: () async {
+                      final uri = Uri.tryParse(value);
+                      if (uri != null && await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blue[700],
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  )
+                : Text(
+                    value,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
           ),
         ],
       ),
@@ -599,6 +621,16 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildEducationSection(CandidateProfileEntity profile) {
+    const Map<String, String> degreeMap = {
+      'postgraduate': 'Trên đại học',
+      'university': 'Đại học',
+      'college': 'Cao đẳng',
+      'intermediate': 'Trung cấp',
+      'high_school': 'Trung học',
+      'certificate': 'Chứng chỉ / Bằng nghề',
+      'none': 'Không yêu cầu',
+    };
+
     return _buildSection(
       title: 'Học vấn',
       icon: Icons.school,
@@ -612,7 +644,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${edu.degree} - ${edu.fieldOfStudy}',
+                        '${degreeMap[edu.degree] ?? edu.degree} - ${edu.fieldOfStudy}',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,

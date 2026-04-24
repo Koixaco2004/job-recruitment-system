@@ -6,19 +6,22 @@ class JobFilterModel extends Equatable {
   final int? provinceId; // ID tỉnh/thành phố
   final int? categoryId; // ID danh mục ngành nghề
   final int? jobTypeId; // ID hình thức làm việc
+  final int? levelId; // ID cấp bậc
 
   const JobFilterModel({
     this.keyword = '',
     this.provinceId,
     this.categoryId,
     this.jobTypeId,
+    this.levelId,
   });
 
   /// Check if any filter is active (excluding keyword usually, but for UI badge let's count)
   bool get hasActiveFilters {
     return provinceId != null ||
         categoryId != null ||
-        jobTypeId != null;
+        jobTypeId != null ||
+        levelId != null;
   }
 
   /// Count active filters
@@ -27,6 +30,7 @@ class JobFilterModel extends Equatable {
     if (provinceId != null) count++;
     if (categoryId != null) count++;
     if (jobTypeId != null) count++;
+    if (levelId != null) count++;
     return count;
   }
 
@@ -36,12 +40,14 @@ class JobFilterModel extends Equatable {
     int? provinceId,
     int? categoryId,
     int? jobTypeId,
+    int? levelId,
   }) {
     return JobFilterModel(
       keyword: keyword ?? this.keyword,
       provinceId: provinceId ?? this.provinceId,
       categoryId: categoryId ?? this.categoryId,
       jobTypeId: jobTypeId ?? this.jobTypeId,
+      levelId: levelId ?? this.levelId,
     );
   }
 
@@ -50,12 +56,14 @@ class JobFilterModel extends Equatable {
     bool province = false,
     bool category = false,
     bool jobType = false,
+    bool level = false,
   }) {
     return JobFilterModel(
       keyword: keyword,
       provinceId: province ? null : provinceId,
       categoryId: category ? null : categoryId,
       jobTypeId: jobType ? null : jobTypeId,
+      levelId: level ? null : levelId,
     );
   }
 
@@ -70,5 +78,6 @@ class JobFilterModel extends Equatable {
     provinceId,
     categoryId,
     jobTypeId,
+    levelId,
   ];
 }

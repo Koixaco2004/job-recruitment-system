@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 class EducationEntity extends Equatable {
   final int? id;
   final String institution;
-  final String degree; // 'Đại học', 'Cao đẳng', 'Thạc sĩ', 'Tiến sĩ'
+  final String degree; // Enum: postgraduate, university, college, intermediate, high_school, certificate, none
   final String fieldOfStudy;
   final DateTime startDate;
   final DateTime? endDate;

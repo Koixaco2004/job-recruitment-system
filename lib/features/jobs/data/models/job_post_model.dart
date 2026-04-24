@@ -29,6 +29,8 @@ class JobPostModel extends JobPostEntity {
     super.provinceId,
     super.categoryId,
     super.jobTypeId,
+    super.levelId,
+    super.levelName,
     super.skills,
     super.rejectionReason,
   });
@@ -68,6 +70,8 @@ class JobPostModel extends JobPostEntity {
       provinceId: _asInt(json['province_id'] ?? json['provinceId'] ?? (json['province'] is Map ? (json['province'] as Map)['id'] : null)),
       categoryId: _asInt(json['category_id'] ?? json['categoryId'] ?? (json['category'] is Map ? (json['category'] as Map)['id'] : null)),
       jobTypeId: _asInt(json['job_type_id'] ?? json['jobTypeId'] ?? (json['jobType'] is Map ? (json['jobType'] as Map)['id'] : null)),
+      levelId: _asInt(json['level_id'] ?? json['levelId'] ?? (json['jobLevel'] is Map ? (json['jobLevel'] as Map)['id'] : (json['level'] is Map ? (json['level'] as Map)['id'] : null))),
+      levelName: _asString(json['level_name'] ?? json['levelName'] ?? (json['jobLevel'] is Map ? (json['jobLevel'] as Map)['name'] : (json['level'] is Map ? (json['level'] as Map)['name'] : null))),
       skills: json['skills'] as List?,
       rejectionReason: _asString(json['rejection_reason'] ?? json['rejectionReason'] ?? json['reason']),
     );
@@ -118,6 +122,8 @@ class JobPostModel extends JobPostEntity {
       'province_id': provinceId,
       'category_id': categoryId,
       'job_type_id': jobTypeId,
+      'level_id': levelId,
+      'level_name': levelName,
       'skills': skills,
       'rejection_reason': rejectionReason,
     };

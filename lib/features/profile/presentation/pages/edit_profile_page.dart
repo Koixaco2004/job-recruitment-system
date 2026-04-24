@@ -23,6 +23,16 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
+  
+  static const Map<String, String> _degreeOptions = {
+    'postgraduate': 'Trên đại học',
+    'university': 'Đại học',
+    'college': 'Cao đẳng',
+    'intermediate': 'Trung cấp',
+    'high_school': 'Trung học',
+    'certificate': 'Chứng chỉ / Bằng nghề',
+    'none': 'Không yêu cầu',
+  };
 
   // Controllers cho thông tin chung
   late TextEditingController _fullNameCtrl;
@@ -32,6 +42,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _desiredJobTitleCtrl;
   late TextEditingController _salaryMinCtrl;
   late TextEditingController _salaryMaxCtrl;
+  late TextEditingController _linkedinUrlCtrl;
+  late TextEditingController _githubUrlCtrl;
+  late TextEditingController _portfolioUrlCtrl;
 
   String? _selectedGender;
   int? _selectedProvinceId;
@@ -74,6 +87,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _salaryMaxCtrl = TextEditingController(
       text: profile.desiredSalaryMax?.toString() ?? '',
     );
+    _linkedinUrlCtrl = TextEditingController(text: profile.linkedinUrl ?? '');
+    _githubUrlCtrl = TextEditingController(text: profile.githubUrl ?? '');
+    _portfolioUrlCtrl = TextEditingController(text: profile.portfolioUrl ?? '');
 
     _selectedGender = profile.gender;
     _selectedProvinceId = profile.provinceId;
@@ -96,6 +112,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _desiredJobTitleCtrl.dispose();
     _salaryMinCtrl.dispose();
     _salaryMaxCtrl.dispose();
+    _linkedinUrlCtrl.dispose();
+    _githubUrlCtrl.dispose();
+    _portfolioUrlCtrl.dispose();
     _skillSearchCtrl.dispose();
     _skillDebounce?.cancel();
     super.dispose();
@@ -319,6 +338,48 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ],
         ),
         _buildJobTypeDropdown(),
+        const Divider(height: 32),
+        const Text(
+          'Liên kết mạng xã hội',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black54),
+        ),
+        const SizedBox(height: 12),
+        _buildTextField(
+          'LinkedIn URL',
+          _linkedinUrlCtrl,
+          keyboardType: TextInputType.url,
+          prefixIcon: Icons.link,
+          validator: (v) {
+            if (v != null && v.isNotEmpty) {
+              if (!v.contains('.')) return 'URL không hợp lệ';
+            }
+            return null;
+          },
+        ),
+        _buildTextField(
+          'GitHub URL',
+          _githubUrlCtrl,
+          keyboardType: TextInputType.url,
+          prefixIcon: Icons.code,
+          validator: (v) {
+            if (v != null && v.isNotEmpty) {
+              if (!v.contains('.')) return 'URL không hợp lệ';
+            }
+            return null;
+          },
+        ),
+        _buildTextField(
+          'Portfolio URL',
+          _portfolioUrlCtrl,
+          keyboardType: TextInputType.url,
+          prefixIcon: Icons.language,
+          validator: (v) {
+            if (v != null && v.isNotEmpty) {
+              if (!v.contains('.')) return 'URL không hợp lệ';
+            }
+            return null;
+          },
+        ),
       ],
     );
   }
@@ -781,6 +842,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     TextInputType? keyboardType,
     int maxLines = 1,
     int? maxLength,
+    IconData? prefixIcon,
     String? Function(String?)? validator,
   }) {
     return Padding(
@@ -792,6 +854,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         maxLength: maxLength,
         decoration: InputDecoration(
           labelText: label,
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
           border: const OutlineInputBorder(),
           counterText: '', // Hide default counter
           contentPadding: const EdgeInsets.symmetric(
@@ -1108,7 +1171,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final institutionCtrl = TextEditingController(text: edu?.institution ?? '');
     final fieldCtrl = TextEditingController(text: edu?.fieldOfStudy ?? '');
     final descCtrl = TextEditingController(text: edu?.description ?? '');
-    String selectedDegree = edu?.degree ?? 'Đại học';
+    String selectedDegree = edu?.degree ?? 'university';
+    if (!_degreeOptions.containsKey(selectedDegree)) {
+       // Fallback for old data or labels
+       if (selectedDegree == 'Đại học') selectedDegree = 'university';
+       else if (selectedDegree == 'Cao đẳng') selectedDegree = 'college';
+       else if (selectedDegree == 'Thạc sĩ' || selectedDegree == 'Tiến sĩ') selectedDegree = 'postgraduate';
+       else selectedDegree = 'university';
+    }
     DateTime startDate = edu?.startDate ?? DateTime(2016);
     DateTime? endDate = edu?.endDate;
 
@@ -1131,8 +1201,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 DropdownButtonFormField<String>(
                   value: selectedDegree,
                   decoration: const InputDecoration(labelText: 'Bằng cấp'),
-                  items: [...educationLevels, 'Online Course']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  items: _degreeOptions.entries
+                      .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
                       .toList(),
                   onChanged: (v) {
                     if (v != null) setDialogState(() => selectedDegree = v);
@@ -1573,6 +1643,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Helper to format URL
+    String? formatUrl(String value) {
+      if (value.isEmpty) return null;
+      var url = value.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://$url';
+      }
+      return url;
+    }
+
     final provider = context.read<ProfileProvider>();
     final profile = provider.profile!;
 
@@ -1607,6 +1687,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       skills: skills,
       cvFileUrl: profile.cvFileUrl,
       isSearchable: profile.isSearchable,
+      linkedinUrl: formatUrl(_linkedinUrlCtrl.text),
+      githubUrl: formatUrl(_githubUrlCtrl.text),
+      portfolioUrl: formatUrl(_portfolioUrlCtrl.text),
       workExperiences: _workExperiences,
       educations: _educations,
       certificates: _certificates,

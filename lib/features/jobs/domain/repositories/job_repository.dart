@@ -16,6 +16,7 @@ abstract class JobRepository {
     int? provinceId,
     int? categoryId,
     int? jobTypeId,
+    int? levelId,
   });
 
   /// Lấy job post theo ID

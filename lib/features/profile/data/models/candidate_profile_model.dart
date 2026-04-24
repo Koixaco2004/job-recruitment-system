@@ -29,6 +29,9 @@ class CandidateProfileModel extends CandidateProfileEntity {
     super.cvFileUrl,
     super.industry,
     super.isSearchable,
+    super.linkedinUrl,
+    super.githubUrl,
+    super.portfolioUrl,
     super.workExperiences,
     super.educations,
     super.certificates,
@@ -137,6 +140,9 @@ class CandidateProfileModel extends CandidateProfileEntity {
           json['cv_file_url'] ?? json['cvUrl'] ?? json['cvFileUrl']),
       industry: _parseStringNullable(json['industry']),
       isSearchable: _parseBool(json['is_searchable'] ?? json['isSearchable'] ?? json['isPublic'], false),
+      linkedinUrl: _parseStringNullable(json['linkedin_url'] ?? json['linkedinUrl']),
+      githubUrl: _parseStringNullable(json['github_url'] ?? json['githubUrl']),
+      portfolioUrl: _parseStringNullable(json['portfolio_url'] ?? json['portfolioUrl']),
       workExperiences:
           json['work_experiences'] ?? json['workExperiences'] != null
           ? (json['work_experiences'] ?? json['workExperiences'] as List)
@@ -201,6 +207,9 @@ class CandidateProfileModel extends CandidateProfileEntity {
       'cv_file_url': cvFileUrl,
       'industry': industry,
       'is_searchable': isSearchable,
+      'linkedin_url': linkedinUrl,
+      'github_url': githubUrl,
+      'portfolio_url': portfolioUrl,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -225,6 +234,9 @@ class CandidateProfileModel extends CandidateProfileEntity {
       if (desiredSalaryMin != null) 'salaryMin': desiredSalaryMin,
       if (desiredSalaryMax != null) 'salaryMax': desiredSalaryMax,
       if (jobTypeId != null) 'jobTypeId': jobTypeId,
+      if (linkedinUrl != null) 'linkedinUrl': linkedinUrl,
+      if (githubUrl != null) 'githubUrl': githubUrl,
+      if (portfolioUrl != null) 'portfolioUrl': portfolioUrl,
       'yearWorkingExperience': yearsOfExperience,
     };
   }
@@ -255,6 +267,9 @@ class CandidateProfileModel extends CandidateProfileEntity {
       cvFileUrl: entity.cvFileUrl,
       industry: entity.industry,
       isSearchable: entity.isSearchable,
+      linkedinUrl: entity.linkedinUrl,
+      githubUrl: entity.githubUrl,
+      portfolioUrl: entity.portfolioUrl,
       workExperiences: entity.workExperiences,
       educations: entity.educations,
       certificates: entity.certificates,

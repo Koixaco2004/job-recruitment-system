@@ -404,6 +404,13 @@ class _JobDetailPageState extends State<JobDetailPage> {
                                 DateFormat('dd/MM/yyyy').format(job.deadline),
                                 _daysRemaining(job.deadline) <= 7 ? Colors.red : Colors.grey,
                               ),
+                              if (job.levelName != null)
+                                _buildInfoChip(
+                                  Icons.bar_chart,
+                                  'Cấp bậc',
+                                  job.levelName!,
+                                  Colors.purple,
+                                ),
                             ],
                           ),
                         ],

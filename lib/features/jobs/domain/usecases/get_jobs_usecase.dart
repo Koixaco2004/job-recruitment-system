@@ -18,6 +18,7 @@ class GetJobsUseCase {
     int? provinceId,
     int? categoryId,
     int? jobTypeId,
+    int? levelId,
   }) async {
     return await repository.getJobs(
       page: page,
@@ -26,6 +27,7 @@ class GetJobsUseCase {
       provinceId: provinceId,
       categoryId: categoryId,
       jobTypeId: jobTypeId,
+      levelId: levelId,
     );
   }
 }

@@ -9,6 +9,8 @@ import '../../domain/usecases/get_employer_jobs_usecase.dart';
 import '../../domain/usecases/get_job_detail_usecase.dart';
 import '../../domain/usecases/get_job_history_usecase.dart';
 import '../../domain/entities/job_status_history_entity.dart';
+import '../../../metadata/domain/entities/job_level_entity.dart';
+import '../../../metadata/domain/usecases/get_job_levels_usecase.dart';
 
 /// Provider quản lý state cho Jobs
 class JobProvider extends ChangeNotifier {
@@ -19,6 +21,7 @@ class JobProvider extends ChangeNotifier {
   final GetEmployerJobsUseCase getEmployerJobsUseCase;
   final GetJobDetailUseCase getJobDetailUseCase;
   final GetJobHistoryUseCase getJobHistoryUseCase;
+  final GetJobLevelsUseCase getJobLevelsUseCase;
 
   JobProvider({
     required this.getJobsUseCase,
@@ -28,6 +31,7 @@ class JobProvider extends ChangeNotifier {
     required this.getEmployerJobsUseCase,
     required this.getJobDetailUseCase,
     required this.getJobHistoryUseCase,
+    required this.getJobLevelsUseCase,
   });
 
   // State
@@ -60,6 +64,10 @@ class JobProvider extends ChangeNotifier {
   bool _isSavingJob = false;
   bool _saveJobSuccess = false;
   String? _saveJobError;
+
+  // Metadata State
+  List<JobLevelEntity> _jobLevels = [];
+  bool _isLoadingJobLevels = false;
 
   // History State
   List<JobStatusHistoryEntity> _jobHistory = [];
@@ -105,6 +113,9 @@ class JobProvider extends ChangeNotifier {
   List<JobStatusHistoryEntity> get jobHistory => _jobHistory;
   bool get isLoadingHistory => _isLoadingHistory;
 
+  List<JobLevelEntity> get jobLevels => _jobLevels;
+  bool get isLoadingJobLevels => _isLoadingJobLevels;
+
   /// Fetch jobs (Public API)
   Future<void> fetchJobs({bool refresh = true}) async {
     await fetchPublicJobs(
@@ -122,6 +133,7 @@ class JobProvider extends ChangeNotifier {
     int? provinceId,
     int? categoryId,
     int? jobTypeId,
+    int? levelId,
   }) async {
     if (_isLoading) return; // Chặn yêu cầu nếu đang thực hiện
 
@@ -141,6 +153,7 @@ class JobProvider extends ChangeNotifier {
       provinceId: provinceId ?? _filter.provinceId,
       categoryId: categoryId ?? _filter.categoryId,
       jobTypeId: jobTypeId ?? _filter.jobTypeId,
+      levelId: levelId ?? _filter.levelId,
     );
 
     result.fold(
@@ -389,6 +402,27 @@ class JobProvider extends ChangeNotifier {
       (history) {
         _isLoadingHistory = false;
         _jobHistory = history;
+        notifyListeners();
+      },
+    );
+  }
+
+  Future<void> fetchJobLevelsIfEmpty() async {
+    if (_jobLevels.isNotEmpty) return;
+    _isLoadingJobLevels = true;
+    notifyListeners();
+
+    final result = await getJobLevelsUseCase();
+
+    result.fold(
+      (failure) {
+        _isLoadingJobLevels = false;
+        _errorMessage = failure.message;
+        notifyListeners();
+      },
+      (levels) {
+        _isLoadingJobLevels = false;
+        _jobLevels = levels;
         notifyListeners();
       },
     );

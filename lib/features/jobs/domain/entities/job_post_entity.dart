@@ -22,6 +22,8 @@ class JobPostEntity extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String? rejectionReason;
+  final int? levelId;
+  final String? levelName;
 
   // Thông tin công ty (từ join với EMPLOYERS)
   final String companyName;
@@ -65,6 +67,8 @@ class JobPostEntity extends Equatable {
     this.provinceId,
     this.categoryId,
     this.jobTypeId,
+    this.levelId,
+    this.levelName,
     this.skills,
     this.rejectionReason,
   });
@@ -97,6 +101,8 @@ class JobPostEntity extends Equatable {
     provinceId,
     categoryId,
     jobTypeId,
+    levelId,
+    levelName,
     skills,
     rejectionReason,
   ];

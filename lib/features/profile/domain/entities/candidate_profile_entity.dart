@@ -33,6 +33,11 @@ class CandidateProfileEntity extends Equatable {
   final String? industry; // Ngành nghề của ứng viên
   final bool isSearchable; // Trạng thái tìm việc (công khai/riêng tư)
 
+  // === Social Links ===
+  final String? linkedinUrl;
+  final String? githubUrl;
+  final String? portfolioUrl;
+
   // === Danh sách chi tiết ===
   final List<WorkExperienceEntity> workExperiences;
   final List<EducationEntity> educations;
@@ -66,6 +71,9 @@ class CandidateProfileEntity extends Equatable {
     this.cvFileUrl,
     this.industry,
     this.isSearchable = false,
+    this.linkedinUrl,
+    this.githubUrl,
+    this.portfolioUrl,
     this.workExperiences = const [],
     this.educations = const [],
     this.certificates = const [],
@@ -99,6 +107,9 @@ class CandidateProfileEntity extends Equatable {
     cvFileUrl,
     industry,
     isSearchable,
+    linkedinUrl,
+    githubUrl,
+    portfolioUrl,
     workExperiences,
     educations,
     certificates,

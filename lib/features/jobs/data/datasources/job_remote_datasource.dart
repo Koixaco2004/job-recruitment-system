@@ -17,6 +17,7 @@ abstract class JobRemoteDataSource {
     int? provinceId,
     int? categoryId,
     int? jobTypeId,
+    int? levelId,
   });
 
   /// Lấy job theo ID
@@ -87,6 +88,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
     int? provinceId,
     int? categoryId,
     int? jobTypeId,
+    int? levelId,
   }) async {
     try {
       final queryParams = {
@@ -96,6 +98,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
         if (provinceId != null) 'provinceId': provinceId,
         if (categoryId != null) 'categoryId': categoryId,
         if (jobTypeId != null) 'jobTypeId': jobTypeId,
+        if (levelId != null) 'levelId': levelId,
       };
 
       final response = await apiClient.dio.get('/api/jobs/public', queryParameters: queryParams);

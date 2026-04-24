@@ -61,6 +61,7 @@ import 'features/metadata/data/repositories/metadata_repository_impl.dart';
 import 'features/metadata/domain/repositories/metadata_repository.dart';
 import 'features/metadata/domain/usecases/get_provinces_usecase.dart';
 import 'features/metadata/domain/usecases/get_job_categories_usecase.dart';
+import 'features/metadata/domain/usecases/get_job_levels_usecase.dart';
 import 'features/employer/data/datasources/employer_remote_datasource.dart';
 import 'features/employer/data/repositories/employer_repository_impl.dart';
 import 'features/employer/domain/repositories/employer_repository.dart';
@@ -169,6 +170,7 @@ Future<void> init() async {
       getEmployerJobsUseCase: sl(),
       getJobDetailUseCase: sl(),
       getJobHistoryUseCase: sl(),
+      getJobLevelsUseCase: sl(),
     ),
   );
 
@@ -280,6 +282,7 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => GetProvincesUseCase(sl()));
   sl.registerLazySingleton(() => GetJobCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => GetJobLevelsUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<MetadataRepository>(

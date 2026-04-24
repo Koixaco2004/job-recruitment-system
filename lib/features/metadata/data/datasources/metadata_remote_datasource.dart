@@ -2,11 +2,13 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/province_model.dart';
 import '../models/job_category_model.dart';
+import '../models/job_level_model.dart';
 import 'package:dio/dio.dart';
 
 abstract class MetadataRemoteDataSource {
   Future<List<ProvinceModel>> getProvinces();
   Future<List<JobCategoryModel>> getJobCategories();
+  Future<List<JobLevelModel>> getJobLevels();
 }
 
 class MetadataRemoteDataSourceImpl implements MetadataRemoteDataSource {
@@ -43,6 +45,23 @@ class MetadataRemoteDataSourceImpl implements MetadataRemoteDataSource {
       }
     } on DioException catch (e) {
       throw ServerException(e.message ?? 'Lỗi kết nối khi tải ngành nghề');
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<JobLevelModel>> getJobLevels() async {
+    try {
+      final response = await apiClient.dio.get('/api/metadata/job-levels');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => JobLevelModel.fromJson(json)).toList();
+      } else {
+        throw ServerException('Failed to fetch job levels');
+      }
+    } on DioException catch (e) {
+      throw ServerException(e.message ?? 'Lỗi kết nối khi tải cấp bậc');
     } catch (e) {
       throw ServerException(e.toString());
     }

@@ -19,7 +19,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   void initState() {
     super.initState();
     // Copy current filter
-    _tempFilter = context.read<JobProvider>().filter;
+    final jobProvider = context.read<JobProvider>();
+    _tempFilter = jobProvider.filter;
     
     // Load metadata if not loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -27,15 +28,18 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       profileProvider.fetchProvincesIfEmpty();
       profileProvider.fetchJobTypesIfEmpty();
       profileProvider.fetchJobCategoriesMetadata();
+      jobProvider.fetchJobLevelsIfEmpty();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final profileProvider = context.watch<ProfileProvider>();
+    final jobProvider = context.watch<JobProvider>();
     final isMetadataLoading = profileProvider.isLoadingProvinces || 
                              profileProvider.isLoadingJobCategories || 
-                             profileProvider.isLoadingJobTypes;
+                             profileProvider.isLoadingJobTypes ||
+                             jobProvider.isLoading;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
@@ -155,6 +159,33 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             onChanged: (val) {
                               setState(() {
                                 _tempFilter = _tempFilter.copyWith(jobTypeId: val);
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Job Level Dropdown ---
+                        _buildDropdownSection(
+                          title: 'Cấp bậc',
+                          icon: Icons.bar_chart,
+                          child: DropdownButtonFormField<int>(
+                            value: jobProvider.jobLevels.any((l) => l.id == _tempFilter.levelId) ? _tempFilter.levelId : null,
+                            isExpanded: true,
+                            decoration: _dropdownDecoration('Chọn cấp bậc'),
+                            items: [
+                              const DropdownMenuItem<int>(
+                                value: null,
+                                child: Text('Tất cả cấp bậc'),
+                              ),
+                              ...jobProvider.jobLevels.map((l) => DropdownMenuItem<int>(
+                                value: l.id,
+                                child: Text(l.name),
+                              )),
+                            ],
+                            onChanged: (val) {
+                              setState(() {
+                                _tempFilter = _tempFilter.copyWith(levelId: val);
                               });
                             },
                           ),

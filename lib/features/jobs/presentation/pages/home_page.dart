@@ -31,6 +31,7 @@ class _HomePageState extends State<HomePage> {
       profileProvider.fetchProvincesIfEmpty();
       profileProvider.fetchJobTypesIfEmpty();
       profileProvider.fetchJobCategoriesMetadata();
+      jobProvider.fetchJobLevelsIfEmpty();
 
       // Khởi tạo thông báo
       if (mounted) {
@@ -258,7 +259,8 @@ class _HomePageState extends State<HomePage> {
             isSelected:
                 jobProvider.filter.jobTypeId == null &&
                 jobProvider.filter.categoryId == null &&
-                jobProvider.filter.provinceId == null,
+                jobProvider.filter.provinceId == null &&
+                jobProvider.filter.levelId == null,
             onTap: () {
               jobProvider.clearFilter();
               jobProvider.fetchPublicJobs(refresh: true);
@@ -332,6 +334,31 @@ class _HomePageState extends State<HomePage> {
             onSelected: (id) {
               jobProvider.updateFilter(
                 jobProvider.filter.copyWith(categoryId: id),
+              );
+              jobProvider.fetchPublicJobs(refresh: true);
+            },
+          ),
+
+          // Level Filter
+          _buildDropdownFilter<int?>(
+            label: 'Cấp bậc',
+            isSelected: jobProvider.filter.levelId != null,
+            value: jobProvider.filter.levelId,
+            options: [
+              const PopupMenuItem(
+                value: null,
+                child: Text('Tất cả cấp bậc'),
+              ),
+              ...jobProvider.jobLevels.map(
+                (level) => PopupMenuItem(
+                  value: level.id,
+                  child: Text(level.name, style: const TextStyle(fontSize: 14)),
+                ),
+              ),
+            ],
+            onSelected: (id) {
+              jobProvider.updateFilter(
+                jobProvider.filter.copyWith(levelId: id),
               );
               jobProvider.fetchPublicJobs(refresh: true);
             },

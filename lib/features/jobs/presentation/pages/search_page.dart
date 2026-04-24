@@ -278,6 +278,23 @@ class _SearchPageState extends State<SearchPage> {
             },
           ),
 
+          // Level Filter
+          _buildDropdownFilter<int?>(
+            label: 'Cấp bậc',
+            isSelected: jobProvider.filter.levelId != null,
+            value: jobProvider.filter.levelId,
+            options: [
+              const PopupMenuItem(value: null, child: Text('Tất cả cấp bậc')),
+              ...jobProvider.jobLevels.map((level) => PopupMenuItem(
+                value: level.id,
+                child: Text(level.name, style: const TextStyle(fontSize: 14)),
+              )),
+            ],
+            onSelected: (id) {
+              jobProvider.updateFilter(jobProvider.filter.copyWith(levelId: id));
+            },
+          ),
+
           _buildAdvanceFilterButton(),
         ],
       ),

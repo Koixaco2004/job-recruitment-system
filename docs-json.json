@@ -1641,6 +1641,21 @@
                 ]
             }
         },
+        "/api/metadata/job-levels": {
+            "get": {
+                "operationId": "JobLevelsController_findAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách cấp bậc"
+                    }
+                },
+                "summary": "Lấy danh sách các cấp bậc công việc",
+                "tags": [
+                    "Metadata - Danh mục cấp bậc"
+                ]
+            }
+        },
         "/api/notifications": {
             "get": {
                 "operationId": "NotificationsController_getMyNotifications",
@@ -1752,6 +1767,558 @@
                 ],
                 "tags": [
                     "Notifications"
+                ]
+            }
+        },
+        "/api/applications/{jobId}": {
+            "post": {
+                "operationId": "CandidateApplicationsController_apply",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID tin tuyển dụng",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ApplyJobDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ứng tuyển thành công"
+                    },
+                    "400": {
+                        "description": "Thiếu CV / Job không hợp lệ"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Vui lòng xác thực email để sử dụng tính năng này\n\nKhông có quyền truy cập (Sai Role)"
+                    },
+                    "409": {
+                        "description": "Đã ứng tuyển công việc này"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Ứng tuyển công việc",
+                "tags": [
+                    "Applications - Candidate"
+                ]
+            }
+        },
+        "/api/applications/me": {
+            "get": {
+                "operationId": "CandidateApplicationsController_getMyApplications",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số bản ghi trên trang",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 10,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo trạng thái (applied, shortlisted, skill_test, interview, offer, hired, rejected, withdrawn)",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "applied",
+                                "shortlisted",
+                                "skill_test",
+                                "interview",
+                                "offer",
+                                "hired",
+                                "rejected",
+                                "withdrawn"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách đơn ứng tuyển"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem danh sách đơn ứng tuyển của mình",
+                "tags": [
+                    "Applications - Candidate"
+                ]
+            }
+        },
+        "/api/applications/me/{id}": {
+            "get": {
+                "operationId": "CandidateApplicationsController_getMyApplicationDetail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chi tiết đơn ứng tuyển"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy đơn"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem chi tiết 1 đơn ứng tuyển",
+                "tags": [
+                    "Applications - Candidate"
+                ]
+            }
+        },
+        "/api/applications/me/{id}/withdraw": {
+            "patch": {
+                "operationId": "CandidateApplicationsController_withdrawApplication",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rút đơn thành công"
+                    },
+                    "400": {
+                        "description": "Đơn không thể rút"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy đơn"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Rút đơn ứng tuyển",
+                "tags": [
+                    "Applications - Candidate"
+                ]
+            }
+        },
+        "/api/employer/applications/job/{jobId}": {
+            "get": {
+                "operationId": "EmployerApplicationsController_getJobApplications",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID tin tuyển dụng",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số bản ghi trên trang",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 10,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo trạng thái (applied, shortlisted, skill_test, interview, offer, hired, rejected, withdrawn)",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "applied",
+                                "shortlisted",
+                                "skill_test",
+                                "interview",
+                                "offer",
+                                "hired",
+                                "rejected",
+                                "withdrawn"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách ứng viên"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Tin tuyển dụng không tồn tại hoặc không thuộc công ty"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem danh sách ứng viên nộp đơn cho 1 tin tuyển dụng",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/job/{jobId}/kanban": {
+            "get": {
+                "operationId": "EmployerApplicationsController_getKanbanBoard",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID tin tuyển dụng",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cấu trúc Kanban board"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Tin tuyển dụng không tồn tại hoặc không thuộc công ty"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem Kanban Board danh sách ứng viên của 1 tin tuyển dụng",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/{id}": {
+            "get": {
+                "operationId": "EmployerApplicationsController_getApplicationDetail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chi tiết hồ sơ ứng viên"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Đơn ứng tuyển không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem chi tiết hồ sơ ứng viên ứng tuyển",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/{id}/status": {
+            "patch": {
+                "operationId": "EmployerApplicationsController_updateApplicationStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateApplicationStatusDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật thành công"
+                    },
+                    "400": {
+                        "description": "Trạng thái không hợp lệ / Đơn đã bị rút"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Đơn ứng tuyển không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật trạng thái đơn ứng tuyển",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/{id}/history": {
+            "get": {
+                "operationId": "EmployerApplicationsController_getApplicationHistory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lịch sử trạng thái"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Đơn ứng tuyển không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem lịch sử thay đổi trạng thái đơn ứng tuyển",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/{id}/notes": {
+            "post": {
+                "operationId": "EmployerApplicationsController_addNote",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID đơn ứng tuyển",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateApplicationNoteDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Đã thêm ghi chú"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Đơn ứng tuyển không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thêm ghi chú/nhận xét cho đơn ứng tuyển",
+                "tags": [
+                    "Applications - Employer"
+                ]
+            }
+        },
+        "/api/employer/applications/notes/{noteId}": {
+            "patch": {
+                "operationId": "EmployerApplicationsController_updateNote",
+                "parameters": [
+                    {
+                        "name": "noteId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID của ghi chú",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateApplicationNoteDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền sửa\n\nKhông có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Ghi chú không tồn tại"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật nội dung ghi chú (chỉ người tạo)",
+                "tags": [
+                    "Applications - Employer"
                 ]
             }
         },
@@ -2049,66 +2616,9 @@
         },
         "/api/employers/headhunting/candidates": {
             "get": {
+                "description": "\nTìm kiếm ứng viên với nhiều bộ lọc kết hợp:\n- **keyword**: Tìm theo tên / vị trí mong muốn\n- **provinceId**: Lọc theo tỉnh/thành phố\n- **jobTypeId**: Lọc theo hình thức làm việc\n- **skillIds**: Lọc theo skill (OR — có ít nhất 1 skill)\n- **categoryIds**: Lọc theo ngành nghề (OR)\n- **salaryMin / salaryMax**: Overlap với kỳ vọng lương của ứng viên\n- **minExperience**: Số năm kinh nghiệm tối thiểu\n\nThông tin nhạy cảm (phone, cvUrl, social links) được ẩn tự động.\n    ",
                 "operationId": "EmployerHeadhuntingController_searchCandidates",
                 "parameters": [
-                    {
-                        "name": "keyword",
-                        "required": false,
-                        "in": "query",
-                        "description": "Từ khóa tìm kiếm (tên, vị trí, bio)",
-                        "schema": {
-                            "example": "Nodejs",
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "provinceId",
-                        "required": false,
-                        "in": "query",
-                        "description": "ID Tỉnh/Thành phố",
-                        "schema": {
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991,
-                            "example": 1,
-                            "type": "number"
-                        }
-                    },
-                    {
-                        "name": "jobCategoryId",
-                        "required": false,
-                        "in": "query",
-                        "description": "ID Ngành nghề (Job Category)",
-                        "schema": {
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991,
-                            "example": 1,
-                            "type": "number"
-                        }
-                    },
-                    {
-                        "name": "jobTypeId",
-                        "required": false,
-                        "in": "query",
-                        "description": "ID Cấp bậc / Hình thức làm việc (Job Type)",
-                        "schema": {
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991,
-                            "example": 1,
-                            "type": "number"
-                        }
-                    },
-                    {
-                        "name": "minExperience",
-                        "required": false,
-                        "in": "query",
-                        "description": "Số năm kinh nghiệm tối thiểu",
-                        "schema": {
-                            "minimum": 0,
-                            "maximum": 9007199254740991,
-                            "example": 2,
-                            "type": "number"
-                        }
-                    },
                     {
                         "name": "page",
                         "required": false,
@@ -2125,18 +2635,171 @@
                         "name": "limit",
                         "required": false,
                         "in": "query",
-                        "description": "Số lượng item mỗi trang",
+                        "description": "Số bản ghi trên trang",
                         "schema": {
                             "minimum": 1,
                             "maximum": 100,
                             "default": 10,
                             "type": "number"
                         }
+                    },
+                    {
+                        "name": "keyword",
+                        "required": false,
+                        "in": "query",
+                        "description": "Từ khóa tìm kiếm (theo tên hoặc vị trí mong muốn)",
+                        "schema": {
+                            "maxLength": 100,
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "provinceId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Tỉnh/thành phố của ứng viên",
+                        "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "jobTypeId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Hình thức làm việc mong muốn",
+                        "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "skillIds",
+                        "required": false,
+                        "in": "query",
+                        "x-nestjs_zod-empty-type": true,
+                        "description": "Skill IDs (OR logic). VD: skillIds=1&skillIds=2",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                    }
+                                }
+                            ],
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    },
+                    {
+                        "name": "categoryIds",
+                        "required": false,
+                        "in": "query",
+                        "x-nestjs_zod-empty-type": true,
+                        "description": "Ngành nghề quan tâm (OR logic). VD: categoryIds=1&categoryIds=2",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                    }
+                                }
+                            ],
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    },
+                    {
+                        "name": "salaryMin",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lương kỳ vọng tối thiểu của ứng viên (candidate.salaryMin >= salaryMin)",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "salaryMax",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lương kỳ vọng tối đa của ứng viên (candidate.salaryMax <= salaryMax)",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "minExperience",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số năm kinh nghiệm tối thiểu",
+                        "schema": {
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trường sắp xếp",
+                        "schema": {
+                            "default": "createdAt",
+                            "type": "string",
+                            "enum": [
+                                "createdAt",
+                                "yearWorkingExperience"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortOrder",
+                        "required": false,
+                        "in": "query",
+                        "description": "Chiều sắp xếp",
+                        "schema": {
+                            "default": "DESC",
+                            "type": "string",
+                            "enum": [
+                                "ASC",
+                                "DESC"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Danh sách ứng viên theo bộ lọc"
+                        "description": "Danh sách ứng viên phù hợp (đã ẩn thông tin nhạy cảm)"
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
@@ -2150,7 +2813,7 @@
                         "bearer": []
                     }
                 ],
-                "summary": "Tìm kiếm ứng viên tự do (Headhunting Search)",
+                "summary": "Tìm kiếm ứng viên đa yếu tố (Headhunting Search)",
                 "tags": [
                     "Employers - Headhunting"
                 ]
@@ -2352,6 +3015,86 @@
                 "summary": "Lấy danh sách thư mời đã gửi",
                 "tags": [
                     "Employers - Headhunting"
+                ]
+            }
+        },
+        "/api/employers/dashboard/stats": {
+            "get": {
+                "description": "Trả về toàn bộ metrics của công ty: job counts, application pipeline, conversion rate, trend 7 ngày, headhunting stats, top jobs.",
+                "operationId": "EmployerDashboardController_getCompanyStats",
+                "parameters": [
+                    {
+                        "name": "expiringSoonDays",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số ngày tới để xác định job \"sắp hết hạn\" (1–30, mặc định 7)",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 30,
+                            "default": 7,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dashboard stats thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không phải Employer hoặc chưa thuộc công ty\n\nKhông có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thống kê tổng quan công ty (Dashboard Overview)",
+                "tags": [
+                    "Employers - Dashboard"
+                ]
+            }
+        },
+        "/api/employers/dashboard/jobs/{jobId}/stats": {
+            "get": {
+                "description": "Trả về application pipeline, conversion rate, trend 7 ngày và invitation stats cho 1 job cụ thể.",
+                "operationId": "EmployerDashboardController_getJobStats",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID tin tuyển dụng",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job stats thành công"
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    },
+                    "404": {
+                        "description": "Tin tuyển dụng không tồn tại hoặc không thuộc công ty"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Thống kê chi tiết cho 1 tin tuyển dụng (Per-Job Drill-down)",
+                "tags": [
+                    "Employers - Dashboard"
                 ]
             }
         },
@@ -2806,6 +3549,8 @@
                         "in": "query",
                         "description": "Trang hiện tại",
                         "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
                             "default": 1,
                             "type": "number"
                         }
@@ -2816,6 +3561,8 @@
                         "in": "query",
                         "description": "Số bản ghi trên trang",
                         "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
                             "default": 10,
                             "type": "number"
                         }
@@ -2824,7 +3571,7 @@
                         "name": "keyword",
                         "required": false,
                         "in": "query",
-                        "description": "Từ khóa tìm kiếm (theo tên job)",
+                        "description": "Từ khóa tìm kiếm (title + description)",
                         "schema": {
                             "maxLength": 100,
                             "type": "string"
@@ -2836,6 +3583,8 @@
                         "in": "query",
                         "description": "Lọc theo ID tỉnh/thành phố",
                         "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
                             "type": "number"
                         }
                     },
@@ -2845,6 +3594,8 @@
                         "in": "query",
                         "description": "Lọc theo danh mục ngành nghề",
                         "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
                             "type": "number"
                         }
                     },
@@ -2854,7 +3605,109 @@
                         "in": "query",
                         "description": "Lọc theo hình thức (Full-time, Part-time)",
                         "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
                             "type": "number"
+                        }
+                    },
+                    {
+                        "name": "levelId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo cấp bậc (levelId)",
+                        "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "salaryMin",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lương tối thiểu mong muốn (overlap: job.salaryMax >= salaryMin)",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "salaryMax",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lương tối đa mong muốn (overlap: job.salaryMin <= salaryMax)",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "requiredDegree",
+                        "required": false,
+                        "in": "query",
+                        "description": "Bằng cấp yêu cầu",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "postgraduate",
+                                "university",
+                                "college",
+                                "intermediate",
+                                "high_school",
+                                "certificate",
+                                "none"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "maxYearsRequired",
+                        "required": false,
+                        "in": "query",
+                        "description": "Job yêu cầu tối đa bao nhiêu năm kinh nghiệm",
+                        "schema": {
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "skillIds",
+                        "required": false,
+                        "in": "query",
+                        "x-nestjs_zod-empty-type": true,
+                        "description": "Skill IDs (OR logic — job có ít nhất 1 skill). VD: skillIds=1&skillIds=2",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                    }
+                                }
+                            ],
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    },
+                    {
+                        "name": "hasDeadline",
+                        "required": false,
+                        "in": "query",
+                        "description": "Chỉ hiển thị job còn trong hạn nộp (deadline > now)",
+                        "schema": {
+                            "type": "boolean"
                         }
                     },
                     {
@@ -2863,7 +3716,44 @@
                         "in": "query",
                         "description": "Lọc theo status (dùng cho nội bộ HR)",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "pending",
+                                "published",
+                                "rejected",
+                                "closed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trường sắp xếp",
+                        "schema": {
+                            "default": "createdAt",
+                            "type": "string",
+                            "enum": [
+                                "createdAt",
+                                "deadline",
+                                "salaryMin",
+                                "relevance"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortOrder",
+                        "required": false,
+                        "in": "query",
+                        "description": "Chiều sắp xếp",
+                        "schema": {
+                            "default": "DESC",
+                            "type": "string",
+                            "enum": [
+                                "ASC",
+                                "DESC"
+                            ]
                         }
                     }
                 ],
@@ -2913,6 +3803,8 @@
                         "in": "query",
                         "description": "Trang hiện tại",
                         "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
                             "default": 1,
                             "type": "number"
                         }
@@ -2923,6 +3815,8 @@
                         "in": "query",
                         "description": "Số bản ghi trên trang",
                         "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
                             "default": 10,
                             "type": "number"
                         }
@@ -2931,7 +3825,7 @@
                         "name": "keyword",
                         "required": false,
                         "in": "query",
-                        "description": "Từ khóa tìm kiếm (theo tên job)",
+                        "description": "Từ khóa tìm kiếm (title + description)",
                         "schema": {
                             "maxLength": 100,
                             "type": "string"
@@ -2943,6 +3837,8 @@
                         "in": "query",
                         "description": "Lọc theo ID tỉnh/thành phố",
                         "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
                             "type": "number"
                         }
                     },
@@ -2952,6 +3848,8 @@
                         "in": "query",
                         "description": "Lọc theo danh mục ngành nghề",
                         "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
                             "type": "number"
                         }
                     },
@@ -2961,7 +3859,109 @@
                         "in": "query",
                         "description": "Lọc theo hình thức (Full-time, Part-time)",
                         "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
                             "type": "number"
+                        }
+                    },
+                    {
+                        "name": "levelId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo cấp bậc (levelId)",
+                        "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "salaryMin",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lương tối thiểu mong muốn (overlap: job.salaryMax >= salaryMin)",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "salaryMax",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lương tối đa mong muốn (overlap: job.salaryMin <= salaryMax)",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "requiredDegree",
+                        "required": false,
+                        "in": "query",
+                        "description": "Bằng cấp yêu cầu",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "postgraduate",
+                                "university",
+                                "college",
+                                "intermediate",
+                                "high_school",
+                                "certificate",
+                                "none"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "maxYearsRequired",
+                        "required": false,
+                        "in": "query",
+                        "description": "Job yêu cầu tối đa bao nhiêu năm kinh nghiệm",
+                        "schema": {
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "skillIds",
+                        "required": false,
+                        "in": "query",
+                        "x-nestjs_zod-empty-type": true,
+                        "description": "Skill IDs (OR logic — job có ít nhất 1 skill). VD: skillIds=1&skillIds=2",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                    }
+                                }
+                            ],
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    },
+                    {
+                        "name": "hasDeadline",
+                        "required": false,
+                        "in": "query",
+                        "description": "Chỉ hiển thị job còn trong hạn nộp (deadline > now)",
+                        "schema": {
+                            "type": "boolean"
                         }
                     },
                     {
@@ -2970,7 +3970,44 @@
                         "in": "query",
                         "description": "Lọc theo status (dùng cho nội bộ HR)",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "pending",
+                                "published",
+                                "rejected",
+                                "closed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trường sắp xếp",
+                        "schema": {
+                            "default": "createdAt",
+                            "type": "string",
+                            "enum": [
+                                "createdAt",
+                                "deadline",
+                                "salaryMin",
+                                "relevance"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortOrder",
+                        "required": false,
+                        "in": "query",
+                        "description": "Chiều sắp xếp",
+                        "schema": {
+                            "default": "DESC",
+                            "type": "string",
+                            "enum": [
+                                "ASC",
+                                "DESC"
+                            ]
                         }
                     }
                 ],
@@ -3137,6 +4174,8 @@
                         "in": "query",
                         "description": "Trang hiện tại",
                         "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
                             "default": 1,
                             "type": "number"
                         }
@@ -3147,6 +4186,8 @@
                         "in": "query",
                         "description": "Số bản ghi trên trang",
                         "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
                             "default": 10,
                             "type": "number"
                         }
@@ -3155,7 +4196,7 @@
                         "name": "keyword",
                         "required": false,
                         "in": "query",
-                        "description": "Từ khóa tìm kiếm (theo tên job)",
+                        "description": "Từ khóa tìm kiếm (title + description)",
                         "schema": {
                             "maxLength": 100,
                             "type": "string"
@@ -3167,6 +4208,8 @@
                         "in": "query",
                         "description": "Lọc theo ID tỉnh/thành phố",
                         "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
                             "type": "number"
                         }
                     },
@@ -3176,6 +4219,8 @@
                         "in": "query",
                         "description": "Lọc theo danh mục ngành nghề",
                         "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
                             "type": "number"
                         }
                     },
@@ -3185,7 +4230,109 @@
                         "in": "query",
                         "description": "Lọc theo hình thức (Full-time, Part-time)",
                         "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
                             "type": "number"
+                        }
+                    },
+                    {
+                        "name": "levelId",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lọc theo cấp bậc (levelId)",
+                        "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "salaryMin",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lương tối thiểu mong muốn (overlap: job.salaryMax >= salaryMin)",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "salaryMax",
+                        "required": false,
+                        "in": "query",
+                        "description": "Lương tối đa mong muốn (overlap: job.salaryMin <= salaryMax)",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "requiredDegree",
+                        "required": false,
+                        "in": "query",
+                        "description": "Bằng cấp yêu cầu",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "postgraduate",
+                                "university",
+                                "college",
+                                "intermediate",
+                                "high_school",
+                                "certificate",
+                                "none"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "maxYearsRequired",
+                        "required": false,
+                        "in": "query",
+                        "description": "Job yêu cầu tối đa bao nhiêu năm kinh nghiệm",
+                        "schema": {
+                            "minimum": 0,
+                            "maximum": 9007199254740991,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "skillIds",
+                        "required": false,
+                        "in": "query",
+                        "x-nestjs_zod-empty-type": true,
+                        "description": "Skill IDs (OR logic — job có ít nhất 1 skill). VD: skillIds=1&skillIds=2",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                    }
+                                }
+                            ],
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    },
+                    {
+                        "name": "hasDeadline",
+                        "required": false,
+                        "in": "query",
+                        "description": "Chỉ hiển thị job còn trong hạn nộp (deadline > now)",
+                        "schema": {
+                            "type": "boolean"
                         }
                     },
                     {
@@ -3194,7 +4341,44 @@
                         "in": "query",
                         "description": "Lọc theo status (dùng cho nội bộ HR)",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "pending",
+                                "published",
+                                "rejected",
+                                "closed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trường sắp xếp",
+                        "schema": {
+                            "default": "createdAt",
+                            "type": "string",
+                            "enum": [
+                                "createdAt",
+                                "deadline",
+                                "salaryMin",
+                                "relevance"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortOrder",
+                        "required": false,
+                        "in": "query",
+                        "description": "Chiều sắp xếp",
+                        "schema": {
+                            "default": "DESC",
+                            "type": "string",
+                            "enum": [
+                                "ASC",
+                                "DESC"
+                            ]
                         }
                     }
                 ],
@@ -3344,550 +4528,6 @@
                     "Jobs - Quản trị Hệ thống"
                 ]
             }
-        },
-        "/api/applications/{jobId}": {
-            "post": {
-                "operationId": "CandidateApplicationsController_apply",
-                "parameters": [
-                    {
-                        "name": "jobId",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID tin tuyển dụng",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ApplyJobDto"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Ứng tuyển thành công"
-                    },
-                    "400": {
-                        "description": "Thiếu CV / Job không hợp lệ"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Vui lòng xác thực email để sử dụng tính năng này\n\nKhông có quyền truy cập (Sai Role)"
-                    },
-                    "409": {
-                        "description": "Đã ứng tuyển công việc này"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Ứng tuyển công việc",
-                "tags": [
-                    "Applications - Candidate"
-                ]
-            }
-        },
-        "/api/applications/me": {
-            "get": {
-                "operationId": "CandidateApplicationsController_getMyApplications",
-                "parameters": [
-                    {
-                        "name": "page",
-                        "required": false,
-                        "in": "query",
-                        "description": "Trang hiện tại",
-                        "schema": {
-                            "default": 1,
-                            "type": "number"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "required": false,
-                        "in": "query",
-                        "description": "Số bản ghi trên trang",
-                        "schema": {
-                            "default": 10,
-                            "type": "number"
-                        }
-                    },
-                    {
-                        "name": "status",
-                        "required": false,
-                        "in": "query",
-                        "description": "Lọc theo trạng thái (applied, shortlisted, skill_test, interview, offer, hired, rejected, withdrawn)",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "applied",
-                                "shortlisted",
-                                "skill_test",
-                                "interview",
-                                "offer",
-                                "hired",
-                                "rejected",
-                                "withdrawn"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Danh sách đơn ứng tuyển"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Xem danh sách đơn ứng tuyển của mình",
-                "tags": [
-                    "Applications - Candidate"
-                ]
-            }
-        },
-        "/api/applications/me/{id}": {
-            "get": {
-                "operationId": "CandidateApplicationsController_getMyApplicationDetail",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID đơn ứng tuyển",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Chi tiết đơn ứng tuyển"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    },
-                    "404": {
-                        "description": "Không tìm thấy đơn"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Xem chi tiết 1 đơn ứng tuyển",
-                "tags": [
-                    "Applications - Candidate"
-                ]
-            }
-        },
-        "/api/applications/me/{id}/withdraw": {
-            "patch": {
-                "operationId": "CandidateApplicationsController_withdrawApplication",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID đơn ứng tuyển",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Rút đơn thành công"
-                    },
-                    "400": {
-                        "description": "Đơn không thể rút"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    },
-                    "404": {
-                        "description": "Không tìm thấy đơn"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Rút đơn ứng tuyển",
-                "tags": [
-                    "Applications - Candidate"
-                ]
-            }
-        },
-        "/api/employer/applications/job/{jobId}": {
-            "get": {
-                "operationId": "EmployerApplicationsController_getJobApplications",
-                "parameters": [
-                    {
-                        "name": "jobId",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID tin tuyển dụng",
-                        "schema": {
-                            "type": "number"
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "required": false,
-                        "in": "query",
-                        "description": "Trang hiện tại",
-                        "schema": {
-                            "default": 1,
-                            "type": "number"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "required": false,
-                        "in": "query",
-                        "description": "Số bản ghi trên trang",
-                        "schema": {
-                            "default": 10,
-                            "type": "number"
-                        }
-                    },
-                    {
-                        "name": "status",
-                        "required": false,
-                        "in": "query",
-                        "description": "Lọc theo trạng thái (applied, shortlisted, skill_test, interview, offer, hired, rejected, withdrawn)",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "applied",
-                                "shortlisted",
-                                "skill_test",
-                                "interview",
-                                "offer",
-                                "hired",
-                                "rejected",
-                                "withdrawn"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Danh sách ứng viên"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    },
-                    "404": {
-                        "description": "Tin tuyển dụng không tồn tại hoặc không thuộc công ty"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Xem danh sách ứng viên nộp đơn cho 1 tin tuyển dụng",
-                "tags": [
-                    "Applications - Employer"
-                ]
-            }
-        },
-        "/api/employer/applications/job/{jobId}/kanban": {
-            "get": {
-                "operationId": "EmployerApplicationsController_getKanbanBoard",
-                "parameters": [
-                    {
-                        "name": "jobId",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID tin tuyển dụng",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Cấu trúc Kanban board"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    },
-                    "404": {
-                        "description": "Tin tuyển dụng không tồn tại hoặc không thuộc công ty"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Xem Kanban Board danh sách ứng viên của 1 tin tuyển dụng",
-                "tags": [
-                    "Applications - Employer"
-                ]
-            }
-        },
-        "/api/employer/applications/{id}": {
-            "get": {
-                "operationId": "EmployerApplicationsController_getApplicationDetail",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID đơn ứng tuyển",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Chi tiết hồ sơ ứng viên"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    },
-                    "404": {
-                        "description": "Đơn ứng tuyển không tồn tại"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Xem chi tiết hồ sơ ứng viên ứng tuyển",
-                "tags": [
-                    "Applications - Employer"
-                ]
-            }
-        },
-        "/api/employer/applications/{id}/status": {
-            "patch": {
-                "operationId": "EmployerApplicationsController_updateApplicationStatus",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID đơn ứng tuyển",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateApplicationStatusDto"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Cập nhật thành công"
-                    },
-                    "400": {
-                        "description": "Trạng thái không hợp lệ / Đơn đã bị rút"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    },
-                    "404": {
-                        "description": "Đơn ứng tuyển không tồn tại"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Cập nhật trạng thái đơn ứng tuyển",
-                "tags": [
-                    "Applications - Employer"
-                ]
-            }
-        },
-        "/api/employer/applications/{id}/history": {
-            "get": {
-                "operationId": "EmployerApplicationsController_getApplicationHistory",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID đơn ứng tuyển",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Lịch sử trạng thái"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    },
-                    "404": {
-                        "description": "Đơn ứng tuyển không tồn tại"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Xem lịch sử thay đổi trạng thái đơn ứng tuyển",
-                "tags": [
-                    "Applications - Employer"
-                ]
-            }
-        },
-        "/api/employer/applications/{id}/notes": {
-            "post": {
-                "operationId": "EmployerApplicationsController_addNote",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID đơn ứng tuyển",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CreateApplicationNoteDto"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Đã thêm ghi chú"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    },
-                    "404": {
-                        "description": "Đơn ứng tuyển không tồn tại"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Thêm ghi chú/nhận xét cho đơn ứng tuyển",
-                "tags": [
-                    "Applications - Employer"
-                ]
-            }
-        },
-        "/api/employer/applications/notes/{noteId}": {
-            "patch": {
-                "operationId": "EmployerApplicationsController_updateNote",
-                "parameters": [
-                    {
-                        "name": "noteId",
-                        "required": true,
-                        "in": "path",
-                        "description": "ID của ghi chú",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateApplicationNoteDto"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Cập nhật thành công"
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền sửa\n\nKhông có quyền truy cập (Sai Role)"
-                    },
-                    "404": {
-                        "description": "Ghi chú không tồn tại"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "Cập nhật nội dung ghi chú (chỉ người tạo)",
-                "tags": [
-                    "Applications - Employer"
-                ]
-            }
         }
     },
     "info": {
@@ -3912,38 +4552,51 @@
                 "properties": {
                     "email": {
                         "type": "string",
-                        "minLength": 1,
+                        "maxLength": 255,
                         "format": "email",
                         "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
                         "description": "Email đăng ký",
                         "example": "user@example.com"
                     },
                     "password": {
-                        "type": "string",
                         "minLength": 6,
+                        "maxLength": 100,
+                        "allOf": [
+                            {
+                                "pattern": "[A-Z]"
+                            },
+                            {
+                                "pattern": "[0-9]"
+                            }
+                        ],
                         "description": "Mật khẩu (tối thiểu 6 ký tự)",
                         "example": "password123"
                     },
                     "firstName": {
                         "type": "string",
                         "minLength": 1,
+                        "maxLength": 100,
                         "description": "Tên",
                         "example": "Văn A"
                     },
                     "lastName": {
                         "type": "string",
                         "minLength": 1,
+                        "maxLength": 100,
                         "description": "Họ",
                         "example": "Nguyễn"
                     },
                     "phone": {
                         "type": "string",
                         "minLength": 10,
+                        "maxLength": 20,
                         "description": "Số điện thoại (tối thiểu 10 số)",
                         "example": "0901234567"
                     },
                     "provinceId": {
                         "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
                         "description": "ID tỉnh/thành phố",
                         "example": 1
                     }
@@ -3962,15 +4615,23 @@
                 "properties": {
                     "email": {
                         "type": "string",
-                        "minLength": 1,
+                        "maxLength": 255,
                         "format": "email",
                         "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
                         "description": "Email đăng ký của HR",
                         "example": "hr@company.com"
                     },
                     "password": {
-                        "type": "string",
                         "minLength": 6,
+                        "maxLength": 100,
+                        "allOf": [
+                            {
+                                "pattern": "[A-Z]"
+                            },
+                            {
+                                "pattern": "[0-9]"
+                            }
+                        ],
                         "description": "Mật khẩu (tối thiểu 6 ký tự)",
                         "example": "password123"
                     }
@@ -4024,7 +4685,7 @@
                 "properties": {
                     "email": {
                         "type": "string",
-                        "minLength": 1,
+                        "maxLength": 255,
                         "format": "email",
                         "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
                         "description": "Email của người dùng",
@@ -4033,12 +4694,21 @@
                     "token": {
                         "type": "string",
                         "minLength": 1,
+                        "maxLength": 20,
                         "description": "Mã PIN gồm 6 số gửi qua email",
                         "example": "123456"
                     },
                     "newPassword": {
-                        "type": "string",
                         "minLength": 6,
+                        "maxLength": 100,
+                        "allOf": [
+                            {
+                                "pattern": "[A-Z]"
+                            },
+                            {
+                                "pattern": "[0-9]"
+                            }
+                        ],
                         "description": "Mật khẩu mới (tối thiểu 6 ký tự)",
                         "example": "newpassword123"
                     }
@@ -4059,8 +4729,16 @@
                         "example": "oldpassword123"
                     },
                     "newPassword": {
-                        "type": "string",
                         "minLength": 6,
+                        "maxLength": 100,
+                        "allOf": [
+                            {
+                                "pattern": "[A-Z]"
+                            },
+                            {
+                                "pattern": "[0-9]"
+                            }
+                        ],
                         "description": "Mật khẩu mới (tối thiểu 6 ký tự)",
                         "example": "newpassword123"
                     }
@@ -4095,20 +4773,9 @@
                         "description": "Số điện thoại",
                         "example": "0901234567"
                     },
-                    "avatarUrl": {
-                        "type": "string",
-                        "maxLength": 255,
-                        "description": "URL ảnh đại diện",
-                        "example": "https://example.com/avatar.jpg"
-                    },
-                    "cvUrl": {
-                        "type": "string",
-                        "maxLength": 255,
-                        "description": "URL file CV",
-                        "example": "https://example.com/cv.pdf"
-                    },
                     "bio": {
                         "type": "string",
+                        "maxLength": 2000,
                         "description": "Giới thiệu bản thân",
                         "example": "Tôi là lập trình viên..."
                     },
@@ -4127,11 +4794,13 @@
                     },
                     "salaryMin": {
                         "type": "number",
+                        "minimum": 0,
                         "description": "Mức lương tối thiểu mong muốn (triệu VNĐ)",
                         "example": 10
                     },
                     "salaryMax": {
                         "type": "number",
+                        "minimum": 0,
                         "description": "Mức lương tối đa mong muốn (triệu VNĐ)",
                         "example": 20
                     },
@@ -4251,6 +4920,7 @@
                     },
                     "description": {
                         "type": "string",
+                        "maxLength": 2000,
                         "description": "Mô tả công việc đã thực hiện",
                         "example": "Phát triển REST API cho hệ thống quản lý nhân sự"
                     }
@@ -4315,9 +4985,17 @@
                     },
                     "degree": {
                         "type": "string",
-                        "maxLength": 100,
-                        "description": "Bằng cấp",
-                        "example": "Cử nhân"
+                        "enum": [
+                            "postgraduate",
+                            "university",
+                            "college",
+                            "intermediate",
+                            "high_school",
+                            "certificate",
+                            "none"
+                        ],
+                        "description": "Bằng cấp/Học vị",
+                        "default": "none"
                     },
                     "startDate": {
                         "type": "string",
@@ -4336,6 +5014,7 @@
                     },
                     "description": {
                         "type": "string",
+                        "maxLength": 2000,
                         "description": "Thông tin thêm về quá trình học tập",
                         "example": "Tốt nghiệp loại giỏi, GPA 3.5/4.0"
                     }
@@ -4361,9 +5040,16 @@
                     },
                     "degree": {
                         "type": "string",
-                        "maxLength": 100,
-                        "description": "Bằng cấp",
-                        "example": "Cử nhân"
+                        "enum": [
+                            "postgraduate",
+                            "university",
+                            "college",
+                            "intermediate",
+                            "high_school",
+                            "certificate",
+                            "none"
+                        ],
+                        "description": "Bằng cấp/Học vị"
                     },
                     "startDate": {
                         "type": "string",
@@ -4409,6 +5095,7 @@
                     },
                     "description": {
                         "type": "string",
+                        "maxLength": 2000,
                         "description": "Mô tả vai trò và kết quả trong dự án",
                         "example": "Thiết kế và phát triển module quản lý ứng viên"
                     }
@@ -4448,15 +5135,18 @@
                 "properties": {
                     "skills": {
                         "minItems": 1,
+                        "maxItems": 20,
                         "items": {
                             "anyOf": [
                                 {
                                     "type": "integer",
-                                    "minimum": -9007199254740991,
+                                    "exclusiveMinimum": 0,
                                     "maximum": 9007199254740991
                                 },
                                 {
-                                    "type": "string"
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 50
                                 }
                             ]
                         },
@@ -4478,6 +5168,7 @@
                 "properties": {
                     "categoryIds": {
                         "minItems": 1,
+                        "maxItems": 10,
                         "items": {
                             "type": "integer",
                             "exclusiveMinimum": 0,
@@ -4539,38 +5230,113 @@
                     "slug"
                 ]
             },
+            "ApplyJobDto": {
+                "type": "object",
+                "properties": {
+                    "coverLetter": {
+                        "type": "string",
+                        "maxLength": 5000,
+                        "description": "Thư xin việc (tùy chọn)"
+                    }
+                }
+            },
+            "UpdateApplicationStatusDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "applied",
+                            "shortlisted",
+                            "skill_test",
+                            "interview",
+                            "offer",
+                            "hired",
+                            "rejected",
+                            "withdrawn"
+                        ],
+                        "description": "Trạng thái mới",
+                        "example": "shortlisted"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "description": "Lý do (bắt buộc khi reject)"
+                    },
+                    "note": {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "description": "Ghi chú nội bộ của nhà tuyển dụng"
+                    }
+                },
+                "required": [
+                    "status"
+                ]
+            },
+            "CreateApplicationNoteDto": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000,
+                        "description": "Nội dung ghi chú"
+                    }
+                },
+                "required": [
+                    "content"
+                ]
+            },
+            "UpdateApplicationNoteDto": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000,
+                        "description": "Cập nhật nội dung ghi chú"
+                    }
+                },
+                "required": [
+                    "content"
+                ]
+            },
             "SetupCompanyDto": {
                 "type": "object",
                 "properties": {
                     "fullName": {
                         "type": "string",
                         "minLength": 1,
+                        "maxLength": 100,
                         "description": "Họ và tên HR"
                     },
                     "phoneContact": {
                         "type": "string",
                         "minLength": 1,
+                        "maxLength": 20,
                         "description": "Số điện thoại cá nhân HR"
                     },
                     "companyName": {
                         "type": "string",
                         "minLength": 1,
+                        "maxLength": 255,
                         "description": "Tên Công ty"
                     },
                     "categoryId": {
                         "type": "number",
-                        "minimum": -9007199254740991,
+                        "exclusiveMinimum": 0,
                         "maximum": 9007199254740991,
                         "description": "ID Ngành nghề / Lĩnh vực công ty"
                     },
                     "provinceId": {
                         "type": "number",
-                        "minimum": -9007199254740991,
+                        "exclusiveMinimum": 0,
                         "maximum": 9007199254740991,
                         "description": "ID Tỉnh / Thành phố trụ sở"
                     },
                     "address": {
                         "type": "string",
+                        "maxLength": 500,
                         "description": "Địa chỉ cụ thể"
                     }
                 },
@@ -4694,7 +5460,16 @@
                         "type": "string"
                     },
                     "degree": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "postgraduate",
+                            "university",
+                            "college",
+                            "intermediate",
+                            "high_school",
+                            "certificate",
+                            "none"
+                        ]
                     },
                     "startDate": {
                         "type": "string"
@@ -4856,6 +5631,10 @@
                         "type": "boolean"
                     },
                     "status": {
+                        "enum": [
+                            "active",
+                            "locked"
+                        ],
                         "type": "string"
                     },
                     "createdAt": {
@@ -5063,6 +5842,25 @@
                     "createdAt"
                 ]
             },
+            "JobLevelMetadataEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug"
+                ]
+            },
             "JobSkillTagEntity": {
                 "type": "object",
                 "properties": {
@@ -5139,6 +5937,21 @@
                     "jobTypeId": {
                         "type": "number"
                     },
+                    "levelId": {
+                        "type": "number"
+                    },
+                    "requiredDegree": {
+                        "type": "string",
+                        "enum": [
+                            "postgraduate",
+                            "university",
+                            "college",
+                            "intermediate",
+                            "high_school",
+                            "certificate",
+                            "none"
+                        ]
+                    },
                     "status": {
                         "type": "string"
                     },
@@ -5176,6 +5989,9 @@
                     "jobType": {
                         "$ref": "#/components/schemas/JobTypeMetadataEntity"
                     },
+                    "level": {
+                        "$ref": "#/components/schemas/JobLevelMetadataEntity"
+                    },
                     "skills": {
                         "type": "array",
                         "items": {
@@ -5204,6 +6020,8 @@
                     "provinceId",
                     "categoryId",
                     "jobTypeId",
+                    "levelId",
+                    "requiredDegree",
                     "status",
                     "slots",
                     "rejectionReason",
@@ -5215,6 +6033,7 @@
                     "province",
                     "category",
                     "jobType",
+                    "level",
                     "skills",
                     "applications"
                 ]
@@ -5330,10 +6149,6 @@
                         "type": "string",
                         "nullable": true
                     },
-                    "employerNote": {
-                        "type": "string",
-                        "nullable": true
-                    },
                     "matchScore": {
                         "type": "number",
                         "nullable": true
@@ -5385,7 +6200,6 @@
                     "coverLetter",
                     "status",
                     "rejectionReason",
-                    "employerNote",
                     "matchScore",
                     "matchReasoning",
                     "cvMatchScore",
@@ -5608,10 +6422,12 @@
                 "properties": {
                     "fullName": {
                         "type": "string",
+                        "maxLength": 100,
                         "description": "Họ và tên HR"
                     },
                     "phoneContact": {
                         "type": "string",
+                        "maxLength": 20,
                         "description": "Số điện thoại liên hệ"
                     }
                 }
@@ -5621,6 +6437,7 @@
                 "properties": {
                     "email": {
                         "type": "string",
+                        "maxLength": 255,
                         "format": "email",
                         "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
                         "example": "new.member@company.com"
@@ -5628,6 +6445,7 @@
                     "fullName": {
                         "type": "string",
                         "minLength": 1,
+                        "maxLength": 100,
                         "example": "Nguyễn Văn A"
                     },
                     "role": {
@@ -5642,7 +6460,16 @@
                         "anyOf": [
                             {
                                 "type": "string",
-                                "minLength": 6
+                                "minLength": 8,
+                                "maxLength": 100,
+                                "allOf": [
+                                    {
+                                        "pattern": "[A-Z]"
+                                    },
+                                    {
+                                        "pattern": "[0-9]"
+                                    }
+                                ]
                             },
                             {
                                 "type": "string",
@@ -5664,6 +6491,7 @@
                 "properties": {
                     "note": {
                         "type": "string",
+                        "maxLength": 1000,
                         "description": "Ghi chú về ứng viên này",
                         "example": "Ứng viên tiềm năng cho vị trí Backend"
                     }
@@ -5674,20 +6502,21 @@
                 "properties": {
                     "jobId": {
                         "type": "number",
-                        "minimum": -9007199254740991,
+                        "exclusiveMinimum": 0,
                         "maximum": 9007199254740991,
                         "description": "ID của Job muốn mời ứng tuyển",
                         "example": 1
                     },
                     "candidateId": {
                         "type": "number",
-                        "minimum": -9007199254740991,
+                        "exclusiveMinimum": 0,
                         "maximum": 9007199254740991,
                         "description": "ID của Ứng viên muốn mời",
                         "example": 10
                     },
                     "message": {
                         "type": "string",
+                        "maxLength": 1000,
                         "description": "Lời nhắn gửi đến ứng viên",
                         "example": "Chào bạn, chúng tôi thấy hồ sơ của bạn rất phù hợp..."
                     }
@@ -5706,12 +6535,14 @@
                         "maximum": 9007199254740991
                     },
                     "name": {
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 255
                     },
                     "emailContact": {
                         "anyOf": [
                             {
                                 "type": "string",
+                                "maxLength": 255,
                                 "format": "email",
                                 "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
                             },
@@ -5723,10 +6554,12 @@
                         "x-nestjs_zod-empty-type": true
                     },
                     "phoneContact": {
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 20
                     },
                     "address": {
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 500
                     },
                     "provinceId": {
                         "type": "number",
@@ -5734,18 +6567,22 @@
                         "maximum": 9007199254740991
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 2000
                     },
                     "content": {
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 10000
                     },
                     "companySize": {
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 50
                     },
                     "websiteUrl": {
                         "anyOf": [
                             {
                                 "type": "string",
+                                "maxLength": 255,
                                 "format": "uri"
                             },
                             {
@@ -5759,6 +6596,7 @@
                         "anyOf": [
                             {
                                 "type": "string",
+                                "maxLength": 255,
                                 "format": "uri"
                             },
                             {
@@ -5772,6 +6610,7 @@
                         "anyOf": [
                             {
                                 "type": "string",
+                                "maxLength": 255,
                                 "format": "uri"
                             },
                             {
@@ -5900,6 +6739,26 @@
                         "exclusiveMinimum": 0,
                         "maximum": 9007199254740991,
                         "description": "ID Hình thức (Full-time, Part-time)"
+                    },
+                    "levelId": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "ID Cấp bậc (Intern, Senior...)"
+                    },
+                    "requiredDegree": {
+                        "default": "none",
+                        "type": "string",
+                        "enum": [
+                            "postgraduate",
+                            "university",
+                            "college",
+                            "intermediate",
+                            "high_school",
+                            "certificate",
+                            "none"
+                        ],
+                        "description": "Yêu cầu bằng cấp tối thiểu"
                     },
                     "slots": {
                         "type": "number",
@@ -6049,6 +6908,24 @@
                         "exclusiveMinimum": 0,
                         "maximum": 9007199254740991
                     },
+                    "levelId": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "requiredDegree": {
+                        "type": "string",
+                        "default": "none",
+                        "enum": [
+                            "postgraduate",
+                            "university",
+                            "college",
+                            "intermediate",
+                            "high_school",
+                            "certificate",
+                            "none"
+                        ]
+                    },
                     "slots": {
                         "type": "integer",
                         "exclusiveMinimum": 0,
@@ -6076,77 +6953,6 @@
                         }
                     }
                 }
-            },
-            "ApplyJobDto": {
-                "type": "object",
-                "properties": {
-                    "coverLetter": {
-                        "type": "string",
-                        "maxLength": 5000,
-                        "description": "Thư xin việc (tùy chọn)"
-                    }
-                }
-            },
-            "UpdateApplicationStatusDto": {
-                "type": "object",
-                "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "applied",
-                            "shortlisted",
-                            "skill_test",
-                            "interview",
-                            "offer",
-                            "hired",
-                            "rejected",
-                            "withdrawn"
-                        ],
-                        "description": "Trạng thái mới",
-                        "example": "shortlisted"
-                    },
-                    "reason": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "description": "Lý do (bắt buộc khi reject)"
-                    },
-                    "note": {
-                        "type": "string",
-                        "maxLength": 2000,
-                        "description": "Ghi chú nội bộ của nhà tuyển dụng"
-                    }
-                },
-                "required": [
-                    "status"
-                ]
-            },
-            "CreateApplicationNoteDto": {
-                "type": "object",
-                "properties": {
-                    "content": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 2000,
-                        "description": "Nội dung ghi chú"
-                    }
-                },
-                "required": [
-                    "content"
-                ]
-            },
-            "UpdateApplicationNoteDto": {
-                "type": "object",
-                "properties": {
-                    "content": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 2000,
-                        "description": "Cập nhật nội dung ghi chú"
-                    }
-                },
-                "required": [
-                    "content"
-                ]
             }
         }
     }

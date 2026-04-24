@@ -36,6 +36,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   int? _selectedProvinceId;
   int? _selectedCategoryId;
   int? _selectedJobTypeId;
+  int? _selectedLevelId;
   DateTime? _selectedDeadline;
 
   bool _isInit = false;
@@ -66,6 +67,9 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     profileProvider.fetchProvincesIfEmpty();
     profileProvider.fetchJobTypesIfEmpty();
     profileProvider.fetchJobCategoriesMetadata();
+    
+    final jobProvider = context.read<JobProvider>();
+    jobProvider.fetchJobLevelsIfEmpty();
   }
 
   void _loadJobData() {
@@ -91,6 +95,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       _selectedProvinceId = (job.provinceId == 0) ? null : job.provinceId;
       _selectedCategoryId = (job.categoryId == 0) ? null : job.categoryId;
       _selectedJobTypeId = (job.jobTypeId == 0) ? null : job.jobTypeId;
+      _selectedLevelId = (job.levelId == 0) ? null : job.levelId;
       
       if (job.skills != null) {
         _selectedJobSkills.clear();
@@ -139,6 +144,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       'provinceId': _selectedProvinceId,
       'categoryId': _selectedCategoryId,
       'jobTypeId': _selectedJobTypeId,
+      'levelId': _selectedLevelId,
       'slots': int.tryParse(_slotsController.text) ?? 1,
       'deadline': _selectedDeadline?.toUtc().toIso8601String(),
       'skills': _selectedJobSkills.map((s) {
@@ -261,6 +267,19 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                       )).toList(),
                     onChanged: isAdmin ? (val) => setState(() => _selectedJobTypeId = val) : null,
                     icon: Icons.access_time,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  _buildDropdown<int>(
+                    label: 'Cấp bậc',
+                    value: _selectedLevelId,
+                    items: jobProvider.jobLevels.map((l) => 
+                      DropdownMenuItem(
+                        value: l.id, 
+                        child: Text(l.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))
+                      )).toList(),
+                    onChanged: isAdmin ? (val) => setState(() => _selectedLevelId = val) : null,
+                    icon: Icons.bar_chart,
                   ),
                   const SizedBox(height: 16),
                   

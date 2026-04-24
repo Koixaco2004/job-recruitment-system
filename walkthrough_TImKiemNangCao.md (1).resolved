@@ -1,0 +1,524 @@
+# Advanced Search — Frontend Integration Guide
+
+> **Phiên bản:** Sprint 2 — 24/04/2026  
+> **Author:** BE Team  
+> **Dành cho:** FE Team
+
+---
+
+## Tổng quan
+
+Hệ thống tìm kiếm nâng cao cung cấp **2 endpoint** độc lập:
+
+| Endpoint | Mô tả | Auth |
+|---|---|---|
+| `GET /jobs/public` | Candidate / khách tìm việc | ❌ Không cần |
+| `GET /employers/headhunting/candidates` | Employer tìm ứng viên (7 bộ lọc nâng cao) | ✅ Bearer Token + Role `EMPLOYER` |
+
+---
+
+## 1. Tìm kiếm việc làm — `GET /jobs/public`
+
+### Base URL
+```
+GET /jobs/public
+```
+
+### Query Parameters
+
+#### Phân trang
+
+| Param | Type | Default | Mô tả |
+|---|---|---|---|
+| `page` | `number` | `1` | Trang hiện tại |
+| `limit` | `number` | `10` | Số kết quả/trang (tối đa 100) |
+
+#### Text Search
+
+| Param | Type | Mô tả |
+|---|---|---|
+| `keyword` | `string` | Tìm trong **title** (luôn) + **description** (nếu keyword > 3 ký tự), không phân biệt hoa thường |
+
+#### Basic Filters (lọc cơ bản)
+
+| Param | Type | Mô tả |
+|---|---|---|
+| `provinceId` | `number` | ID tỉnh/thành phố (lấy từ API metadata) |
+| `categoryId` | `number` | ID ngành nghề (lấy từ API metadata) |
+| `jobTypeId` | `number` | ID hình thức (Full-time, Part-time, ...) |
+
+#### Advanced Filters (lọc nâng cao — mới)
+
+| Param | Type | Mô tả |
+|---|---|---|
+| `levelId` | `number` | ID cấp bậc (Junior, Senior, Manager, ...) |
+| `salaryMin` | `number` | Lương **tối thiểu** mong muốn (VNĐ) |
+| `salaryMax` | `number` | Lương **tối đa** mong muốn (VNĐ) |
+| `requiredDegree` | `string` | Bằng cấp yêu cầu (xem bảng enum bên dưới) |
+| `maxYearsRequired` | `number` | Lọc job yêu cầu số năm KN **tối đa** bằng này (candidate dùng để filter theo khả năng mình) |
+| `skillIds` | `number[]` | IDs skill cần tìm — **OR logic** (job có ít nhất 1 skill) |
+| `hasDeadline` | `boolean` | `true` = chỉ hiện job còn hạn nộp (`deadline > now` hoặc không giới hạn) |
+
+#### Sorting
+
+| Param | Type | Default | Các giá trị |
+|---|---|---|---|
+| `sortBy` | `string` | `createdAt` | `createdAt`, `deadline`, `salaryMin`, `relevance` |
+| `sortOrder` | `string` | `DESC` | `ASC`, `DESC` |
+
+> [!NOTE]
+> **`sortBy=relevance`**: Tính điểm tự động dựa trên `keyword` + `provinceId` + `categoryId` bạn đã truyền. Job match title = +10đ, match tỉnh = +5đ, match ngành = +3đ. Kết hợp tốt nhất khi dùng cùng các filter đó.
+
+---
+
+### Enum: `requiredDegree`
+
+| Giá trị | Ý nghĩa |
+|---|---|
+| `postgraduate` | Trên đại học |
+| `university` | Đại học |
+| `college` | Cao đẳng |
+| `intermediate` | Trung cấp |
+| `high_school` | Trung học |
+| `certificate` | Chứng chỉ / Bằng nghề |
+| `none` | Không yêu cầu |
+
+---
+
+### Salary Overlap Logic
+
+> [!IMPORTANT]
+> Hệ thống tìm job có khoảng lương **GIAO THOA** với khoảng bạn truyền vào — không phải filter cứng.
+>
+> Ví dụ: `salaryMin=15M` + `salaryMax=25M`  
+> → Sẽ trả về job nào có `salaryMax >= 15M` AND `salaryMin <= 25M`  
+> → Job để `null` lương vẫn được trả về (không ẩn job không ghi lương)
+
+---
+
+### Cách truyền `skillIds`
+
+Hỗ trợ **2 format**, chọn 1 tuỳ lib HTTP của bạn:
+
+```
+# Format 1: Repeated params (axios, fetch mặc định)
+GET /jobs/public?skillIds=1&skillIds=3&skillIds=7
+
+# Format 2: Comma-separated (dễ đọc hơn trong URL)  
+GET /jobs/public?skillIds=1,3,7
+```
+
+---
+
+### Response Structure
+
+```json
+{
+  "data": [
+    {
+      "id": 42,
+      "title": "Senior Backend Developer",
+      "description": "...",
+      "requirements": "...",
+      "benefits": "...",
+      "salaryMin": "15000000",
+      "salaryMax": "25000000",
+      "currency": "VND",
+      "yearsOfExperience": 3,
+      "requiredDegree": "university",
+      "slots": 2,
+      "deadline": "2026-05-30T00:00:00.000Z",
+      "status": "published",
+      "createdAt": "2026-04-20T08:00:00.000Z",
+      "company": {
+        "id": 5,
+        "name": "Tech Corp Vietnam",
+        "logoUrl": "https://...",
+        "bannerUrl": "https://...",
+        "description": "...",
+        "websiteUrl": "https://techcorp.vn",
+        "slug": "tech-corp-vietnam"
+      },
+      "province": { "id": 1, "name": "Hà Nội" },
+      "category": { "id": 2, "name": "Công nghệ thông tin" },
+      "jobType": { "id": 1, "name": "Full-time" },
+      "level": { "id": 3, "name": "Senior" },
+      "skills": [
+        {
+          "id": 10,
+          "skillMetadata": {
+            "id": 7,
+            "canonicalName": "NestJS",
+            "type": "framework"
+          }
+        }
+      ]
+    }
+  ],
+  "total": 150,
+  "page": 1,
+  "lastPage": 15
+}
+```
+
+---
+
+### Ví dụ Request
+
+**Tìm job React ở Hà Nội, lương 15-30M, còn hạn, sort theo relevance:**
+
+```
+GET /jobs/public?keyword=react&provinceId=1&salaryMin=15000000&salaryMax=30000000&hasDeadline=true&sortBy=relevance
+```
+
+**Lọc Senior Frontend với skill React hoặc Vue:**
+
+```
+GET /jobs/public?levelId=3&skillIds=5&skillIds=8&sortBy=salaryMin&sortOrder=DESC
+```
+
+**Tìm việc không yêu cầu bằng cấp, ít hơn 2 năm KN:**
+
+```
+GET /jobs/public?requiredDegree=none&maxYearsRequired=2&categoryId=1
+```
+
+---
+
+## 2. Tìm kiếm ứng viên — `GET /employers/headhunting/candidates`
+
+> **Cập nhật 24/04/2026:** Endpoint đã được chuyển từ `/candidates/search` sang `/employers/headhunting/candidates`
+> để đặt đúng namespace. Logic, bộ lọc và response shape **không thay đổi**.
+
+### Auth Required
+
+```
+Authorization: Bearer <token>
+```
+
+> [!IMPORTANT]
+> Endpoint này **chỉ dành cho Employer** (role = `EMPLOYER`).  
+> Candidate hoặc Admin gọi sẽ nhận `403 Forbidden`.
+
+### Base URL
+```
+GET /employers/headhunting/candidates
+```
+
+### Query Parameters
+
+#### Phân trang
+
+| Param | Type | Default | Mô tả |
+|---|---|---|---|
+| `page` | `number` | `1` | Trang hiện tại |
+| `limit` | `number` | `10` | Số kết quả/trang (tối đa 100) |
+
+#### Text Search
+
+| Param | Type | Mô tả |
+|---|---|---|
+| `keyword` | `string` | Tìm theo **tên** hoặc **vị trí mong muốn** (ILIKE) |
+
+#### Filters
+
+| Param | Type | Logic | Mô tả |
+|---|---|---|---|
+| `provinceId` | `number` | — | Tỉnh/thành phố ứng viên đang sinh sống |
+| `jobTypeId` | `number` | — | Hình thức làm việc ứng viên muốn |
+| `skillIds` | `number[]` | **OR** | Ứng viên có ít nhất 1 trong các skill này |
+| `categoryIds` | `number[]` | **OR** | Ứng viên quan tâm ít nhất 1 ngành này |
+| `salaryMin` | `number` | — | Employer sẵn sàng trả tối thiểu (overlap với kỳ vọng UV) |
+| `salaryMax` | `number` | — | Employer sẵn sàng trả tối đa (overlap với kỳ vọng UV) |
+| `minExperience` | `number` | — | Số năm kinh nghiệm tối thiểu của UV |
+
+#### Sorting
+
+| Param | Type | Default | Các giá trị |
+|---|---|---|---|
+| `sortBy` | `string` | `createdAt` | `createdAt`, `yearWorkingExperience` |
+| `sortOrder` | `string` | `DESC` | `ASC`, `DESC` |
+
+---
+
+### Response Structure
+
+> [!WARNING]
+> Một số field **bị ẩn** trong response để bảo vệ thông tin cá nhân UV.  
+> FE **không nhận được**: `phone`, `cvUrl`, `linkedinUrl`, `githubUrl`, `portfolioUrl`
+
+```json
+{
+  "data": [
+    {
+      "id": 12,
+      "fullName": "Nguyễn Văn A",
+      "gender": "male",
+      "avatarUrl": "https://...",
+      "bio": "Tôi là backend developer...",
+      "provinceId": 1,
+      "position": "Senior Backend Developer",
+      "salaryMin": "15000000",
+      "salaryMax": "25000000",
+      "jobTypeId": 1,
+      "yearWorkingExperience": 4,
+      "isPublic": true,
+      "userId": 55,
+      "skills": [
+        {
+          "id": 8,
+          "skillMetadata": {
+            "id": 3,
+            "canonicalName": "NestJS",
+            "type": "framework"
+          }
+        }
+      ],
+      "jobCategories": [
+        {
+          "id": 3,
+          "jobCategory": {
+            "id": 2,
+            "name": "Công nghệ thông tin"
+          }
+        }
+      ]
+    }
+  ],
+  "total": 42,
+  "page": 1,
+  "lastPage": 5
+}
+```
+
+---
+
+### Ví dụ Request
+
+**Tìm Senior có NestJS hoặc Node.js, ở Hà Nội, lương kỳ vọng phù hợp ngân sách 20-35M:**
+
+```
+GET /employers/headhunting/candidates?keyword=backend&provinceId=1&skillIds=3&skillIds=6&salaryMin=20000000&salaryMax=35000000&minExperience=3&sortBy=yearWorkingExperience&sortOrder=DESC
+```
+
+**Tìm UV quan tâm ngành IT hoặc Data, chưa yêu cầu lương cao:**
+
+```
+GET /employers/headhunting/candidates?categoryIds=1&categoryIds=4&salaryMax=20000000
+```
+
+---
+
+## Lưu ý chung cho FE
+
+### IDs của metadata
+
+Các ID như `provinceId`, `categoryId`, `jobTypeId`, `levelId` đều lấy từ các API metadata tương ứng:
+
+```
+GET /metadata/provinces
+GET /metadata/job-categories  
+GET /metadata/job-types
+GET /metadata/job-levels
+GET /metadata/skills
+```
+
+### Salary đơn vị là VNĐ
+
+Backend lưu salary dưới dạng `decimal` (VNĐ nguyên). FE nên format khi hiển thị:
+
+```ts
+// Ví dụ format
+const formatted = new Intl.NumberFormat('vi-VN').format(15000000);
+// → "15.000.000"
+```
+
+### `skill.canonicalName` vs `skill.tagText`
+
+Trong response skill của job, field `canonicalName` là tên chuẩn hoá từ BE (AI-normalized). Dùng field này để hiển thị tag, không dùng raw input của employer.
+
+### Pagination
+
+Response luôn trả về `total`, `page`, `lastPage` — dùng để render pagination component:
+
+```ts
+const hasNextPage = page < lastPage;
+const hasPrevPage = page > 1;
+```
+
+---
+
+## Employer Dashboard Stats
+
+> **Thêm vào:** 24/04/2026 | **Auth:** Bearer Token + Role `EMPLOYER`
+
+### Tổng quan
+
+| Endpoint | Mô tả |
+|---|---|
+| `GET /employers/dashboard/stats` | Thống kê tổng quan toàn công ty |
+| `GET /employers/dashboard/jobs/:jobId/stats` | Drill-down chi tiết 1 job cụ thể |
+
+---
+
+### `GET /employers/dashboard/stats?expiringSoonDays=7`
+
+#### Query Params
+
+| Param | Type | Default | Range | Mô tả |
+|---|---|---|---|---|
+| `expiringSoonDays` | `number` | `7` | `1–30` | Khoảng thời gian (ngày) tính job "sắp hết hạn" |
+
+> `expiringSoonDays=0` hoặc `=31` → `400 Bad Request`
+
+#### Response
+
+```json
+{
+  "jobs": {
+    "total": 12,
+    "byStatus": {
+      "draft": 3,
+      "pending": 2,
+      "published": 5,
+      "closed": 1,
+      "rejected": 1
+    },
+    "expiringSoon": {
+      "count": 2,
+      "days": 7
+    }
+  },
+  "applications": {
+    "total": 87,
+    "byStatus": {
+      "applied": 30,
+      "shortlisted": 20,
+      "skill_test": 10,
+      "interview": 12,
+      "offer": 5,
+      "hired": 7,
+      "rejected": 18,
+      "withdrawn": 3
+    },
+    "conversionRate": {
+      "appliedToShortlisted": 66.7,
+      "shortlistedToInterview": 60.0,
+      "interviewToHired": 58.3
+    },
+    "trend": {
+      "last7Days": [
+        { "date": "2026-04-18", "count": 5 },
+        { "date": "2026-04-19", "count": 3 },
+        { "date": "2026-04-20", "count": 0 },
+        { "date": "2026-04-21", "count": 8 },
+        { "date": "2026-04-22", "count": 12 },
+        { "date": "2026-04-23", "count": 6 },
+        { "date": "2026-04-24", "count": 1 }
+      ]
+    }
+  },
+  "headhunting": {
+    "invitationsSent": 15,
+    "accepted": 8,
+    "declined": 4,
+    "pending": 3,
+    "savedCandidates": 22
+  },
+  "topJobs": [
+    { "jobId": 10, "title": "Senior Backend Developer", "status": "published", "applicationCount": 24 }
+  ]
+}
+```
+
+#### Lưu ý quan trọng cho FE
+
+**`conversionRate` có thể là `null`:**
+
+```json
+"conversionRate": {
+  "appliedToShortlisted": 66.7,
+  "shortlistedToInterview": null,  // null khi chưa có shortlisted nào
+  "interviewToHired": null
+}
+```
+
+> [!WARNING]
+> Hiển thị `null` → `"N/A"`, KHÔNG phải `"0%"`. `null` = thiếu data. `0%` = đã có data nhưng tỉ lệ bằng 0.
+
+**`trend.last7Days` luôn có đủ 7 phần tử**, kể cả ngày vắng đơn → `count: 0`. FE dùng trực tiếp để vẽ chart.
+
+**Scope metric:**
+- `jobs`, `applications`, `topJobs` → **toàn công ty** (tất cả HR cùng thấy)
+- `headhunting.*` → **cá nhân HR đang đăng nhập**
+
+---
+
+### `GET /employers/dashboard/jobs/:jobId/stats`
+
+```json
+{
+  "job": {
+    "id": 10,
+    "title": "Senior Backend Developer",
+    "status": "published",
+    "deadline": "2026-05-30T00:00:00.000Z",
+    "slots": 3
+  },
+  "applications": {
+    "total": 24,
+    "byStatus": { "applied": 8, "shortlisted": 6, "skill_test": 3, "interview": 4, "offer": 1, "hired": 1, "rejected": 5, "withdrawn": 1 },
+    "conversionRate": {
+      "appliedToShortlisted": 75.0,
+      "shortlistedToInterview": 66.7,
+      "interviewToHired": 25.0
+    },
+    "trend": {
+      "last7Days": [
+        { "date": "2026-04-18", "count": 3 },
+        { "date": "2026-04-19", "count": 0 }
+      ]
+    }
+  },
+  "invitations": { "sent": 5, "accepted": 3, "declined": 1, "pending": 1 }
+}
+```
+
+**Error cases:**
+- `403` → Employer chưa thuộc công ty
+- `404` → `jobId` không tồn tại hoặc không thuộc công ty của employer
+
+---
+
+### Axios Example
+
+```ts
+// Company-wide (default 7 ngày)
+const stats = await axios.get('/employers/dashboard/stats', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+// Custom window 14 ngày
+const stats14 = await axios.get('/employers/dashboard/stats', {
+  headers: { Authorization: `Bearer ${token}` },
+  params: { expiringSoonDays: 14 },
+});
+
+// Per-job drill-down
+const jobStats = await axios.get(`/employers/dashboard/jobs/${jobId}/stats`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+```
+
+### Suggested UI Mapping
+
+| Data | UI Component |
+|---|---|
+| `jobs.byStatus` | Donut chart / Progress bar |
+| `jobs.expiringSoon.count` | Badge cảnh báo |
+| `applications.conversionRate` | Funnel chart / KPI cards |
+| `applications.trend.last7Days` | Line chart / Bar chart |
+| `headhunting.invitationsSent` | Stat card |
+| `topJobs` | Ranked table |
+| Per-job `byStatus` | Kanban column counts |
+| Per-job `invitations` | Invite stats card |
