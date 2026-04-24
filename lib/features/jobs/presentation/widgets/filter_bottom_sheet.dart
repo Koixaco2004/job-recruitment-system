@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
+import '../../../profile/domain/entities/skill_entity.dart';
 import '../../domain/models/job_filter_model.dart';
 import '../providers/job_provider.dart';
 
@@ -14,6 +15,8 @@ class FilterBottomSheet extends StatefulWidget {
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
   late JobFilterModel _tempFilter;
+  final TextEditingController _skillSearchController = TextEditingController();
+  List<SkillEntity> _selectedSkillEntities = [];
 
   @override
   void initState() {
@@ -21,6 +24,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     // Copy current filter
     final jobProvider = context.read<JobProvider>();
     _tempFilter = jobProvider.filter;
+    _selectedSkillEntities = List.from(jobProvider.selectedSkillEntities);
     
     // Load metadata if not loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -29,7 +33,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       profileProvider.fetchJobTypesIfEmpty();
       profileProvider.fetchJobCategoriesMetadata();
       jobProvider.fetchJobLevelsIfEmpty();
+      
+      // No need to manually populate here as we now store entities in JobProvider
     });
+  }
+
+  @override
+  void dispose() {
+    _skillSearchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -300,6 +312,101 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                             ],
                           ),
                         ),
+                        const SizedBox(height: 24),
+
+                        // --- Skills Section ---
+                        _buildDropdownSection(
+                          title: 'Kỹ năng',
+                          icon: Icons.psychology_outlined,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Selected Skills Tags
+                              if (_selectedSkillEntities.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: _selectedSkillEntities.map((skill) => Chip(
+                                      label: Text(skill.canonicalName, style: const TextStyle(fontSize: 12)),
+                                      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                      deleteIcon: const Icon(Icons.close, size: 16),
+                                      onDeleted: () {
+                                        setState(() {
+                                          _selectedSkillEntities.removeWhere((s) => s.id == skill.id);
+                                          final newIds = _selectedSkillEntities.map((s) => s.id).toList();
+                                          _tempFilter = _tempFilter.copyWith(
+                                            skillIds: newIds,
+                                            clearSkillIds: newIds.isEmpty,
+                                          );
+                                        });
+                                      },
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
+                                    )).toList(),
+                                  ),
+                                ),
+
+                              // Search Field
+                              TextFormField(
+                                controller: _skillSearchController,
+                                decoration: _dropdownDecoration('Tìm kiếm kỹ năng (vd: Java, React...)').copyWith(
+                                  prefixIcon: const Icon(Icons.search, size: 20),
+                                  suffixIcon: profileProvider.isLoadingSkills 
+                                    ? const SizedBox(width: 20, height: 20, child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2)))
+                                    : _skillSearchController.text.isNotEmpty 
+                                      ? IconButton(icon: const Icon(Icons.clear), onPressed: () {
+                                          _skillSearchController.clear();
+                                          profileProvider.searchSkills('');
+                                        })
+                                      : null,
+                                ),
+                                onChanged: (val) => profileProvider.searchSkills(val),
+                              ),
+
+                              // Search Results
+                              if (profileProvider.skillSearchResults.isNotEmpty && _skillSearchController.text.isNotEmpty)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  constraints: const BoxConstraints(maxHeight: 200),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2)),
+                                    ],
+                                  ),
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: profileProvider.skillSearchResults.length,
+                                    itemBuilder: (context, index) {
+                                      final skill = profileProvider.skillSearchResults[index];
+                                      final isSelected = _selectedSkillEntities.any((s) => s.id == skill.id);
+                                      
+                                      return ListTile(
+                                        title: Text(skill.canonicalName),
+                                        trailing: isSelected ? Icon(Icons.check, color: Theme.of(context).primaryColor) : null,
+                                        onTap: () {
+                                          if (!isSelected) {
+                                            setState(() {
+                                              _selectedSkillEntities.add(skill);
+                                              final newIds = _selectedSkillEntities.map((s) => s.id).toList();
+                                              _tempFilter = _tempFilter.copyWith(
+                                                skillIds: newIds,
+                                              );
+                                              _skillSearchController.clear();
+                                              profileProvider.searchSkills('');
+                                            });
+                                          }
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -326,6 +433,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                     onPressed: () {
                       setState(() {
                         _tempFilter = const JobFilterModel(keyword: '');
+                        _selectedSkillEntities = [];
+                        _skillSearchController.clear();
                       });
                     },
                     style: OutlinedButton.styleFrom(
@@ -341,7 +450,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   flex: 2,
                   child: ElevatedButton(
                     onPressed: () {
-                      context.read<JobProvider>().updateFilter(_tempFilter);
+                      context.read<JobProvider>().updateFilter(
+                        _tempFilter,
+                        selectedSkills: _selectedSkillEntities,
+                      );
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(

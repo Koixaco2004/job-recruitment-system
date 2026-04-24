@@ -4,6 +4,7 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/province_entity.dart';
 import '../../domain/entities/job_category_entity.dart';
 import '../../domain/entities/job_level_entity.dart';
+import '../../../profile/domain/entities/skill_entity.dart';
 import '../../domain/repositories/metadata_repository.dart';
 import '../datasources/metadata_remote_datasource.dart';
 
@@ -45,6 +46,18 @@ class MetadataRepositoryImpl implements MetadataRepository {
       return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Lỗi truy xuất cấp bậc: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<SkillEntity>>> searchSkills(String query) async {
+    try {
+      final skills = await remoteDataSource.searchSkills(query);
+      return Right(skills.cast<SkillEntity>());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi tìm kiếm kỹ năng: ${e.toString()}'));
     }
   }
 }

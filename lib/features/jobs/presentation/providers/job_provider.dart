@@ -11,6 +11,7 @@ import '../../domain/usecases/get_job_history_usecase.dart';
 import '../../domain/entities/job_status_history_entity.dart';
 import '../../../metadata/domain/entities/job_level_entity.dart';
 import '../../../metadata/domain/usecases/get_job_levels_usecase.dart';
+import '../../../../features/profile/domain/entities/skill_entity.dart';
 
 /// Provider quản lý state cho Jobs
 class JobProvider extends ChangeNotifier {
@@ -45,6 +46,7 @@ class JobProvider extends ChangeNotifier {
   String? _jobDetailError;
   JobFilterModel _filter = const JobFilterModel();
   JobPostEntity? _currentJobDetail;
+  List<SkillEntity> _selectedSkillEntities = [];
 
   // Apply state
   bool _isApplying = false;
@@ -86,6 +88,7 @@ class JobProvider extends ChangeNotifier {
   bool get hasJobs => _allJobs.isNotEmpty;
   JobFilterModel get filter => _filter;
   JobPostEntity? get currentJobDetail => _currentJobDetail;
+  List<SkillEntity> get selectedSkillEntities => _selectedSkillEntities;
   bool get isApplying => _isApplying;
   bool get applySuccess => _applySuccess;
   String? get applyError => _applyError;
@@ -138,6 +141,7 @@ class JobProvider extends ChangeNotifier {
     int? salaryMax,
     String? requiredDegree,
     int? maxYearsRequired,
+    List<int>? skillIds,
   }) async {
     if (_isLoading) return; // Chặn yêu cầu nếu đang thực hiện
 
@@ -162,6 +166,7 @@ class JobProvider extends ChangeNotifier {
       salaryMax: salaryMax ?? _filter.salaryMax,
       requiredDegree: requiredDegree ?? _filter.requiredDegree,
       maxYearsRequired: maxYearsRequired ?? _filter.maxYearsRequired,
+      skillIds: skillIds ?? _filter.skillIds,
     );
 
     result.fold(
@@ -218,8 +223,13 @@ class JobProvider extends ChangeNotifier {
   }
 
   /// Update filter and apply
-  void updateFilter(JobFilterModel newFilter) {
+  void updateFilter(JobFilterModel newFilter, {List<SkillEntity>? selectedSkills}) {
     _filter = newFilter;
+    if (selectedSkills != null) {
+      _selectedSkillEntities = List.from(selectedSkills);
+    } else if (newFilter.skillIds == null || newFilter.skillIds!.isEmpty) {
+      _selectedSkillEntities = [];
+    }
     fetchPublicJobs(refresh: true); // Re-fetch from API with new filter
     notifyListeners();
   }
@@ -227,6 +237,7 @@ class JobProvider extends ChangeNotifier {
   /// Clear all filters
   void clearFilter() {
     _filter = const JobFilterModel();
+    _selectedSkillEntities = [];
     fetchPublicJobs(refresh: true);
     notifyListeners();
   }

@@ -3,12 +3,14 @@ import '../../../../core/error/exceptions.dart';
 import '../models/province_model.dart';
 import '../models/job_category_model.dart';
 import '../models/job_level_model.dart';
+import '../models/skill_model.dart';
 import 'package:dio/dio.dart';
 
 abstract class MetadataRemoteDataSource {
   Future<List<ProvinceModel>> getProvinces();
   Future<List<JobCategoryModel>> getJobCategories();
   Future<List<JobLevelModel>> getJobLevels();
+  Future<List<SkillModel>> searchSkills(String query, {int limit = 10});
 }
 
 class MetadataRemoteDataSourceImpl implements MetadataRemoteDataSource {
@@ -62,6 +64,26 @@ class MetadataRemoteDataSourceImpl implements MetadataRemoteDataSource {
       }
     } on DioException catch (e) {
       throw ServerException(e.message ?? 'Lỗi kết nối khi tải cấp bậc');
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<SkillModel>> searchSkills(String query, {int limit = 10}) async {
+    try {
+      final response = await apiClient.dio.get(
+        '/api/metadata/skills/search',
+        queryParameters: {'q': query, 'limit': limit},
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => SkillModel.fromJson(json)).toList();
+      } else {
+        throw ServerException('Failed to search skills');
+      }
+    } on DioException catch (e) {
+      throw ServerException(e.message ?? 'Lỗi kết nối khi tìm kiếm kỹ năng');
     } catch (e) {
       throw ServerException(e.toString());
     }

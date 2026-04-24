@@ -41,13 +41,17 @@ class CandidateFilterModel extends Equatable {
     int? jobTypeId,
     int? yearsOfExperience,
     int? page,
+    bool? clearProvince,
+    bool? clearCategory,
+    bool? clearJobType,
+    bool? clearExperience,
   }) {
     return CandidateFilterModel(
       keyword: keyword ?? this.keyword,
-      provinceId: provinceId ?? this.provinceId,
-      categoryId: categoryId ?? this.categoryId,
-      jobTypeId: jobTypeId ?? this.jobTypeId,
-      yearsOfExperience: yearsOfExperience ?? this.yearsOfExperience,
+      provinceId: clearProvince == true ? null : (provinceId ?? this.provinceId),
+      categoryId: clearCategory == true ? null : (categoryId ?? this.categoryId),
+      jobTypeId: clearJobType == true ? null : (jobTypeId ?? this.jobTypeId),
+      yearsOfExperience: clearExperience == true ? null : (yearsOfExperience ?? this.yearsOfExperience),
       page: page ?? this.page,
     );
   }

@@ -23,6 +23,7 @@ class GetJobsUseCase {
     int? salaryMax,
     String? requiredDegree,
     int? maxYearsRequired,
+    List<int>? skillIds,
   }) async {
     return await repository.getJobs(
       page: page,
@@ -36,6 +37,7 @@ class GetJobsUseCase {
       salaryMax: salaryMax,
       requiredDegree: requiredDegree,
       maxYearsRequired: maxYearsRequired,
+      skillIds: skillIds,
     );
   }
 }

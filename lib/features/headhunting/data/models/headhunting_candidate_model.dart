@@ -30,9 +30,9 @@ class HeadhuntingCandidateModel extends HeadhuntingCandidateEntity {
 
   factory HeadhuntingCandidateModel.fromJson(Map<String, dynamic> json) {
     return HeadhuntingCandidateModel(
-      id: json['id'] as int,
-      userId: json['userId'] as int,
-      fullName: json['fullName'] as String,
+      id: json['id'] as int? ?? 0,
+      userId: json['userId'] as int? ?? 0,
+      fullName: json['fullName'] as String? ?? 'Ẩn danh',
       gender: json['gender'] as String?,
       phone: json['phone'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
@@ -91,8 +91,8 @@ class HeadhuntingSkillModel extends HeadhuntingSkillEntity {
 
   factory HeadhuntingSkillModel.fromJson(Map<String, dynamic> json) {
     return HeadhuntingSkillModel(
-      id: json['id'] as int,
-      skillMetadataId: json['skillMetadataId'] as int,
+      id: json['id'] as int? ?? 0,
+      skillMetadataId: json['skillMetadataId'] as int? ?? 0,
       skillMetadata: SkillMetadataModel.fromJson(json['skillMetadata'] as Map<String, dynamic>),
     );
   }
@@ -108,10 +108,10 @@ class SkillMetadataModel extends SkillMetadataEntity {
 
   factory SkillMetadataModel.fromJson(Map<String, dynamic> json) {
     return SkillMetadataModel(
-      id: json['id'] as int,
-      canonicalName: json['canonicalName'] as String,
-      slug: json['slug'] as String,
-      type: json['type'] as String,
+      id: json['id'] as int? ?? 0,
+      canonicalName: json['canonicalName'] as String? ?? '',
+      slug: json['slug'] as String? ?? '',
+      type: json['type'] as String? ?? '',
     );
   }
 }

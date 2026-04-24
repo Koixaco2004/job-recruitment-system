@@ -58,7 +58,7 @@ class CandidateSearchProvider extends ChangeNotifier {
         notifyListeners();
       },
       (data) {
-        final List<HeadhuntingCandidateEntity> newCandidates = data['candidates'];
+        final List<HeadhuntingCandidateEntity> newCandidates = data['candidates'] ?? [];
         if (refresh) {
           _candidates = newCandidates;
         } else {
@@ -68,8 +68,8 @@ class CandidateSearchProvider extends ChangeNotifier {
           _candidates.addAll(uniqueNewCandidates);
         }
 
-        _totalCount = data['total'];
-        final int lastPage = data['lastPage'];
+        _totalCount = data['total'] ?? 0;
+        final int lastPage = data['lastPage'] ?? 1;
         _hasMore = _filter.page < lastPage;
 
         if (_hasMore) {

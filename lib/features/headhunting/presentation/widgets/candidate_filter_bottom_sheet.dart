@@ -99,6 +99,7 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                               setState(() {
                                 _tempFilter = _tempFilter.copyWith(
                                   yearsOfExperience: int.tryParse(val),
+                                  clearExperience: val.isEmpty,
                                 );
                               });
                             },
@@ -126,7 +127,10 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                             ],
                             onChanged: (val) {
                               setState(() {
-                                _tempFilter = _tempFilter.copyWith(provinceId: val);
+                                _tempFilter = _tempFilter.copyWith(
+                                  provinceId: val,
+                                  clearProvince: val == null,
+                                );
                               });
                             },
                           ),
@@ -153,7 +157,10 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                             ],
                             onChanged: (val) {
                               setState(() {
-                                _tempFilter = _tempFilter.copyWith(categoryId: val);
+                                _tempFilter = _tempFilter.copyWith(
+                                  categoryId: val,
+                                  clearCategory: val == null,
+                                );
                               });
                             },
                           ),
@@ -180,7 +187,10 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                             ],
                             onChanged: (val) {
                               setState(() {
-                                _tempFilter = _tempFilter.copyWith(jobTypeId: val);
+                                _tempFilter = _tempFilter.copyWith(
+                                  jobTypeId: val,
+                                  clearJobType: val == null,
+                                );
                               });
                             },
                           ),
