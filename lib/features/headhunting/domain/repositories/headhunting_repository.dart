@@ -5,6 +5,8 @@ import '../entities/candidate_detail_entity.dart';
 import '../entities/candidate_invitation_entity.dart';
 import '../entities/employer_invitation_entity.dart';
 import '../entities/saved_candidate_entity.dart';
+import '../../data/models/employer_dashboard_stats_model.dart';
+import '../../data/models/job_detailed_stats_model.dart';
 
 abstract class HeadhuntingRepository {
   Future<Either<Failure, List<HeadhuntingCandidateEntity>>> getSuggestedCandidates(int jobId);
@@ -41,4 +43,7 @@ abstract class HeadhuntingRepository {
   Future<Either<Failure, bool>> saveCandidate(int candidateId, {String? note});
   Future<Either<Failure, bool>> unsaveCandidate(int candidateId);
   Future<Either<Failure, List<SavedCandidateEntity>>> getSavedCandidates();
+
+  Future<Either<Failure, EmployerDashboardStatsModel>> getDashboardStats({int expiringSoonDays = 7});
+  Future<Either<Failure, JobDetailedStatsModel>> getJobDetailedStats(int jobId);
 }

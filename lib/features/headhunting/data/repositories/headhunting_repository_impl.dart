@@ -5,6 +5,8 @@ import '../../domain/entities/candidate_detail_entity.dart';
 import '../../domain/entities/candidate_invitation_entity.dart';
 import '../../domain/entities/employer_invitation_entity.dart';
 import '../../domain/entities/saved_candidate_entity.dart';
+import '../models/employer_dashboard_stats_model.dart';
+import '../models/job_detailed_stats_model.dart';
 import '../../domain/repositories/headhunting_repository.dart';
 import '../datasources/headhunting_remote_datasource.dart';
 
@@ -151,6 +153,26 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
     try {
       final savedCandidates = await remoteDataSource.getSavedCandidates();
       return Right(savedCandidates);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, EmployerDashboardStatsModel>> getDashboardStats({int expiringSoonDays = 7}) async {
+    try {
+      final stats = await remoteDataSource.getDashboardStats(expiringSoonDays: expiringSoonDays);
+      return Right(stats);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, JobDetailedStatsModel>> getJobDetailedStats(int jobId) async {
+    try {
+      final stats = await remoteDataSource.getJobDetailedStats(jobId);
+      return Right(stats);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

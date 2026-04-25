@@ -11,6 +11,7 @@ import 'features/employer/presentation/providers/employer_provider.dart';
 import 'features/applications/presentation/providers/application_provider.dart';
 import 'features/applications/presentation/providers/employer_application_provider.dart';
 import 'features/headhunting/presentation/providers/headhunting_provider.dart';
+import 'features/headhunting/presentation/providers/employer_dashboard_provider.dart';
 import 'features/headhunting/presentation/providers/candidate_search_provider.dart';
 import 'features/notifications/presentation/providers/notification_provider.dart';
 import 'features/auth/presentation/pages/email_verification_page.dart';
@@ -54,6 +55,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => di.sl<EmployerApplicationProvider>()),
         // Headhunting Provider
         ChangeNotifierProvider(create: (_) => di.sl<HeadhuntingProvider>()),
+        // Employer Dashboard Provider
+        ChangeNotifierProvider(create: (_) => di.sl<EmployerDashboardProvider>()),
         // Candidate Search Provider
         ChangeNotifierProvider(create: (_) => di.sl<CandidateSearchProvider>()),
         // Notification Provider

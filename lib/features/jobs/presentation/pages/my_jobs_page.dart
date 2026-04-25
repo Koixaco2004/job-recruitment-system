@@ -14,6 +14,7 @@ import '../pages/job_detail_page.dart';
 import '../../../applications/presentation/pages/job_kanban_page.dart';
 import '../../../headhunting/presentation/pages/suggested_candidates_page.dart';
 import '../../../employer/presentation/providers/employer_provider.dart';
+import '../../../headhunting/presentation/pages/job_detailed_stats_page.dart';
 
 /// Màn hình "Việc của tôi" với 2 tabs: Đã lưu & Đã ứng tuyển
 class MyJobsPage extends StatefulWidget {
@@ -419,66 +420,90 @@ class _MyJobsPageState extends State<MyJobsPage>
                             ),
                           ),
                         const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Text(
+                          'Cập nhật: ${job.updatedAt.day}/${job.updatedAt.month}/${job.updatedAt.year}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(height: 1),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
-                            Text(
-                              'Cập nhật: ${job.updatedAt.day}/${job.updatedAt.month}/${job.updatedAt.year}',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                            ),
-                            Row(
-                              children: [
-                                if (job.applicationCount > 0 || job.status == 'published' || job.status == 'approved')
-                                  TextButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => JobKanbanPage(
-                                            jobId: job.jobPostId,
-                                            jobTitle: job.title,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.people_alt_outlined, size: 18),
-                                    label: const Text('Ứng viên'),
-                                    style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                      visualDensity: VisualDensity.compact,
+                            if (job.applicationCount > 0 || job.status == 'published' || job.status == 'approved')
+                              TextButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => JobKanbanPage(
+                                        jobId: job.jobPostId,
+                                        jobTitle: job.title,
+                                      ),
                                     ),
-                                  ),
-                                if (job.status == 'published' || job.status == 'approved')
-                                  TextButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => SuggestedCandidatesPage(
-                                            jobId: job.jobPostId,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.auto_awesome_outlined, size: 18, color: Colors.purple),
-                                    label: const Text('Đề xuất', style: TextStyle(color: Colors.purple)),
-                                    style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                      visualDensity: VisualDensity.compact,
+                                  );
+                                },
+                                icon: const Icon(Icons.people_alt_outlined, size: 18),
+                                label: const Text('Ứng viên'),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  backgroundColor: Colors.blue.withOpacity(0.05),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                            if (job.status == 'published' || job.status == 'approved')
+                              TextButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => JobDetailedStatsPage(
+                                        jobId: job.jobPostId,
+                                        jobTitle: job.title,
+                                      ),
                                     ),
-                                  ),
-                                if (job.status == 'draft' && (context.read<EmployerProvider>().employer?.isAdminCompany ?? false))
-                                  TextButton.icon(
-                                    onPressed: () => provider.publishJob(job.jobPostId),
-                                    icon: const Icon(Icons.publish, size: 18),
-                                    label: const Text('Đăng ngay'),
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
+                                  );
+                                },
+                                icon: const Icon(Icons.analytics_outlined, size: 18, color: Color(0xFF3B82F6)),
+                                label: const Text('Thống kê', style: TextStyle(color: Color(0xFF3B82F6))),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  backgroundColor: Colors.blue.withOpacity(0.05),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                            if (job.status == 'published' || job.status == 'approved')
+                              TextButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SuggestedCandidatesPage(
+                                        jobId: job.jobPostId,
+                                      ),
                                     ),
-                                  ),
-                              ],
-                            ),
+                                  );
+                                },
+                                icon: const Icon(Icons.auto_awesome_outlined, size: 18, color: Colors.purple),
+                                label: const Text('Đề xuất', style: TextStyle(color: Colors.purple)),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  backgroundColor: Colors.purple.withOpacity(0.05),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                            if (job.status == 'draft' && (context.read<EmployerProvider>().employer?.isAdminCompany ?? false))
+                              TextButton.icon(
+                                onPressed: () => provider.publishJob(job.jobPostId),
+                                icon: const Icon(Icons.publish, size: 18),
+                                label: const Text('Đăng ngay'),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  backgroundColor: Colors.orange.withOpacity(0.05),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
                           ],
                         ),
                       ],

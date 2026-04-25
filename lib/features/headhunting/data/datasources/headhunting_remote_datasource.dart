@@ -5,6 +5,8 @@ import '../models/candidate_detail_model.dart';
 import '../models/candidate_invitation_model.dart';
 import '../models/employer_invitation_model.dart';
 import '../models/saved_candidate_model.dart';
+import '../models/employer_dashboard_stats_model.dart';
+import '../models/job_detailed_stats_model.dart';
 
 abstract class HeadhuntingRemoteDataSource {
   Future<List<HeadhuntingCandidateModel>> getSuggestedCandidates(int jobId);
@@ -41,6 +43,10 @@ abstract class HeadhuntingRemoteDataSource {
   Future<bool> saveCandidate(int candidateId, {String? note});
   Future<bool> unsaveCandidate(int candidateId);
   Future<List<SavedCandidateModel>> getSavedCandidates();
+
+  Future<EmployerDashboardStatsModel> getDashboardStats({int expiringSoonDays = 7});
+
+  Future<JobDetailedStatsModel> getJobDetailedStats(int jobId);
 }
 
 class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
@@ -204,6 +210,29 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
       return data.map((json) => SavedCandidateModel.fromJson(json as Map<String, dynamic>)).toList();
     } else {
       throw Exception('Failed to load saved candidates');
+    }
+  }
+
+  @override
+  Future<EmployerDashboardStatsModel> getDashboardStats({int expiringSoonDays = 7}) async {
+    try {
+      final response = await apiClient.dio.get(
+        '/api/employers/dashboard/stats',
+        queryParameters: {'expiringSoonDays': expiringSoonDays},
+      );
+      return EmployerDashboardStatsModel.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<JobDetailedStatsModel> getJobDetailedStats(int jobId) async {
+    try {
+      final response = await apiClient.dio.get('/api/employers/dashboard/jobs/$jobId/stats');
+      return JobDetailedStatsModel.fromJson(response.data);
+    } catch (e) {
+      rethrow;
     }
   }
 }
