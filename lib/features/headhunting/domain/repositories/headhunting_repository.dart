@@ -12,9 +12,14 @@ abstract class HeadhuntingRepository {
   Future<Either<Failure, Map<String, dynamic>>> searchCandidates({
     String? keyword,
     int? provinceId,
-    int? yearsOfExperience,
-    int? jobCategoryId,
+    int? minExperience,
+    List<int>? categoryIds,
+    List<int>? skillIds,
     int? jobTypeId,
+    int? salaryMin,
+    int? salaryMax,
+    String? sortBy,
+    String? sortOrder,
     int page = 1,
   });
 

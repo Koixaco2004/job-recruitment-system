@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/headhunting_candidate_entity.dart';
 import '../../domain/models/candidate_filter_model.dart';
 import '../../domain/usecases/search_candidates_usecase.dart';
+import '../../../profile/domain/entities/skill_entity.dart';
 
 class CandidateSearchProvider extends ChangeNotifier {
   final SearchCandidatesUseCase searchCandidatesUseCase;
@@ -26,6 +27,9 @@ class CandidateSearchProvider extends ChangeNotifier {
   bool _hasMore = true;
   bool get hasMore => _hasMore;
 
+  List<SkillEntity> _selectedSkillEntities = [];
+  List<SkillEntity> get selectedSkillEntities => _selectedSkillEntities;
+
   Future<void> searchCandidates({bool refresh = true}) async {
     if (_isLoading) return; // Chặn yêu cầu nếu đang tải
     
@@ -45,9 +49,14 @@ class CandidateSearchProvider extends ChangeNotifier {
     final result = await searchCandidatesUseCase(
       keyword: _filter.keyword,
       provinceId: _filter.provinceId,
-      yearsOfExperience: _filter.yearsOfExperience,
-      jobCategoryId: _filter.categoryId,
+      minExperience: _filter.minExperience,
+      categoryIds: _filter.categoryIds,
+      skillIds: _filter.skillIds,
       jobTypeId: _filter.jobTypeId,
+      salaryMin: _filter.salaryMin,
+      salaryMax: _filter.salaryMax,
+      sortBy: _filter.sortBy,
+      sortOrder: _filter.sortOrder,
       page: _filter.page,
     );
 
@@ -82,13 +91,17 @@ class CandidateSearchProvider extends ChangeNotifier {
     );
   }
 
-  void updateFilter(CandidateFilterModel newFilter) {
+  void updateFilter(CandidateFilterModel newFilter, {List<SkillEntity>? selectedSkills}) {
     _filter = newFilter;
+    if (selectedSkills != null) {
+      _selectedSkillEntities = selectedSkills;
+    }
     searchCandidates(refresh: true);
   }
 
   void clearFilter() {
     _filter = const CandidateFilterModel();
+    _selectedSkillEntities = [];
     searchCandidates(refresh: true);
   }
 }

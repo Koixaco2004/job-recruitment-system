@@ -10,17 +10,27 @@ class SearchCandidatesUseCase {
   Future<Either<Failure, Map<String, dynamic>>> call({
     String? keyword,
     int? provinceId,
-    int? yearsOfExperience,
-    int? jobCategoryId,
+    int? minExperience,
+    List<int>? categoryIds,
+    List<int>? skillIds,
     int? jobTypeId,
+    int? salaryMin,
+    int? salaryMax,
+    String? sortBy,
+    String? sortOrder,
     int page = 1,
   }) {
     return repository.searchCandidates(
       keyword: keyword,
       provinceId: provinceId,
-      yearsOfExperience: yearsOfExperience,
-      jobCategoryId: jobCategoryId,
+      minExperience: minExperience,
+      categoryIds: categoryIds,
+      skillIds: skillIds,
       jobTypeId: jobTypeId,
+      salaryMin: salaryMin,
+      salaryMax: salaryMax,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
       page: page,
     );
   }

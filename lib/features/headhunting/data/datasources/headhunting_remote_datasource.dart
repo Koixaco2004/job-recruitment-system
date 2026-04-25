@@ -12,9 +12,14 @@ abstract class HeadhuntingRemoteDataSource {
   Future<Map<String, dynamic>> searchCandidates({
     String? keyword,
     int? provinceId,
-    int? yearsOfExperience,
-    int? jobCategoryId,
+    int? minExperience,
+    List<int>? categoryIds,
+    List<int>? skillIds,
     int? jobTypeId,
+    int? salaryMin,
+    int? salaryMax,
+    String? sortBy,
+    String? sortOrder,
     int page = 1,
   });
 
@@ -59,17 +64,27 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
   Future<Map<String, dynamic>> searchCandidates({
     String? keyword,
     int? provinceId,
-    int? yearsOfExperience,
-    int? jobCategoryId,
+    int? minExperience,
+    List<int>? categoryIds,
+    List<int>? skillIds,
     int? jobTypeId,
+    int? salaryMin,
+    int? salaryMax,
+    String? sortBy,
+    String? sortOrder,
     int page = 1,
   }) async {
     final queryParams = {
       if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
       if (provinceId != null) 'provinceId': provinceId,
-      if (yearsOfExperience != null) 'minExperience': yearsOfExperience,
-      if (jobCategoryId != null) 'jobCategoryId': jobCategoryId,
+      if (minExperience != null) 'minExperience': minExperience,
+      if (categoryIds != null && categoryIds.isNotEmpty) 'categoryIds': categoryIds,
+      if (skillIds != null && skillIds.isNotEmpty) 'skillIds': skillIds,
       if (jobTypeId != null) 'jobTypeId': jobTypeId,
+      if (salaryMin != null) 'salaryMin': salaryMin,
+      if (salaryMax != null) 'salaryMax': salaryMax,
+      if (sortBy != null) 'sortBy': sortBy,
+      if (sortOrder != null) 'sortOrder': sortOrder,
       'page': page,
       'limit': 10,
     };

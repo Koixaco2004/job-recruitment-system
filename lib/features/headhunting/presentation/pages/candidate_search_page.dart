@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../../profile/domain/entities/job_category_entity.dart';
+import '../../../profile/domain/entities/skill_entity.dart';
 import '../providers/candidate_search_provider.dart';
 import '../widgets/candidate_card.dart';
 import '../widgets/candidate_filter_bottom_sheet.dart';
@@ -275,9 +276,9 @@ class _CandidateSearchPageState extends State<CandidateSearchPage> {
     final filter = provider.filter;
     final profileProvider = context.read<ProfileProvider>();
 
-    if (filter.yearsOfExperience != null) {
-      chips.add(_buildFilterChip('${filter.yearsOfExperience}+ năm KN', () {
-        provider.updateFilter(filter.clearField(experience: true));
+    if (filter.minExperience != null) {
+      chips.add(_buildFilterChip('${filter.minExperience}+ năm KN', () {
+        provider.updateFilter(filter.copyWith(clearExperience: true));
       }));
     }
 
@@ -285,20 +286,22 @@ class _CandidateSearchPageState extends State<CandidateSearchPage> {
       final name = profileProvider.getProvinceName(filter.provinceId);
       if (name != null) {
         chips.add(_buildFilterChip(name, () {
-          provider.updateFilter(filter.clearField(province: true));
+          provider.updateFilter(filter.copyWith(clearProvince: true));
         }));
       }
     }
 
-    if (filter.categoryId != null) {
-      final category = profileProvider.allJobCategories.firstWhere(
-        (c) => c.id == filter.categoryId,
-        orElse: () => const JobCategoryEntity(id: -1, name: ''),
-      );
-      if (category.id != -1) {
-        chips.add(_buildFilterChip(category.name, () {
-          provider.updateFilter(filter.clearField(category: true));
-        }));
+    if (filter.categoryIds != null && filter.categoryIds!.isNotEmpty) {
+      for (final id in filter.categoryIds!) {
+        final category = profileProvider.allJobCategories.firstWhere(
+          (c) => c.id == id,
+          orElse: () => const JobCategoryEntity(id: -1, name: ''),
+        );
+        if (category.id != -1) {
+          chips.add(_buildFilterChip(category.name, () {
+            provider.updateFilter(filter.copyWith(categoryIds: filter.categoryIds!.where((cid) => cid != id).toList()));
+          }));
+        }
       }
     }
 
@@ -306,7 +309,36 @@ class _CandidateSearchPageState extends State<CandidateSearchPage> {
       final name = profileProvider.getJobTypeName(filter.jobTypeId);
       if (name != null) {
         chips.add(_buildFilterChip(name, () {
-          provider.updateFilter(filter.clearField(jobType: true));
+          provider.updateFilter(filter.copyWith(clearJobType: true));
+        }));
+      }
+    }
+
+    if (filter.salaryMin != null) {
+      chips.add(_buildFilterChip('Min: ${filter.salaryMin}', () {
+        provider.updateFilter(filter.copyWith(clearSalaryMin: true));
+      }));
+    }
+
+    if (filter.salaryMax != null) {
+      chips.add(_buildFilterChip('Max: ${filter.salaryMax}', () {
+        provider.updateFilter(filter.copyWith(clearSalaryMax: true));
+      }));
+    }
+
+    // Add Skill Chips
+    if (provider.selectedSkillEntities.isNotEmpty) {
+      for (final skill in provider.selectedSkillEntities) {
+        chips.add(_buildFilterChip(skill.canonicalName, () {
+          final newSkills = List<SkillEntity>.from(provider.selectedSkillEntities)..removeWhere((s) => s.id == skill.id);
+          final newIds = newSkills.map((s) => s.id).toList();
+          provider.updateFilter(
+            filter.copyWith(
+              skillIds: newIds,
+              clearSkillIds: newIds.isEmpty,
+            ),
+            selectedSkills: newSkills,
+          );
         }));
       }
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
+import '../../../profile/domain/entities/skill_entity.dart';
 import '../../domain/models/candidate_filter_model.dart';
 import '../providers/candidate_search_provider.dart';
 
@@ -14,13 +15,26 @@ class CandidateFilterBottomSheet extends StatefulWidget {
 class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet> {
   late CandidateFilterModel _tempFilter;
   final TextEditingController _experienceController = TextEditingController();
+  final TextEditingController _salaryMinController = TextEditingController();
+  final TextEditingController _salaryMaxController = TextEditingController();
+  final TextEditingController _skillSearchController = TextEditingController();
+  List<SkillEntity> _selectedSkillEntities = [];
 
   @override
   void initState() {
     super.initState();
-    _tempFilter = context.read<CandidateSearchProvider>().filter;
-    if (_tempFilter.yearsOfExperience != null) {
-      _experienceController.text = _tempFilter.yearsOfExperience.toString();
+    final candidateProvider = context.read<CandidateSearchProvider>();
+    _tempFilter = candidateProvider.filter;
+    _selectedSkillEntities = List.from(candidateProvider.selectedSkillEntities);
+
+    if (_tempFilter.minExperience != null) {
+      _experienceController.text = _tempFilter.minExperience.toString();
+    }
+    if (_tempFilter.salaryMin != null) {
+      _salaryMinController.text = _tempFilter.salaryMin.toString();
+    }
+    if (_tempFilter.salaryMax != null) {
+      _salaryMaxController.text = _tempFilter.salaryMax.toString();
     }
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -34,6 +48,9 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
   @override
   void dispose() {
     _experienceController.dispose();
+    _salaryMinController.dispose();
+    _salaryMaxController.dispose();
+    _skillSearchController.dispose();
     super.dispose();
   }
 
@@ -98,11 +115,152 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                             onChanged: (val) {
                               setState(() {
                                 _tempFilter = _tempFilter.copyWith(
-                                  yearsOfExperience: int.tryParse(val),
+                                  minExperience: int.tryParse(val),
                                   clearExperience: val.isEmpty,
                                 );
                               });
                             },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Salary Range ---
+                        _buildDropdownSection(
+                          title: 'Mức lương ngân sách (VNĐ)',
+                          icon: Icons.monetization_on_outlined,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _salaryMinController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: _inputDecoration('Tối thiểu'),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _tempFilter = _tempFilter.copyWith(
+                                        salaryMin: int.tryParse(val),
+                                        clearSalaryMin: val.isEmpty,
+                                      );
+                                    });
+                                  },
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('—', style: TextStyle(color: Colors.grey)),
+                              ),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _salaryMaxController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: _inputDecoration('Tối đa'),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _tempFilter = _tempFilter.copyWith(
+                                        salaryMax: int.tryParse(val),
+                                        clearSalaryMax: val.isEmpty,
+                                      );
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Skills Section ---
+                        _buildDropdownSection(
+                          title: 'Kỹ năng',
+                          icon: Icons.psychology_outlined,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Selected Skills Tags
+                              if (_selectedSkillEntities.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: _selectedSkillEntities.map((skill) => Chip(
+                                      label: Text(skill.canonicalName, style: const TextStyle(fontSize: 12)),
+                                      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                                      deleteIcon: const Icon(Icons.close, size: 16),
+                                      onDeleted: () {
+                                        setState(() {
+                                          _selectedSkillEntities.removeWhere((s) => s.id == skill.id);
+                                          final newIds = _selectedSkillEntities.map((s) => s.id).toList();
+                                          _tempFilter = _tempFilter.copyWith(
+                                            skillIds: newIds,
+                                            clearSkillIds: newIds.isEmpty,
+                                          );
+                                        });
+                                      },
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.2)),
+                                    )).toList(),
+                                  ),
+                                ),
+
+                              // Search Field
+                              TextFormField(
+                                controller: _skillSearchController,
+                                decoration: _inputDecoration('Tìm kiếm kỹ năng (vd: Java, React...)').copyWith(
+                                  prefixIcon: const Icon(Icons.search, size: 20),
+                                  suffixIcon: profileProvider.isLoadingSkills 
+                                    ? const SizedBox(width: 20, height: 20, child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2)))
+                                    : _skillSearchController.text.isNotEmpty 
+                                      ? IconButton(icon: const Icon(Icons.clear), onPressed: () {
+                                          _skillSearchController.clear();
+                                          profileProvider.searchSkills('');
+                                        })
+                                      : null,
+                                ),
+                                onChanged: (val) => profileProvider.searchSkills(val),
+                              ),
+
+                              // Search Results
+                              if (profileProvider.skillSearchResults.isNotEmpty && _skillSearchController.text.isNotEmpty)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  constraints: const BoxConstraints(maxHeight: 200),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2)),
+                                    ],
+                                  ),
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: profileProvider.skillSearchResults.length,
+                                    itemBuilder: (context, index) {
+                                      final skill = profileProvider.skillSearchResults[index];
+                                      final isSelected = _selectedSkillEntities.any((s) => s.id == skill.id);
+                                      
+                                      return ListTile(
+                                        title: Text(skill.canonicalName),
+                                        trailing: isSelected ? Icon(Icons.check, color: Theme.of(context).primaryColor) : null,
+                                        onTap: () {
+                                          if (!isSelected) {
+                                            setState(() {
+                                              _selectedSkillEntities.add(skill);
+                                              final newIds = _selectedSkillEntities.map((s) => s.id).toList();
+                                              _tempFilter = _tempFilter.copyWith(
+                                                skillIds: newIds,
+                                                clearSkillIds: false,
+                                              );
+                                              _skillSearchController.clear();
+                                              profileProvider.searchSkills('');
+                                            });
+                                          }
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -112,7 +270,7 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                           title: 'Tỉnh / Thành phố',
                           icon: Icons.location_on_outlined,
                           child: DropdownButtonFormField<int>(
-                            initialValue: profileProvider.provinces.any((p) => p.id == _tempFilter.provinceId) ? _tempFilter.provinceId : null,
+                            value: profileProvider.provinces.any((p) => p.id == _tempFilter.provinceId) ? _tempFilter.provinceId : null,
                             isExpanded: true,
                             decoration: _dropdownDecoration('Chọn tỉnh/thành phố'),
                             items: [
@@ -142,7 +300,7 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                           title: 'Ngành nghề',
                           icon: Icons.work_outline,
                           child: DropdownButtonFormField<int>(
-                            initialValue: profileProvider.allJobCategories.any((c) => c.id == _tempFilter.categoryId) ? _tempFilter.categoryId : null,
+                            value: profileProvider.allJobCategories.any((c) => c.id == (_tempFilter.categoryIds?.first ?? -1)) ? _tempFilter.categoryIds?.first : null,
                             isExpanded: true,
                             decoration: _dropdownDecoration('Chọn ngành nghề'),
                             items: [
@@ -158,7 +316,7 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                             onChanged: (val) {
                               setState(() {
                                 _tempFilter = _tempFilter.copyWith(
-                                  categoryId: val,
+                                  categoryIds: val != null ? [val] : null,
                                   clearCategory: val == null,
                                 );
                               });
@@ -172,7 +330,7 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                           title: 'Hình thức làm việc',
                           icon: Icons.access_time,
                           child: DropdownButtonFormField<int>(
-                            initialValue: profileProvider.jobTypes.any((jt) => jt.id == _tempFilter.jobTypeId) ? _tempFilter.jobTypeId : null,
+                            value: profileProvider.jobTypes.any((jt) => jt.id == _tempFilter.jobTypeId) ? _tempFilter.jobTypeId : null,
                             isExpanded: true,
                             decoration: _dropdownDecoration('Chọn hình thức'),
                             items: [
@@ -221,7 +379,11 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                     onPressed: () {
                       setState(() {
                         _tempFilter = const CandidateFilterModel();
+                        _selectedSkillEntities = [];
                         _experienceController.clear();
+                        _salaryMinController.clear();
+                        _salaryMaxController.clear();
+                        _skillSearchController.clear();
                       });
                     },
                     style: OutlinedButton.styleFrom(
@@ -237,7 +399,10 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                   flex: 2,
                   child: ElevatedButton(
                     onPressed: () {
-                      context.read<CandidateSearchProvider>().updateFilter(_tempFilter);
+                      context.read<CandidateSearchProvider>().updateFilter(
+                        _tempFilter,
+                        selectedSkills: _selectedSkillEntities,
+                      );
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(

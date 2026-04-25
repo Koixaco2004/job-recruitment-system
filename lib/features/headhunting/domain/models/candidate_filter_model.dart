@@ -4,71 +4,88 @@ import 'package:equatable/equatable.dart';
 class CandidateFilterModel extends Equatable {
   final String keyword;
   final int? provinceId;
-  final int? categoryId;
+  final List<int>? categoryIds;
+  final List<int>? skillIds;
+  final int? salaryMin;
+  final int? salaryMax;
+  final int? minExperience;
   final int? jobTypeId;
-  final int? yearsOfExperience;
+  final String sortBy;
+  final String sortOrder;
   final int page;
 
   const CandidateFilterModel({
     this.keyword = '',
     this.provinceId,
-    this.categoryId,
+    this.categoryIds,
+    this.skillIds,
+    this.salaryMin,
+    this.salaryMax,
+    this.minExperience,
     this.jobTypeId,
-    this.yearsOfExperience,
+    this.sortBy = 'createdAt',
+    this.sortOrder = 'DESC',
     this.page = 1,
   });
 
   bool get hasActiveFilters {
     return provinceId != null ||
-        categoryId != null ||
+        categoryIds != null ||
+        skillIds != null ||
+        salaryMin != null ||
+        salaryMax != null ||
+        minExperience != null ||
         jobTypeId != null ||
-        yearsOfExperience != null;
+        sortBy != 'createdAt' ||
+        sortOrder != 'DESC';
   }
 
   int get activeFilterCount {
     int count = 0;
     if (provinceId != null) count++;
-    if (categoryId != null) count++;
+    if (categoryIds != null) count++;
+    if (skillIds != null) count++;
+    if (salaryMin != null) count++;
+    if (salaryMax != null) count++;
+    if (minExperience != null) count++;
     if (jobTypeId != null) count++;
-    if (yearsOfExperience != null) count++;
+    if (sortBy != 'createdAt') count++;
+    if (sortOrder != 'DESC') count++;
     return count;
   }
 
   CandidateFilterModel copyWith({
     String? keyword,
     int? provinceId,
-    int? categoryId,
+    List<int>? categoryIds,
+    List<int>? skillIds,
+    int? salaryMin,
+    int? salaryMax,
+    int? minExperience,
     int? jobTypeId,
-    int? yearsOfExperience,
+    String? sortBy,
+    String? sortOrder,
     int? page,
     bool? clearProvince,
     bool? clearCategory,
     bool? clearJobType,
     bool? clearExperience,
+    bool? clearSalaryMin,
+    bool? clearSalaryMax,
+    bool? clearSkillIds,
   }) {
     return CandidateFilterModel(
       keyword: keyword ?? this.keyword,
       provinceId: clearProvince == true ? null : (provinceId ?? this.provinceId),
-      categoryId: clearCategory == true ? null : (categoryId ?? this.categoryId),
+      categoryIds: clearCategory == true ? null : (categoryIds ?? this.categoryIds),
+      skillIds: clearSkillIds == true ? null : (skillIds ?? this.skillIds),
       jobTypeId: clearJobType == true ? null : (jobTypeId ?? this.jobTypeId),
-      yearsOfExperience: clearExperience == true ? null : (yearsOfExperience ?? this.yearsOfExperience),
+      minExperience: clearExperience == true ? null : (minExperience ?? this.minExperience),
+      salaryMin: clearSalaryMin == true ? null : (salaryMin ?? this.salaryMin),
+      salaryMax: clearSalaryMax == true ? null : (salaryMax ?? this.salaryMax),
+      sortBy: sortBy ?? this.sortBy,
+      sortOrder: sortOrder ?? this.sortOrder,
       page: page ?? this.page,
-    );
-  }
-
-  CandidateFilterModel clearField({
-    bool province = false,
-    bool category = false,
-    bool jobType = false,
-    bool experience = false,
-  }) {
-    return CandidateFilterModel(
-      keyword: keyword,
-      provinceId: province ? null : provinceId,
-      categoryId: category ? null : categoryId,
-      jobTypeId: jobType ? null : jobTypeId,
-      yearsOfExperience: experience ? null : yearsOfExperience,
-      page: 1,
     );
   }
 
@@ -80,9 +97,14 @@ class CandidateFilterModel extends Equatable {
   List<Object?> get props => [
     keyword,
     provinceId,
-    categoryId,
+    categoryIds,
+    skillIds,
+    salaryMin,
+    salaryMax,
+    minExperience,
     jobTypeId,
-    yearsOfExperience,
+    sortBy,
+    sortOrder,
     page,
   ];
 }
