@@ -7,6 +7,8 @@ import '../../domain/usecases/save_job_usecase.dart';
 import '../../domain/usecases/unsave_job_usecase.dart';
 import '../../domain/usecases/unsave_job_by_post_id_usecase.dart';
 
+import '../../domain/usecases/is_job_saved_usecase.dart';
+
 /// Provider quản lý state cho My Jobs (Saved Jobs + Applications)
 class MyJobsProvider extends ChangeNotifier {
   final GetSavedJobsUseCase getSavedJobsUseCase;
@@ -14,6 +16,7 @@ class MyJobsProvider extends ChangeNotifier {
   final UnsaveJobUseCase unsaveJobUseCase;
   final UnsaveJobByPostIdUseCase unsaveJobByPostIdUseCase;
   final GetMyApplicationsUseCase getMyApplicationsUseCase;
+  final IsJobSavedUseCase isJobSavedUseCase;
 
   MyJobsProvider({
     required this.getSavedJobsUseCase,
@@ -21,6 +24,7 @@ class MyJobsProvider extends ChangeNotifier {
     required this.unsaveJobUseCase,
     required this.unsaveJobByPostIdUseCase,
     required this.getMyApplicationsUseCase,
+    required this.isJobSavedUseCase,
   });
 
   // State
@@ -171,6 +175,46 @@ class MyJobsProvider extends ChangeNotifier {
         _savedJobsMap[jobPostId] = false;
         notifyListeners();
         return true;
+      },
+    );
+  }
+
+  /// Toggle save job
+  Future<bool> toggleSaveJob({
+    required int candidateId,
+    required int jobPostId,
+  }) async {
+    final currentlySaved = isJobSaved(jobPostId);
+
+    if (currentlySaved) {
+      return await unsaveJobByJobPostId(
+        candidateId: candidateId,
+        jobPostId: jobPostId,
+      );
+    } else {
+      return await saveJob(
+        candidateId: candidateId,
+        jobPostId: jobPostId,
+      );
+    }
+  }
+
+  /// Kiểm tra trạng thái lưu từ API
+  Future<bool> checkJobSaved({
+    required int candidateId,
+    required int jobPostId,
+  }) async {
+    final result = await isJobSavedUseCase(
+      candidateId: candidateId,
+      jobPostId: jobPostId,
+    );
+
+    return result.fold(
+      (failure) => false,
+      (isSaved) {
+        _savedJobsMap[jobPostId] = isSaved;
+        notifyListeners();
+        return isSaved;
       },
     );
   }

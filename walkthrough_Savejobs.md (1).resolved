@@ -1,0 +1,109 @@
+# Tài Liệu Cập Nhật API Frontend (Pre-VIP Phase 1)
+
+Tài liệu này cung cấp chi tiết về các endpoints mới được bổ sung nhằm hỗ trợ Frontend team tích hợp các tính năng Pre-VIP đợt 1.
+
+---
+
+## 1. Tính Năng Lưu Việc Làm (Candidate Saved Jobs)
+
+Ứng viên có thể lưu trữ (bookmark) các công việc họ quan tâm để nộp đơn sau.
+
+### 1.1 Lấy danh sách việc làm đã lưu
+- **Endpoint**: `/api/candidates/saved-jobs`
+- **Method**: `GET`
+- **Auth**: Yêu cầu Header `Authorization: Bearer <Token>` (Role: `CANDIDATE`)
+- **Query Parameters**:
+  - `page` (number, default: 1)
+  - `limit` (number, default: 10)
+- **Response**: Trả về cấu trúc paginated chứa các thông tin slim của job (bao gồm info công ty để dễ dàng render list.
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "candidateId": 5,
+      "jobId": 12,
+      "savedAt": "2026-04-26T08:00:00Z",
+      "job": {
+        "id": 12,
+        "title": "Senior Frontend Developer",
+        "company": {
+          "id": 3,
+          "name": "Công ty ABC",
+          "slug": "cong-ty-abc",
+          "logoUrl": "..."
+        },
+        "province": {
+            "code": "79",
+            "name": "Hồ Chí Minh"
+        }
+      }
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "lastPage": 1
+}
+```
+
+### 1.2 Kiểm tra trạng thái "Đã lưu" của 1 công việc
+*Dùng để hiển thị trạng thái nút trái tim / bookmark ngoài UI chi tiết tin tuyển dụng.*
+- **Endpoint**: `/api/candidates/saved-jobs/:jobId/check`
+- **Method**: `GET`
+- **Auth**: Yêu cầu Token `CANDIDATE`.
+- **Response**:
+```json
+{
+  "isSaved": true
+}
+```
+
+### 1.3 Lưu một công việc
+- **Endpoint**: `/api/candidates/saved-jobs/:jobId`
+- **Method**: `POST`
+- **Auth**: Yêu cầu Token `CANDIDATE`.
+- **Lưu ý**: Nếu ấn lưu 2 lần cùng 1 job sẽ nhận lỗi 409 Conflict.
+- **Response**: `201 Created`
+
+### 1.4 Bỏ lưu công việc
+- **Endpoint**: `/api/candidates/saved-jobs/:jobId`
+- **Method**: `DELETE`
+- **Auth**: Yêu cầu Token `CANDIDATE`.
+- **Lưu ý**: Nếu chưa từng lưu job này thì sẽ nhận lỗi 404 NotFound.
+- **Response**: `200 OK`
+
+---
+
+## 2. Gợi Ý Việc Làm Cá Nhân Hóa (Job Recommendation)
+
+Thuật toán tự động quét hồ sơ ứng viên (Kỹ năng, Kinh nghiệm, Mức lương mong muốn, Ngành nghề) và trả ra các việc làm match nhất.
+
+- **Endpoint**: `/api/jobs/candidate/recommended`
+- **Method**: `GET`
+- **Auth**: Yêu cầu Header `Authorization: Bearer <Token>` (Role: `CANDIDATE`)
+- **Query Parameters**:
+  - `page` (number, default: 1)
+  - `limit` (number, default: 10)
+- **Response**: Trả về paginated job list (giống API Public jobs thông thường), những job hiện lên đầu tiên trong list này là job đạt hệ số matching score cao nhất so với profile ứng viên.
+
+---
+
+## 3. Lấy Danh Sách Public Jobs Theo Công Ty (Company Public Jobs)
+
+Dành cho frontend ở trang "Chi tiết công ty" (VD: `domain.com/companies/fpt-software`), khi người dùng kéo xuống cần hiển thị tab "Các việc làm đang mở". 
+
+- **Endpoint**: `/api/companies/slug/:slug/jobs`
+- **Method**: `GET`
+- **Auth**: `Public` (Không yêu cầu đăng nhập)
+- **Query Parameters**: Endpoint này support toàn bộ query model của `JobFilterDto` (giống như tìm kiếm tổng quát).
+  - Phổ biến: `page`, `limit`, `keyword`, `provinceId`...
+- **Response**: Trả về paginated public job list thuộc công ty đó.
+
+---
+
+## 4. Ghi Chú Về Real-time & Socket Notifications
+Backend đã tích hợp đầy đủ flow cho thông báo Notifications (Lưu Database và Bắn ngầm qua Socket.IO `socket.gateway.ts`). Khi Frontend có màn hình chuông thông báo, hoặc flow quản lý đơn, các bạn cần lưu ý:
+1. **Ứng viên**: Sẽ nhận được thông báo socket khi có: 
+   - Nhà tuyển dụng đổi trạng thái đơn (Từ `APPLIED` sang `INTERVIEW`, `REJECTED`, ...)
+   - Nhà tuyển dụng gửi Job Invitation `Pending` (Mời đi pv mới).
+2. Khi connect socket, frontend cần sử dụng `Auth Token` như setup hiện hành tại gateway để đảm bảo tin nhắn websocket gửi đúng user.

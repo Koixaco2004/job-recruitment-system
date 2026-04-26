@@ -225,7 +225,18 @@ class _MyJobsPageState extends State<MyJobsPage>
                   }
                 },
                 onTap: () {
-                  // Tìm JobPostEntity từ danh sách jobs đã load
+                  // Sử dụng thông tin job lồng nhau nếu có
+                  if (savedJob.job != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => JobDetailPage(job: savedJob.job!),
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Fallback: Tìm JobPostEntity từ danh sách jobs đã load (Legacy support)
                   final jobProvider = context.read<JobProvider>();
                   try {
                     final job = jobProvider.allJobs.firstWhere(

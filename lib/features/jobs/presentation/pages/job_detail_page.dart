@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../domain/entities/job_post_entity.dart';
 import '../providers/job_provider.dart';
+import '../providers/my_jobs_provider.dart';
 import '../../../../core/pages/main_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../applications/presentation/providers/application_provider.dart';
@@ -28,10 +29,16 @@ class _JobDetailPageState extends State<JobDetailPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<JobProvider>().fetchJobDetail(widget.job.jobPostId);
       
-      // Fetch invitations if user is a candidate to sync "Apply" button status
       final authProvider = context.read<AuthProvider>();
       if (authProvider.user?.userType.toLowerCase() == 'candidate') {
+        final profileProvider = context.read<ProfileProvider>();
+        final candidateId = profileProvider.profile?.candidateId ?? 1;
+        
         context.read<HeadhuntingProvider>().fetchCandidateInvitations();
+        context.read<MyJobsProvider>().checkJobSaved(
+          candidateId: candidateId,
+          jobPostId: widget.job.jobPostId,
+        );
       }
     });
   }
@@ -137,9 +144,44 @@ class _JobDetailPageState extends State<JobDetailPage> {
               // App bar
               SliverAppBar(
                 expandedHeight: 180,
-                pinned: true,
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
+                actions: [
+                  Consumer<MyJobsProvider>(
+                    builder: (context, myJobsProvider, child) {
+                      final authProvider = context.read<AuthProvider>();
+                      if (authProvider.user?.userType.toLowerCase() != 'candidate') {
+                        return const SizedBox.shrink();
+                      }
+                      
+                      final isSaved = myJobsProvider.isJobSaved(job.jobPostId);
+                      return IconButton(
+                        icon: Icon(
+                          isSaved ? Icons.favorite : Icons.favorite_border,
+                          color: isSaved ? Colors.red : Colors.white,
+                        ),
+                        onPressed: () async {
+                          final profileProvider = context.read<ProfileProvider>();
+                          final candidateId = profileProvider.profile?.candidateId ?? 1;
+                          
+                          final success = await myJobsProvider.toggleSaveJob(
+                            candidateId: candidateId,
+                            jobPostId: job.jobPostId,
+                          );
+                          
+                          if (context.mounted && success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(isSaved ? 'Đã bỏ lưu việc làm' : 'Đã lưu việc làm'),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          }
+                        },
+                        tooltip: isSaved ? 'Bỏ lưu' : 'Lưu việc làm',
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
                     decoration: BoxDecoration(

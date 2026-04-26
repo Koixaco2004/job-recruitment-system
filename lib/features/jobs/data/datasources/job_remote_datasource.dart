@@ -184,8 +184,17 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
 
   @override
   Future<List<SavedJobModel>> getSavedJobs(int candidateId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _mockSavedJobs.where((s) => s.candidateId == candidateId).toList();
+    try {
+      final response = await apiClient.dio.get('/api/candidates/saved-jobs');
+      
+      if (response.statusCode == 200) {
+        final List data = response.data['data'] ?? [];
+        return data.map((e) => SavedJobModel.fromJson(e)).toList();
+      }
+      throw const ServerException('Lấy danh sách việc làm đã lưu thất bại');
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    }
   }
 
   @override
@@ -193,21 +202,30 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
     required int candidateId,
     required int jobPostId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final savedJob = SavedJobModel(
-      savedJobId: DateTime.now().millisecondsSinceEpoch,
-      candidateId: candidateId,
-      jobPostId: jobPostId,
-      createdAt: DateTime.now(),
-    );
-    _mockSavedJobs.add(savedJob);
-    return savedJob;
+    try {
+      final response = await apiClient.dio.post('/api/candidates/saved-jobs/$jobPostId');
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // API response for save might be simple message, so we create a model locally or return what's returned
+        // Based on user res: {"message": "Đã lưu việc làm thành công", "saved": true}
+        return SavedJobModel(
+          savedJobId: 0, // Not provided by message response
+          candidateId: candidateId,
+          jobPostId: jobPostId,
+          createdAt: DateTime.now(),
+        );
+      }
+      throw const ServerException('Lưu việc làm thất bại');
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    }
   }
 
   @override
   Future<void> unsaveJob(int savedJobId) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _mockSavedJobs.removeWhere((s) => s.savedJobId == savedJobId);
+    // Legacy support - might not work if savedJobId is not jobId
+    // Recommended to use unsaveJobByJobPostId
+    throw const ServerException('Vui lòng sử dụng unsaveJobByJobPostId');
   }
 
   @override
@@ -215,22 +233,38 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
     required int candidateId,
     required int jobPostId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _mockSavedJobs.removeWhere(
-      (s) => s.candidateId == candidateId && s.jobPostId == jobPostId,
-    );
+    try {
+      final response = await apiClient.dio.delete('/api/candidates/saved-jobs/$jobPostId');
+      
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw const ServerException('Bỏ lưu việc làm thất bại');
+      }
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    }
   }
 
   @override
   Future<List<ApplicationModel>> getMyApplications(int candidateId) async {
+    // Applications might still be mock or implemented separately
     await Future.delayed(const Duration(milliseconds: 500));
     return _mockApplications.where((a) => a.candidateId == candidateId).toList();
   }
 
   @override
   Future<bool> isJobSaved({required int candidateId, required int jobPostId}) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return _mockSavedJobs.any((s) => s.candidateId == candidateId && s.jobPostId == jobPostId);
+    try {
+      final response = await apiClient.dio.get('/api/candidates/saved-jobs/$jobPostId/check');
+      
+      if (response.statusCode == 200) {
+        return response.data['isSaved'] == true;
+      }
+      return false;
+    } on DioException catch (e) {
+      // If 404, assume not saved
+      if (e.response?.statusCode == 404) return false;
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    }
   }
 
   // --- Employer API Implementation ---

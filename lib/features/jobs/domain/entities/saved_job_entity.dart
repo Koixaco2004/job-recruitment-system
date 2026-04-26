@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'job_post_entity.dart';
 
 /// Entity cho việc làm đã lưu (SAVED_JOBS table)
 class SavedJobEntity extends Equatable {
@@ -6,8 +7,9 @@ class SavedJobEntity extends Equatable {
   final int candidateId;
   final int jobPostId;
   final DateTime createdAt;
+  final JobPostEntity? job;
 
-  // Thông tin job (từ join)
+  // Thông tin job (từ join - legacy support)
   final String? jobTitle;
   final String? companyName;
   final String? companyLogo;
@@ -24,6 +26,7 @@ class SavedJobEntity extends Equatable {
     required this.candidateId,
     required this.jobPostId,
     required this.createdAt,
+    this.job,
     this.jobTitle,
     this.companyName,
     this.companyLogo,
@@ -37,5 +40,5 @@ class SavedJobEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [savedJobId, candidateId, jobPostId, createdAt];
+  List<Object?> get props => [savedJobId, candidateId, jobPostId, createdAt, job];
 }
