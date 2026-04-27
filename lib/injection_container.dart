@@ -26,6 +26,7 @@ import 'features/companies/domain/usecases/get_company_by_id_usecase.dart';
 import 'features/companies/domain/usecases/get_company_jobs_usecase.dart';
 import 'features/companies/domain/usecases/search_companies_usecase.dart';
 import 'features/companies/domain/usecases/update_company_usecase.dart';
+import 'features/companies/domain/usecases/get_company_by_slug_usecase.dart';
 import 'features/companies/domain/usecases/upload_company_banner_usecase.dart';
 import 'features/companies/domain/usecases/upload_company_logo_usecase.dart';
 import 'features/companies/domain/usecases/upload_company_gallery_image_usecase.dart';
@@ -225,6 +226,7 @@ Future<void> init() async {
     () => CompanyProvider(
       getCompaniesUseCase: sl(),
       getCompanyByIdUseCase: sl(),
+      getCompanyBySlugUseCase: sl(),
       searchCompaniesUseCase: sl(),
       getCompanyJobsUseCase: sl(),
     ),
@@ -233,6 +235,7 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => GetCompaniesUseCase(sl()));
   sl.registerLazySingleton(() => GetCompanyByIdUseCase(sl()));
+  sl.registerLazySingleton(() => GetCompanyBySlugUseCase(sl()));
   sl.registerLazySingleton(() => SearchCompaniesUseCase(sl()));
   sl.registerLazySingleton(() => GetCompanyJobsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCompanyUseCase(sl()));

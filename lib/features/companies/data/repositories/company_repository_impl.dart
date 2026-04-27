@@ -42,6 +42,20 @@ class CompanyRepositoryImpl implements CompanyRepository {
   }
 
   @override
+  Future<Either<Failure, CompanyEntity>> getCompanyBySlug(String slug) async {
+    try {
+      final company = await remoteDataSource.getCompanyBySlug(slug);
+      return Right(company);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(
+        ServerFailure('Không thể lấy thông tin công ty theo slug: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
   Future<Either<Failure, List<CompanyEntity>>> searchCompanies(
     String query,
   ) async {
@@ -57,10 +71,10 @@ class CompanyRepositoryImpl implements CompanyRepository {
 
   @override
   Future<Either<Failure, List<JobPostEntity>>> getCompanyJobs(
-    int employerId,
+    String slug,
   ) async {
     try {
-      final jobs = await remoteDataSource.getCompanyJobs(employerId);
+      final jobs = await remoteDataSource.getCompanyJobs(slug);
       return Right(jobs);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

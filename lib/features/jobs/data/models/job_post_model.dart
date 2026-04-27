@@ -34,6 +34,7 @@ class JobPostModel extends JobPostEntity {
     super.requiredDegree,
     super.skills,
     super.rejectionReason,
+    super.companySlug,
   });
 
   /// Tạo JobPostModel từ JSON
@@ -76,6 +77,7 @@ class JobPostModel extends JobPostEntity {
       requiredDegree: _asString(json['required_degree'] ?? json['requiredDegree']),
       skills: json['skills'] as List?,
       rejectionReason: _asString(json['rejection_reason'] ?? json['rejectionReason'] ?? json['reason']),
+      companySlug: _asString((json['company'] is Map ? (json['company'] as Map)['slug'] : null) ?? json['company_slug'] ?? json['slug']),
     );
   }
 
@@ -129,6 +131,7 @@ class JobPostModel extends JobPostEntity {
       'required_degree': requiredDegree,
       'skills': skills,
       'rejection_reason': rejectionReason,
+      'company_slug': companySlug,
     };
   }
 }

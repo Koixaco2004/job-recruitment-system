@@ -40,6 +40,7 @@ class JobPostEntity extends Equatable {
   final int? categoryId;
   final int? jobTypeId;
   final List<dynamic>? skills;
+  final String? companySlug;
 
   const JobPostEntity({
     required this.jobPostId,
@@ -73,6 +74,7 @@ class JobPostEntity extends Equatable {
     this.requiredDegree,
     this.skills,
     this.rejectionReason,
+    this.companySlug,
   });
 
   @override
@@ -108,5 +110,6 @@ class JobPostEntity extends Equatable {
     requiredDegree,
     skills,
     rejectionReason,
+    companySlug,
   ];
 }

@@ -26,6 +26,7 @@ class CompanyModel extends CompanyEntity {
     super.jobCount,
     super.isVerified,
     super.images,
+    super.slug,
   });
 
   factory CompanyModel.fromJson(Map<String, dynamic> json) {
@@ -60,13 +61,22 @@ class CompanyModel extends CompanyEntity {
       foundedYear: _asInt(json['founded_year'] ?? json['foundedYear']),
       jobCount: _asInt(json['job_count'] ?? json['jobCount']),
       isVerified: json['isVerified'] ?? false,
-      images: json['images'] != null 
-          ? (json['images'] as List).map((e) {
-              if (e is String) return e;
-              if (e is Map && e.containsKey('imageUrl')) return e['imageUrl'] as String;
-              return '';
-            }).where((url) => url.isNotEmpty).toList()
-          : null,
+      images: () {
+        try {
+          if (json['images'] == null) return <String>[];
+          if (json['images'] is! List) return <String>[];
+          return (json['images'] as List).map((e) {
+            if (e is String) return e;
+            if (e is Map) {
+              return (e['imageUrl'] ?? e['url'] ?? '').toString();
+            }
+            return '';
+          }).where((url) => url.isNotEmpty).toList();
+        } catch (e) {
+          return <String>[];
+        }
+      }(),
+      slug: json['slug'] as String?,
     );
   }
 
@@ -89,6 +99,7 @@ class CompanyModel extends CompanyEntity {
       'description': description,
       'content': content,
       'isVerified': isVerified,
+      'slug': slug,
     };
   }
 }

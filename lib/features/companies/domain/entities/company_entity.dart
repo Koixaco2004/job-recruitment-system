@@ -25,6 +25,7 @@ class CompanyEntity extends Equatable {
   final int jobCount;
   final bool isVerified;
   final List<String>? images;
+  final String? slug;
 
   const CompanyEntity({
     required this.employerId,
@@ -50,6 +51,7 @@ class CompanyEntity extends Equatable {
     this.jobCount = 0,
     this.isVerified = false,
     this.images,
+    this.slug,
   });
 
   @override
@@ -77,5 +79,6 @@ class CompanyEntity extends Equatable {
         jobCount,
         isVerified,
         images,
+        slug,
       ];
 }

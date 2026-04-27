@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/company_entity.dart';
+import 'package:provider/provider.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 
 /// Tab hiển thị thông tin công ty
 class CompanyInfoTab extends StatelessWidget {
@@ -31,20 +33,23 @@ class CompanyInfoTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profileProvider = context.read<ProfileProvider>();
+    final provinceName = profileProvider.getProvinceName(company.provinceId);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Description
-          if (company.description != null) ...[
+          // Content/Description
+          if (company.content != null || company.description != null) ...[
             const Text(
               'Giới thiệu',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              company.description!,
+              company.content ?? company.description!,
               style: const TextStyle(fontSize: 14, height: 1.5),
             ),
             const SizedBox(height: 24),
@@ -76,6 +81,26 @@ class CompanyInfoTab extends StatelessWidget {
             const SizedBox(height: 16),
           ],
 
+          // Email
+          if (company.emailContact != null) ...[
+            _buildInfoRow(
+              icon: Icons.email,
+              label: 'Email liên hệ',
+              value: company.emailContact!,
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Phone
+          if (company.phoneContact != null) ...[
+            _buildInfoRow(
+              icon: Icons.phone,
+              label: 'Số điện thoại',
+              value: company.phoneContact!,
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // Company size
           if (company.companySize != null) ...[
             _buildInfoRow(
@@ -97,28 +122,54 @@ class CompanyInfoTab extends StatelessWidget {
           ],
 
           // Address
-          if (company.address != null || company.cityName != null) ...[
+          if (company.address != null || provinceName != null || company.cityName != null) ...[
             _buildInfoRow(
               icon: Icons.location_on,
               label: 'Địa chỉ',
-              value:
-                  '${company.address ?? ''}${company.address != null && company.cityName != null ? ', ' : ''}${company.cityName ?? ''}',
+              value: [
+                if (company.address != null) company.address,
+                if (provinceName != null || company.cityName != null)
+                  provinceName ?? company.cityName,
+              ].join(', '),
             ),
             const SizedBox(height: 16),
           ],
 
-          // Founded year
-          if (company.foundedYear != null) ...[
+          // Facebook
+          if (company.facebookUrl != null && company.facebookUrl!.isNotEmpty) ...[
             _buildInfoRow(
-              icon: Icons.calendar_today,
-              label: 'Năm thành lập',
-              value: company.foundedYear.toString(),
+              icon: Icons.facebook,
+              label: 'Facebook',
+              child: InkWell(
+                onTap: () => _openWebsite(context, company.facebookUrl!),
+                child: Text(
+                  company.facebookUrl!,
+                  style: const TextStyle(color: Colors.blue),
+                ),
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+          ],
+
+          // LinkedIn
+          if (company.linkedinUrl != null && company.linkedinUrl!.isNotEmpty) ...[
+            _buildInfoRow(
+              icon: Icons.link,
+              label: 'LinkedIn',
+              child: InkWell(
+                onTap: () => _openWebsite(context, company.linkedinUrl!),
+                child: Text(
+                  company.linkedinUrl!,
+                  style: const TextStyle(color: Colors.blue),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
 
           // Benefits
           if (company.benefits != null) ...[
+            const SizedBox(height: 8),
             const Text(
               'Phúc lợi',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -127,6 +178,41 @@ class CompanyInfoTab extends StatelessWidget {
             Text(
               company.benefits!,
               style: const TextStyle(fontSize: 14, height: 1.8),
+            ),
+          ],
+
+          // Images Gallery
+          if (company.images != null && company.images!.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            const Text(
+              'Hình ảnh công ty',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 150,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: company.images!.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      company.images![index],
+                      height: 150,
+                      width: 250,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 150,
+                        width: 250,
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.image_not_supported),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ],

@@ -12,11 +12,14 @@ abstract class CompanyRepository {
   /// Lấy chi tiết công ty theo ID
   Future<Either<Failure, CompanyEntity>> getCompanyById(int employerId);
 
+  /// Lấy chi tiết công ty theo Slug
+  Future<Either<Failure, CompanyEntity>> getCompanyBySlug(String slug);
+
   /// Tìm kiếm công ty theo tên
   Future<Either<Failure, List<CompanyEntity>>> searchCompanies(String query);
 
   /// Lấy danh sách việc làm của công ty
-  Future<Either<Failure, List<JobPostEntity>>> getCompanyJobs(int employerId);
+  Future<Either<Failure, List<JobPostEntity>>> getCompanyJobs(String slug);
 
   // Employer - Company Profile Management
   Future<Either<Failure, CompanyEntity>> updateCompanyProfile({

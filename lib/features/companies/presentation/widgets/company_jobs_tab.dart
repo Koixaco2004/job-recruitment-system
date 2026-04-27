@@ -6,9 +6,9 @@ import '../providers/company_provider.dart';
 
 /// Tab hiển thị danh sách việc làm của công ty
 class CompanyJobsTab extends StatelessWidget {
-  final int employerId;
+  final String companySlug;
 
-  const CompanyJobsTab({super.key, required this.employerId});
+  const CompanyJobsTab({super.key, required this.companySlug});
 
   @override
   Widget build(BuildContext context) {
@@ -18,17 +18,17 @@ class CompanyJobsTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (provider.error != null) {
+        if (provider.jobsError != null) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.error_outline, size: 64, color: Colors.red),
                 const SizedBox(height: 16),
-                Text(provider.error!),
+                Text(provider.jobsError!),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => provider.fetchCompanyJobs(employerId),
+                  onPressed: () => provider.fetchCompanyJobs(companySlug),
                   child: const Text('Thử lại'),
                 ),
               ],
@@ -53,7 +53,7 @@ class CompanyJobsTab extends StatelessWidget {
         }
 
         return RefreshIndicator(
-          onRefresh: () => provider.fetchCompanyJobs(employerId),
+          onRefresh: () => provider.fetchCompanyJobs(companySlug),
           child: ListView.builder(
             padding: const EdgeInsets.only(top: 8, bottom: 16),
             itemCount: provider.companyJobs.length,

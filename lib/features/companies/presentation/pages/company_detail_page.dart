@@ -6,9 +6,15 @@ import '../widgets/company_jobs_tab.dart';
 
 /// Màn hình chi tiết công ty
 class CompanyDetailPage extends StatefulWidget {
-  final int employerId;
+  final int? employerId;
+  final String? companySlug;
 
-  const CompanyDetailPage({super.key, required this.employerId});
+  const CompanyDetailPage({
+    super.key,
+    this.employerId,
+    this.companySlug,
+  }) : assert(employerId != null || companySlug != null,
+            'Either employerId or companySlug must be provided');
 
   @override
   State<CompanyDetailPage> createState() => _CompanyDetailPageState();
@@ -25,8 +31,21 @@ class _CompanyDetailPageState extends State<CompanyDetailPage>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<CompanyProvider>();
-      provider.fetchCompanyDetail(widget.employerId);
-      provider.fetchCompanyJobs(widget.employerId);
+      if (widget.employerId != null) {
+        provider.fetchCompanyDetail(widget.employerId!).then((_) {
+          final company = provider.selectedCompany;
+          if (company != null && company.slug != null) {
+            provider.fetchCompanyJobs(company.slug!);
+          }
+        });
+      } else if (widget.companySlug != null) {
+        provider.fetchCompanyBySlug(widget.companySlug!).then((_) {
+          final company = provider.selectedCompany;
+          if (company != null && company.slug != null) {
+            provider.fetchCompanyJobs(company.slug!);
+          }
+        });
+      }
     });
   }
 
@@ -56,8 +75,21 @@ class _CompanyDetailPageState extends State<CompanyDetailPage>
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      provider.fetchCompanyDetail(widget.employerId);
-                      provider.fetchCompanyJobs(widget.employerId);
+                      if (widget.employerId != null) {
+                        provider.fetchCompanyDetail(widget.employerId!).then((_) {
+                          final company = provider.selectedCompany;
+                          if (company != null && company.slug != null) {
+                            provider.fetchCompanyJobs(company.slug!);
+                          }
+                        });
+                      } else if (widget.companySlug != null) {
+                        provider.fetchCompanyBySlug(widget.companySlug!).then((_) {
+                          final company = provider.selectedCompany;
+                          if (company != null && company.slug != null) {
+                            provider.fetchCompanyJobs(company.slug!);
+                          }
+                        });
+                      }
                     },
                     child: const Text('Thử lại'),
                   ),
@@ -223,7 +255,7 @@ class _CompanyDetailPageState extends State<CompanyDetailPage>
                   controller: _tabController,
                   children: [
                     CompanyInfoTab(company: company),
-                    CompanyJobsTab(employerId: widget.employerId),
+                    CompanyJobsTab(companySlug: company.slug ?? ''),
                   ],
                 ),
               ),

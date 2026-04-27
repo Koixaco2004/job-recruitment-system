@@ -9,8 +9,9 @@ import '../../../jobs/data/models/job_post_model.dart';
 abstract class CompanyRemoteDataSource {
   Future<List<CompanyModel>> getCompanies();
   Future<CompanyModel> getCompanyById(int employerId);
+  Future<CompanyModel> getCompanyBySlug(String slug);
   Future<List<CompanyModel>> searchCompanies(String query);
-  Future<List<JobPostModel>> getCompanyJobs(int employerId);
+  Future<List<JobPostModel>> getCompanyJobs(String slug);
   
   // Employer - Company Profile Management
   Future<CompanyModel> updateCompanyProfile({
@@ -68,6 +69,21 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   }
 
   @override
+  Future<CompanyModel> getCompanyBySlug(String slug) async {
+    final url = '/api/companies/slug/$slug';
+    try {
+      final response = await apiClient.dio.get(url);
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        return CompanyModel.fromJson(data);
+      }
+      throw ServerException('Không tìm thấy công ty (404) tại $url');
+    } catch (e) {
+      throw ServerException('Lỗi khi gọi API $url: ${e.toString()}');
+    }
+  }
+
+  @override
   Future<List<CompanyModel>> searchCompanies(String query) async {
     try {
       final response = await apiClient.dio.get('/api/companies/search', queryParameters: {'q': query});
@@ -82,16 +98,17 @@ class CompanyRemoteDataSourceImpl implements CompanyRemoteDataSource {
   }
 
   @override
-  Future<List<JobPostModel>> getCompanyJobs(int employerId) async {
+  Future<List<JobPostModel>> getCompanyJobs(String slug) async {
+    final url = '/api/companies/slug/$slug/jobs';
     try {
-      final response = await apiClient.dio.get('/api/companies/$employerId/jobs');
+      final response = await apiClient.dio.get(url);
       if (response.statusCode == 200) {
         final List data = response.data['data'] ?? response.data;
         return data.map((e) => JobPostModel.fromJson(e)).toList();
       }
       return [];
     } catch (e) {
-      throw ServerException(e.toString());
+      throw ServerException('Lỗi khi lấy danh sách việc làm tại $url: ${e.toString()}');
     }
   }
 

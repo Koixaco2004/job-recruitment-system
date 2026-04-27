@@ -9,7 +9,7 @@ class GetCompanyJobsUseCase {
 
   GetCompanyJobsUseCase(this.repository);
 
-  Future<Either<Failure, List<JobPostEntity>>> call(int employerId) async {
-    return await repository.getCompanyJobs(employerId);
+  Future<Either<Failure, List<JobPostEntity>>> call(String slug) async {
+    return await repository.getCompanyJobs(slug);
   }
 }

@@ -59,7 +59,7 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
     final response = await apiClient.dio.get('/api/employers/headhunting/jobs/$jobId/suggested-candidates');
     
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final List<dynamic> data = response.data;
+      final List<dynamic> data = response.data['data'];
       return data.map((json) => HeadhuntingCandidateModel.fromJson(json as Map<String, dynamic>)).toList();
     } else {
       throw Exception('Failed to load suggested candidates');

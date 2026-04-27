@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../../features/companies/presentation/pages/company_detail_page.dart';
 import '../../domain/entities/job_post_entity.dart';
 import '../providers/job_provider.dart';
 import '../providers/my_jobs_provider.dart';
@@ -290,6 +291,49 @@ class _JobDetailPageState extends State<JobDetailPage> {
                                         child: LinearProgressIndicator(
                                           backgroundColor: Colors.white24,
                                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                                        ),
+                                      ),
+                                    )
+                                  else if (job.companySlug != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: InkWell(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => CompanyDetailPage(
+                                                companySlug: job.companySlug,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(color: Colors.white.withOpacity(0.5)),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                'Xem hồ sơ công ty',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              SizedBox(width: 4),
+                                              Icon(
+                                                Icons.chevron_right,
+                                                color: Colors.white,
+                                                size: 14,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
