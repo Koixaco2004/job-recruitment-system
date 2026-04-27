@@ -1,0 +1,677 @@
+# 🛡️ Walkthrough: VIP Monetization & Feature Enforcement
+
+> **Đối tượng**: Team Frontend  
+> **Backend API Base**: `/api`  
+> **Auth**: Bearer JWT — tất cả endpoint employer cần `Authorization: Bearer <token>`
+
+---
+
+## Mục lục
+
+1. [Screening Questions — Employer CRUD](#1-screening-questions--employer-crud)
+2. [Screening Answers — Candidate Submit](#2-screening-answers--candidate-submit)
+3. [Credit System — Mua tính năng lẻ](#3-credit-system--mua-tính-năng-lẻ)
+4. [Feature #1: max_active_jobs — Giới hạn slot tin](#4-feature-1-max_active_jobs--giới-hạn-slot-tin)
+5. [Feature #2: can_hide_salary — Ẩn lương](#5-feature-2-can_hide_salary--ẩn-lương)
+6. [Feature #3: can_require_cv — Bắt buộc CV ứng tuyển](#6-feature-3-can_require_cv--bắt-buộc-cv-ứng-tuyển)
+7. [Feature #4: max_profile_views_per_job — Giới hạn xem hồ sơ](#7-feature-4-max_profile_views_per_job--giới-hạn-xem-hồ-sơ)
+8. [Feature #5: free_ai_scoring — AI chấm tự động](#8-feature-5-free_ai_scoring--ai-chấm-tự-động)
+9. [Feature #6: monthly_headhunt_profile_views — Headhunting Quota](#9-feature-6-monthly_headhunt_profile_views--headhunting-quota)
+10. [Feature #7: has_vip_badge — Badge VIP trên trang công ty](#10-feature-7-has_vip_badge--badge-vip-trên-trang-công-ty)
+11. [Feature #8 & #9: Deferred](#11-feature-8--9-deferred)
+12. [Fix A: canHeadhuntSaveAndInvite — VIP gate lưu/mời ứng viên](#12-fix-a-canheadhuntsaveandinvite)
+13. [Fix D+E: Credit Product Side-Effects](#13-fix-de-credit-product-side-effects)
+14. [Fix F: Bumped Jobs Sort Priority](#14-fix-f-bumped-jobs-sort-priority)
+15. [Ma trận Free vs VIP](#15-ma-trận-free-vs-vip)
+
+---
+
+## 1. Screening Questions — Employer CRUD
+
+### Mô tả
+Employer VIP có thể tạo câu hỏi sàng lọc cho mỗi tin tuyển dụng. Candidate phải trả lời trước/sau khi apply. Kết quả `screeningPassed` được tự động tính nếu có `preferredAnswer`.
+
+### Endpoints
+
+#### GET `/api/jobs/:jobId/screening`
+> **Auth**: Employer (JWT)  
+> **Mô tả**: Xem câu hỏi sàng lọc của tin (Employer view — kiểm tra quyền sở hữu job)
+
+**Response** `200`:
+```json
+[
+  {
+    "id": 1,
+    "jobId": 42,
+    "questionText": "Bạn có kinh nghiệm NestJS không?",
+    "questionType": "text",        // "text" | "single_choice" | "multiple_choice" | "yes_no"
+    "options": "[\"Có\",\"Không\"]", // JSON string, null nếu text
+    "preferredAnswer": "Có",       // null nếu không auto-grade
+    "isRequired": true,
+    "sortOrder": 0
+  }
+]
+```
+
+---
+
+#### POST `/api/jobs/:jobId/screening`
+> **Auth**: Employer (JWT) — **Yêu cầu VIP** (`maxScreeningQuestions > 0`)  
+> **Mô tả**: Tạo / cập nhật toàn bộ câu hỏi (Upsert — xoá cũ, lưu mới)
+
+**Request Body**:
+```json
+{
+  "questions": [
+    {
+      "questionText": "Bạn có kinh nghiệm NestJS không?",
+      "questionType": "yes_no",
+      "options": ["Có", "Không"],
+      "preferredAnswer": "Có",
+      "isRequired": true,
+      "sortOrder": 0
+    },
+    {
+      "questionText": "Mô tả dự án lớn nhất bạn tham gia",
+      "questionType": "text",
+      "isRequired": true,
+      "sortOrder": 1
+    }
+  ]
+}
+```
+
+**Response** `200`:
+```json
+[
+  { "id": 10, "jobId": 42, "questionText": "...", ... },
+  { "id": 11, "jobId": 42, "questionText": "...", ... }
+]
+```
+
+**Error Cases**:
+
+| Status | Message | Khi nào |
+|--------|---------|---------|
+| `403` | `Tính năng Câu hỏi sàng lọc yêu cầu gói VIP` | Free plan (`maxScreeningQuestions=0`) |
+| `400` | `Gói X chỉ cho phép tối đa N câu hỏi/tin` | Gửi quá nhiều câu hỏi |
+
+---
+
+#### GET `/api/jobs/:jobId/screening/public`
+> **Auth**: Không cần (Public)  
+> **Mô tả**: Candidate xem câu hỏi sàng lọc trước khi ứng tuyển  
+> **Response**: Giống `GET /api/jobs/:jobId/screening`
+
+---
+
+## 2. Screening Answers — Candidate Submit
+
+#### POST `/api/jobs/applications/:applicationId/screening/answers`
+> **Auth**: Candidate (JWT) — kiểm tra candidate sở hữu application  
+> **Mô tả**: Nộp câu trả lời sàng lọc. Idempotent (gửi lại sẽ overwrite câu trả lời cũ).
+
+**Request Body**:
+```json
+{
+  "answers": [
+    { "questionId": 10, "answerText": "Có" },
+    { "questionId": 11, "answerText": "Dự án ATS cho 10,000 users..." }
+  ]
+}
+```
+
+**Response** `200`:
+```json
+{
+  "screeningPassed": true
+}
+```
+
+| `screeningPassed` | Ý nghĩa |
+|---|---|
+| `true` | Tất cả câu có `preferredAnswer` đều đúng |
+| `false` | Có ít nhất 1 câu `preferredAnswer` sai |
+| `null` | Không có câu nào có `preferredAnswer` — chờ employer review |
+
+**Error Cases**:
+
+| Status | Message | Khi nào |
+|--------|---------|---------|
+| `400` | `Câu hỏi bắt buộc chưa được trả lời: "..."` | Bỏ trống câu `isRequired=true` |
+| `404` | `Đơn ứng tuyển không tồn tại hoặc không thuộc về bạn` | applicationId sai hoặc không phải của candidate |
+
+---
+
+## 3. Credit System — Mua tính năng lẻ
+
+### Xem danh sách sản phẩm
+
+#### GET `/api/credits/products`
+> **Auth**: Employer (JWT)
+
+**Response** `200`:
+```json
+[
+  {
+    "slug": "bump_post",
+    "displayName": "Đẩy tin lên đầu",
+    "description": "...",
+    "creditCost": 30,
+    "scope": "job",
+    "durationDays": 3
+  },
+  {
+    "slug": "extend_job",
+    "displayName": "Gia hạn tin tuyển dụng",
+    "creditCost": 20,
+    "scope": "job",
+    "durationDays": 15
+  },
+  {
+    "slug": "extra_job_slot",
+    "displayName": "Thêm slot tin tuyển dụng",
+    "creditCost": 40,
+    "scope": "company",
+    "durationDays": null
+  }
+]
+```
+
+---
+
+### Mua sản phẩm
+
+#### POST `/api/credits/purchase`
+> **Auth**: Employer (JWT)
+
+**Request Body**:
+```json
+{
+  "slug": "bump_post",
+  "targetJobId": 42
+}
+```
+
+> [!IMPORTANT]
+> `targetJobId` **bắt buộc** khi `scope=job` (bump_post, extend_job). Bỏ qua khi `scope=company` (extra_job_slot).
+
+**Response** `200`:
+```json
+{
+  "message": "Mua thành công: Đẩy tin lên đầu",
+  "transaction": {
+    "id": 55,
+    "type": "purchase",
+    "amount": -30,
+    "balanceAfter": 70,
+    "description": "Mua Đẩy tin lên đầu cho Job #42"
+  }
+}
+```
+
+**Error Cases**:
+
+| Status | Message | Khi nào |
+|--------|---------|---------|
+| `400` | `Không đủ Credit (cần X, hiện có Y)` | Số dư không đủ |
+| `400` | `Sản phẩm "bump_post" cần chỉ định targetJobId` | Thiếu `targetJobId` cho scope=job |
+| `403` | `Job không thuộc công ty của bạn` | Job thuộc company khác |
+| `404` | `Credit product "xyz" không tồn tại` | Slug không hợp lệ |
+
+---
+
+### Xem số dư
+
+#### GET `/api/credits/balance`
+> **Auth**: Employer (JWT)
+
+**Response** `200`:
+```json
+{ "balance": 100 }
+```
+
+---
+
+### Xem lịch sử giao dịch
+
+#### GET `/api/credits/transactions?page=1&limit=20`
+> **Auth**: Employer (JWT)
+
+**Response** `200`:
+```json
+{
+  "data": [
+    {
+      "id": 55,
+      "type": "purchase",
+      "amount": -30,
+      "balanceAfter": 70,
+      "description": "Mua Đẩy tin lên đầu cho Job #42",
+      "createdAt": "2026-04-27T06:00:00.000Z"
+    }
+  ],
+  "total": 15,
+  "page": 1,
+  "lastPage": 1
+}
+```
+
+---
+
+## 4. Feature #1: max_active_jobs — Giới hạn slot tin
+
+### Endpoint ảnh hưởng
+
+#### PUT `/api/jobs/employer/:id` (updateJob — chuyển status sang `published`)
+> **Auth**: Employer (JWT)
+
+### Hành vi mới
+- **Khi nào check**: Chỉ khi `status` chuyển từ `draft`/`closed` → `published`
+- **Free**: `maxActiveJobs = 1` → chỉ 1 tin PUBLISHED active cùng lúc + cooldown theo `jobDurationDays`
+- **VIP**: `maxActiveJobs = -1` → unlimited
+- **Extra slots**: Mua `extra_job_slot` bằng Credit sẽ `+1` vào `maxActiveJobs` hiệu dụng (cộng dồn, vĩnh viễn nếu `durationDays=null`)
+
+**Request Body** (không đổi):
+```json
+{
+  "status": "published"
+}
+```
+
+**Error Case** `403`:
+```json
+{
+  "statusCode": 403,
+  "message": "Gói Free chỉ cho phép đăng 1 tin mỗi 30 ngày. Mở khoá lúc 27/05/2026, 06:00:00."
+}
+```
+HOẶC:
+```json
+{
+  "statusCode": 403,
+  "message": "Bạn đã đạt tối đa 1 tin đang tuyển (hiện có: 1)."
+}
+```
+
+> [!TIP]
+> FE nên gọi `GET /api/subscriptions/status` trước khi cho phép employer bấm "Đăng tin" để disable nút nếu đã hết slot.
+
+---
+
+## 5. Feature #2: can_hide_salary — Ẩn lương
+
+### Endpoints ảnh hưởng
+
+#### POST `/api/jobs/employer` (createJob)
+#### PUT `/api/jobs/employer/:id` (updateJob)
+
+### Request Body — field mới
+```json
+{
+  "title": "Backend Developer",
+  "description": "...",
+  "hideSalary": true,
+  "salaryMin": 15000000,
+  "salaryMax": 25000000
+}
+```
+
+| Field | Type | Default | Mô tả |
+|-------|------|---------|-------|
+| `hideSalary` | `boolean` | `false` | Ẩn mức lương trên trang public. **Yêu cầu VIP**. |
+
+### Hành vi
+- **Free** gửi `hideSalary: true` → `403 Tính năng ẩn lương yêu cầu gói VIP`
+- **VIP** gửi `hideSalary: true` → OK, lương sẽ bị ẩn trên public API
+- Khi update: nếu tin cũ có `hideSalary=true` mà employer **hạ cấp về Free** → update bất kỳ field nào cũng bị `403` cho đến khi tắt `hideSalary`
+
+> [!IMPORTANT]
+> FE nên hiển thị toggle "Ẩn lương" ở form tạo/sửa tin, nhưng **chỉ enabled khi employer có VIP**. Nếu Free → disable toggle và hiện tooltip "Nâng cấp VIP để sử dụng".
+
+---
+
+## 6. Feature #3: can_require_cv — Bắt buộc CV ứng tuyển
+
+### Endpoints ảnh hưởng (giống Feature #2)
+
+#### POST `/api/jobs/employer` (createJob)
+#### PUT `/api/jobs/employer/:id` (updateJob)
+
+### Request Body — field mới
+```json
+{
+  "title": "Backend Developer",
+  "description": "...",
+  "requireCv": true
+}
+```
+
+| Field | Type | Default | Mô tả |
+|-------|------|---------|-------|
+| `requireCv` | `boolean` | `false` | Bắt buộc candidate có CV trước khi apply. **Yêu cầu VIP**. |
+
+### Hành vi
+- **Free** gửi `requireCv: true` → `403 Tính năng bắt buộc CV yêu cầu gói VIP`
+- **VIP** gửi `requireCv: true` → OK. Candidate apply mà chưa upload CV sẽ thấy error riêng: `"Tin tuyển dụng này yêu cầu bắt buộc có CV"`
+
+---
+
+## 7. Feature #4: max_profile_views_per_job — Giới hạn xem hồ sơ
+
+### Endpoint ảnh hưởng
+
+#### GET `/api/employer/applications/:id`
+> **Auth**: Employer (JWT)
+
+### Response — field mới
+```json
+{
+  "id": 99,
+  "jobId": 42,
+  "candidateId": 5,
+  "status": "applied",
+  "candidate": { "fullName": "Nguyễn Văn A", "skills": [...], ... },
+  "job": { ... },
+  "statusHistory": [...],
+  "notes": [...],
+  "profileViewsRemaining": 27
+}
+```
+
+| Field mới | Type | Ý nghĩa |
+|-----------|------|---------|
+| `profileViewsRemaining` | `number \| -1` | Số lượt xem CV còn lại cho job này. `-1` = unlimited (VIP). |
+
+### Hành vi
+- **Free**: `maxProfileViewsPerJob = 30` → mỗi job chỉ xem 30 candidate khác nhau
+- **VIP**: `maxProfileViewsPerJob = -1` → unlimited, `profileViewsRemaining = -1`
+- Xem lại cùng candidate **không tốn lượt** (idempotent per candidate per job)
+- Hết lượt → `403`:
+
+```json
+{
+  "statusCode": 403,
+  "message": "Bạn đã đạt giới hạn xem 30 hồ sơ cho tin này. Nâng cấp VIP để xem không giới hạn."
+}
+```
+
+> [!TIP]
+> FE nên hiển thị counter `profileViewsRemaining` dưới dạng badge trên mỗi thẻ ứng viên: "Còn 27 lượt xem".
+
+---
+
+## 8. Feature #5: free_ai_scoring — AI chấm tự động
+
+### Endpoint ảnh hưởng
+
+#### POST `/api/applications/:jobId` (Candidate apply)
+
+### Hành vi (Tự động — không có UI mới)
+- **VIP** (`freeAiScoring = true`): Khi candidate apply → AI Profile Score + CV Score được **tính ngay tự động** (fire-and-forget)
+- **Free** (`freeAiScoring = false`): AI KHÔNG tự kích hoạt → employer phải trigger thủ công qua `POST /api/employer/applications/:id/ai-analyze`
+
+### Response
+Không thay đổi response endpoint apply.  
+Kết quả AI scoring xuất hiện trong `GET /api/employer/applications/:id`:
+
+```json
+{
+  "id": 99,
+  "matchScore": 85,
+  "matchReasoning": "Ứng viên có 3/5 skill phù hợp...",
+  "cvMatchScore": 78,
+  "cvMatchReasoning": "CV thể hiện kinh nghiệm..."
+}
+```
+
+> [!NOTE]
+> FE VIP dashboard có thể hiển thị ngay `matchScore` trên danh sách ứng viên mà không cần chờ employer bấm "Phân tích AI".
+
+---
+
+## 9. Feature #6: monthly_headhunt_profile_views — Headhunting Quota
+
+### Endpoint ảnh hưởng
+
+#### GET `/api/employers/headhunting/candidates/:id`
+> **Auth**: Employer (JWT)
+
+### Response — fields mới
+```json
+{
+  "id": 5,
+  "fullName": "Nguyễn Văn A",
+  "phone": "0901234567",
+  "email": "a@mail.com",
+  "cvUrl": "https://...",
+  "skills": [...],
+  "workExperiences": [...],
+  "educations": [...],
+  "certificates": [...],
+  "contactUnlocked": true,
+  "creditSpent": 0
+}
+```
+
+| Field mới | Type | Ý nghĩa |
+|-----------|------|---------|
+| `contactUnlocked` | `boolean` | Luôn `true` trong response thành công (vì đã unlock) |
+| `creditSpent` | `number` | Số credit bị trừ cho lần xem này. `0` = miễn phí (VIP quota hoặc đã unlock) |
+
+### Logic chi tiết
+
+```
+Employer gọi GET /employers/headhunting/candidates/:id
+  ↓
+Đã unlock trước đó? (contact_unlock_log)
+  ├─ CÓ → trả full profile, creditSpent=0 (miễn phí mãi mãi)
+  └─ CHƯA →
+      VIP + freeContactUnlock=true?
+        ├─ CÓ → Đếm lượt unlock tháng này
+        │    ├─ Dưới quota → unlock miễn phí (creditSpent=0)
+        │    └─ Hết quota → charge 5 Credit (creditSpent=5)
+        └─ KHÔNG (Free) → charge 5 Credit (creditSpent=5)
+```
+
+### Error Cases
+
+| Status | Message | Khi nào |
+|--------|---------|---------|
+| `400` | `Không đủ Credit (cần 5, hiện có 0)` | Free/VIP hết quota, không đủ credit |
+| `403` | `Bạn đã bị xóa khỏi công ty` | Employer không thuộc company nào |
+| `404` | `Không tìm thấy ứng viên hoặc hồ sơ không được công khai` | Candidate ẩn profile |
+
+> [!IMPORTANT]
+> **Lần đầu** xem profile candidate = tốn lượt/credit. **Lần sau** xem lại candidate đó = miễn phí (vĩnh viễn cho company đó). FE nên cache trạng thái `contactUnlocked` từ response trước.
+
+> [!TIP]
+> FE nên hiện confirm dialog trước khi gọi endpoint: "Xem thông tin liên hệ sẽ tốn 5 Credit. Bạn có chắc?" (nếu employer không phải VIP hoặc VIP hết quota).
+
+---
+
+## 10. Feature #7: has_vip_badge — Badge VIP trên trang công ty
+
+### Endpoint ảnh hưởng
+
+#### GET `/api/companies/slug/:slug` (Public — không cần auth)
+
+### Response — field mới
+```json
+{
+  "id": 3,
+  "name": "Công ty TNHH ABC",
+  "slug": "cong-ty-tnhh-abc",
+  "logoUrl": "https://...",
+  "bannerUrl": "https://...",
+  "description": "...",
+  "companySize": "51-200",
+  "websiteUrl": "https://abc.vn",
+  "images": [...],
+  "isVip": true
+}
+```
+
+| Field mới | Type | Ý nghĩa |
+|-----------|------|---------|
+| `isVip` | `boolean` | `true` nếu công ty đang có gói VIP với `hasVipBadge=true` |
+
+> [!TIP]
+> FE hiển thị badge ✨ VIP bên cạnh tên công ty khi `isVip=true`. Áp dụng cả trên trang chi tiết công ty, danh sách job, và card công ty.
+
+---
+
+## 11. Feature #8 & #9: Deferred
+
+| # | Feature | Lý do defer |
+|---|---------|------------|
+| 8 | `can_use_premium_filters` | Cần define rõ: premium filter là filter gì? (Hiện tại mọi filter đều free) |
+| 9 | `can_view_advanced_analytics` | Cần product spec: advanced analytics gồm gì? (trend, benchmark, export?) |
+
+> Backend sẵn sàng toggle — FE chỉ cần gọi `GET /api/subscriptions/status` và check `package.canUsePremiumFilters` / `package.canViewAdvancedAnalytics`. Logic gating chờ khi có spec rõ ràng.
+
+---
+
+## 12. Fix A: canHeadhuntSaveAndInvite
+
+### Endpoints ảnh hưởng
+
+#### POST `/api/employers/headhunting/saved-candidates/:candidateId`
+> **Auth**: Employer (JWT) — **Yêu cầu VIP**
+
+#### POST `/api/employers/headhunting/invitations`
+> **Auth**: Employer (JWT) — **Yêu cầu VIP**
+
+### Hành vi mới
+- **Free** gọi save/invite → `403`:
+```json
+{
+  "statusCode": 403,
+  "message": "Tính năng lưu ứng viên yêu cầu gói VIP"
+}
+```
+hoặc:
+```json
+{
+  "statusCode": 403,
+  "message": "Tính năng gửi thư mời ứng tuyển yêu cầu gói VIP"
+}
+```
+
+- **VIP** (`canHeadhuntSaveAndInvite = true`) → hoạt động bình thường
+
+> [!TIP]
+> FE nên ẩn/disable nút "Lưu ứng viên" và "Gửi lời mời" nếu employer không phải VIP. Check `package.canHeadhuntSaveAndInvite` từ `GET /api/subscriptions/status`.
+
+---
+
+## 13. Fix D+E: Credit Product Side-Effects
+
+### Mô tả
+Trước đây `POST /api/credits/purchase` chỉ trừ credit và ghi log, **không thực sự thay đổi gì trên job**. Giờ đã có side-effects thật:
+
+### `bump_post` — Đẩy tin lên đầu
+- **Side-effect**: Set `job.isBumped = true` + `job.bumpedUntil = now() + durationDays`
+- **FE hiệu ứng**: Tin được đẩy lên **đầu danh sách** public jobs (xem Fix F)
+- Khi `bumpedUntil` hết hạn → tự động rớt về vị trí bình thường (DB query check)
+
+**Request** (không đổi):
+```json
+{ "slug": "bump_post", "targetJobId": 42 }
+```
+
+### `extend_job` — Gia hạn deadline
+- **Side-effect**: Nếu `job.deadline` còn hiệu lực → cộng thêm `durationDays`. Nếu đã hết hạn hoặc null → tính từ `now()`
+- **FE hiệu ứng**: Tin không còn hiện "Đã hết hạn" nữa
+
+**Request** (không đổi):
+```json
+{ "slug": "extend_job", "targetJobId": 42 }
+```
+
+### `extra_job_slot` — Thêm slot tin
+- **Side-effect**: Slot mới được đếm từ `credit_purchase_log` active → cộng vào `maxActiveJobs` hiệu dụng
+- **FE hiệu ứng**: Employer Free có thể đăng thêm tin (VD: 1 + 1 = 2 slots)  
+- **Không cần `targetJobId`**
+
+**Request** (không đổi):
+```json
+{ "slug": "extra_job_slot" }
+```
+
+> [!IMPORTANT]
+> Tất cả side-effects chạy trong cùng 1 transaction với việc trừ credit — nếu bất kỳ bước nào fail thì toàn bộ rollback, credit không bị trừ.
+
+---
+
+## 14. Fix F: Bumped Jobs Sort Priority
+
+### Endpoint ảnh hưởng
+
+#### GET `/api/jobs/public` (và `GET /api/companies/slug/:slug/jobs`)
+> **Auth**: Không cần (Public)
+
+### Hành vi mới
+- Tin đã mua `bump_post` (còn hiệu lực) → **luôn xuất hiện trước** mọi tin khác, bất kể sort mode (relevance, salary, deadline, created_at)
+- Thứ tự: `Bumped jobs → Non-bumped jobs → Chính sort đang chọn`
+- Khi `bumpedUntil < now()` → tự động rơi về vị trí thường mà không cần cron job
+
+> [!NOTE]
+> FE có thể hiển thị badge "📌 Tin ưu tiên" trên card nếu `job.isBumped === true`
+
+---
+
+## 15. Ma trận Free vs VIP
+
+| Tính năng | Free | VIP |
+|-----------|------|-----|
+| Tạo/đăng tin | 1 tin active, cooldown 30 ngày | Unlimited |
+| Ẩn lương (`hideSalary`) | ❌ Bị chặn | ✅ |
+| Bắt buộc CV (`requireCv`) | ❌ Bị chặn | ✅ |
+| Xem hồ sơ ứng viên (per job) | 30 lượt | Unlimited |
+| AI scoring tự động khi apply | ❌ Phải trigger thủ công | ✅ Auto |
+| Xem contact ứng viên (Headhunting) | 5 Credit / lần | Free (monthly quota) hoặc credit |
+| Lưu ứng viên / Gửi thư mời | ❌ Bị chặn | ✅ |
+| Badge VIP trên trang công ty | ❌ | ✅ |
+| Câu hỏi sàng lọc | ❌ Bị chặn | ✅ (theo quota gói) |
+| Mua tính năng lẻ bằng Credit | ✅ (bump_post, extend_job, extra_job_slot) | ✅ |
+| Bumped tin lên đầu | ✅ (qua Credit) | ✅ (qua Credit hoặc bumpPostQuota) |
+
+---
+
+## Bugs đã sửa (tổng hợp 2 đợt)
+
+| Bug | File | Vấn đề | Fix |
+|-----|------|--------|-----|
+| **BUG A** | [candidate-applications.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/applications/candidate-applications.service.ts#L72-L84) | Check `requireCv` là dead code (luôn false) | Đảo thứ tự: check `requireCv` trước `cvUrl` chung |
+| **BUG B** | [employer-headhunting.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/employers/employer-headhunting.service.ts#L308-L403) | `getCandidateDetail` trả full SĐT/email không qua VIP/credit check | Thêm contact_unlock_log + credit charge |
+| **BUG C** | [create-job.dto.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/jobs/dto/create-job.dto.ts#L55-L64) | `hideSalary`, `requireCv` thiếu trong DTO → FE không gửi được | Thêm vào `BaseJobSchema` |
+| **BUG D** | [employer-jobs.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/jobs/services/employer-jobs.service.ts#L126-L145) | `updateJob()` không check VIP cho các feature toggle | Thêm VIP check trong updateJob |
+| **Fix A** | [employer-headhunting.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/employers/employer-headhunting.service.ts) | Free user save/invite thoải mái | Thêm VIP gate `canHeadhuntSaveAndInvite` |
+| **Fix D** | [credits.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/credits/credits.service.ts) | `bump_post` mua nhưng job không đổi | Side-effect set `isBumped=true` + `bumpedUntil` |
+| **Fix E** | [credits.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/credits/credits.service.ts) | `extend_job`/`extra_job_slot` mua nhưng không tác dụng | Gia hạn deadline + đếm extra slots |
+| **Fix F** | [public-jobs.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/jobs/services/public-jobs.service.ts) | Bumped tin không lên đầu | Thêm ORDER BY bump priority |
+
+---
+
+## Files đã thay đổi
+
+| File | Loại thay đổi |
+|------|---------------|
+| [create-job.dto.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/jobs/dto/create-job.dto.ts) | Thêm `hideSalary`, `requireCv` vào schema & class |
+| [employer-jobs.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/jobs/services/employer-jobs.service.ts) | Inject SubscriptionsService, enforce VIP #1/#2/#3 |
+| [candidate-applications.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/applications/candidate-applications.service.ts) | Fix BUG A (dead code requireCv) |
+| [employer-applications.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/applications/employer-applications.service.ts) | Enforce profile view quota #4 |
+| [employer-headhunting.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/employers/employer-headhunting.service.ts) | Fix BUG B + headhunting quota #6 + Fix A (VIP save/invite gate) |
+| [companies.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/companies/companies.service.ts) | Thêm `isVip` vào public response #7 |
+| [credits.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/credits/credits.service.ts) | Fix D+E: side-effects cho bump_post, extend_job, extra_job_slot |
+| [public-jobs.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/jobs/services/public-jobs.service.ts) | Fix F: bump ordering priority |
+| [subscriptions.service.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/subscriptions/subscriptions.service.ts) | Extra slot counting in checkJobSlotLock |
+| [jobs.module.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/jobs/jobs.module.ts) | Import SubscriptionsModule |
+| [employers.module.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/employers/employers.module.ts) | Import SubscriptionsModule, CreditsModule, ContactUnlockLogEntity |
+| [applications.module.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/applications/applications.module.ts) | Import JobProfileViewEntity |
+| [companies.module.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/companies/companies.module.ts) | Import SubscriptionsModule |
+| [credits.module.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/credits/credits.module.ts) | Import JobEntity cho side-effects |
+| [subscriptions.module.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/subscriptions/subscriptions.module.ts) | Import CreditPurchaseLogEntity, CreditProductEntity |
+| [screening.controller.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/screening/screening.controller.ts) | *(Đợt trước)* Tạo mới controller cho screening |
+| [credits.controller.ts](file:///d:/Workspace/Projects/NestJs-ATS/src/credits/credits.controller.ts) | *(Đợt trước)* Thêm POST purchase, GET products/balance/transactions |

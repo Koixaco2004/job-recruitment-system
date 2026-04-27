@@ -20,6 +20,8 @@ import 'package:test1/features/employer/presentation/pages/member_management_pag
 import 'package:test1/features/auth/presentation/pages/change_password_page.dart';
 import 'package:test1/features/headhunting/presentation/pages/employer_dashboard_page.dart';
 import 'package:test1/features/headhunting/presentation/providers/employer_dashboard_provider.dart';
+import 'package:test1/features/monetization/presentation/pages/pricing_page.dart';
+import 'package:test1/features/monetization/presentation/pages/topup_page.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -178,6 +180,26 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const MemberManagementPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.workspace_premium, color: Colors.amber),
+            title: const Text('Nâng cấp VIP'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const PricingPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.toll, color: Colors.blue),
+            title: const Text('Nạp Credit'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const TopupPage()),
               );
             },
           ),

@@ -2459,6 +2459,140 @@
                 ]
             }
         },
+        "/api/subscriptions/packages": {
+            "get": {
+                "operationId": "SubscriptionsController_getPackages",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SubscriptionPackageEntity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách gói đăng ký",
+                "tags": [
+                    "Subscriptions"
+                ]
+            }
+        },
+        "/api/subscriptions/my": {
+            "get": {
+                "operationId": "SubscriptionsController_getMySubscription",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem subscription hiện tại của công ty",
+                "tags": [
+                    "Subscriptions"
+                ]
+            }
+        },
+        "/api/credits/balance": {
+            "get": {
+                "operationId": "CreditsController_getBalance",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xem số dư Credit của công ty",
+                "tags": [
+                    "Credits"
+                ]
+            }
+        },
+        "/api/credits/topup-packs": {
+            "get": {
+                "operationId": "CreditsController_getTopupPacks",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Danh sách gói nạp Credit",
+                "tags": [
+                    "Credits"
+                ]
+            }
+        },
+        "/api/credits/transactions": {
+            "get": {
+                "operationId": "CreditsController_getTransactions",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lịch sử giao dịch Credit",
+                "tags": [
+                    "Credits"
+                ]
+            }
+        },
         "/api/employers/setup-company": {
             "post": {
                 "operationId": "EmployersController_setupCompany",
@@ -2727,11 +2861,35 @@
                         "schema": {
                             "type": "number"
                         }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số ứng viên mỗi trang (tối đa 50)",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 50,
+                            "default": 20,
+                            "type": "number"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Danh sách 50 ứng viên phù hợp nhất"
+                        "description": "Danh sách ứng viên phù hợp nhất (có pagination)"
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
@@ -4942,6 +5100,100 @@
                     "Jobs - Candidate Recommendation"
                 ]
             }
+        },
+        "/api/payments/vip/create-order": {
+            "post": {
+                "operationId": "PaymentsController_createVipOrder",
+                "parameters": [],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Tạo đơn hàng mua gói VIP qua VNPay",
+                "tags": [
+                    "Payments"
+                ]
+            }
+        },
+        "/api/payments/credit/create-order": {
+            "post": {
+                "operationId": "PaymentsController_createCreditTopupOrder",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateCreditTopupDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Tạo đơn hàng nạp Credit qua VNPay",
+                "tags": [
+                    "Payments"
+                ]
+            }
+        },
+        "/api/payments/vnpay/return": {
+            "get": {
+                "operationId": "PaymentsController_vnpayReturn",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "summary": "VNPay return URL — hiển thị kết quả thanh toán",
+                "tags": [
+                    "Payments"
+                ]
+            }
+        },
+        "/api/payments/vnpay/ipn": {
+            "get": {
+                "operationId": "PaymentsController_vnpayIpn",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "summary": "VNPay IPN callback — xác nhận thanh toán",
+                "tags": [
+                    "Payments"
+                ]
+            }
         }
     },
     "info": {
@@ -5715,52 +5967,6 @@
                     "content"
                 ]
             },
-            "SetupCompanyDto": {
-                "type": "object",
-                "properties": {
-                    "fullName": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 100,
-                        "description": "Họ và tên HR"
-                    },
-                    "phoneContact": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 20,
-                        "description": "Số điện thoại cá nhân HR"
-                    },
-                    "companyName": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 255,
-                        "description": "Tên Công ty"
-                    },
-                    "categoryId": {
-                        "type": "number",
-                        "exclusiveMinimum": 0,
-                        "maximum": 9007199254740991,
-                        "description": "ID Ngành nghề / Lĩnh vực công ty"
-                    },
-                    "provinceId": {
-                        "type": "number",
-                        "exclusiveMinimum": 0,
-                        "maximum": 9007199254740991,
-                        "description": "ID Tỉnh / Thành phố trụ sở"
-                    },
-                    "address": {
-                        "type": "string",
-                        "maxLength": 500,
-                        "description": "Địa chỉ cụ thể"
-                    }
-                },
-                "required": [
-                    "fullName",
-                    "phoneContact",
-                    "companyName",
-                    "categoryId"
-                ]
-            },
             "CertificateEntity": {
                 "type": "object",
                 "properties": {
@@ -6017,219 +6223,6 @@
                     "skillMetadataId",
                     "candidate",
                     "skillMetadata"
-                ]
-            },
-            "EmployerEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "userId": {
-                        "type": "number"
-                    },
-                    "companyId": {
-                        "type": "number",
-                        "nullable": true
-                    },
-                    "fullName": {
-                        "type": "string"
-                    },
-                    "phoneContact": {
-                        "type": "string"
-                    },
-                    "avatarUrl": {
-                        "type": "string"
-                    },
-                    "isAdminCompany": {
-                        "type": "boolean"
-                    },
-                    "status": {
-                        "enum": [
-                            "active",
-                            "locked"
-                        ],
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "updatedAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "user": {
-                        "$ref": "#/components/schemas/UserEntity"
-                    },
-                    "company": {
-                        "$ref": "#/components/schemas/CompanyEntity"
-                    }
-                },
-                "required": [
-                    "id",
-                    "userId",
-                    "companyId",
-                    "fullName",
-                    "phoneContact",
-                    "avatarUrl",
-                    "isAdminCompany",
-                    "status",
-                    "createdAt",
-                    "updatedAt",
-                    "user",
-                    "company"
-                ]
-            },
-            "CompanyImageEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "companyId": {
-                        "type": "number"
-                    },
-                    "imageUrl": {
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "company": {
-                        "$ref": "#/components/schemas/CompanyEntity"
-                    }
-                },
-                "required": [
-                    "id",
-                    "companyId",
-                    "imageUrl",
-                    "createdAt",
-                    "company"
-                ]
-            },
-            "CompanyEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "userCreatorId": {
-                        "type": "number"
-                    },
-                    "categoryId": {
-                        "type": "number"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "emailContact": {
-                        "type": "string"
-                    },
-                    "phoneContact": {
-                        "type": "string"
-                    },
-                    "address": {
-                        "type": "string"
-                    },
-                    "provinceId": {
-                        "type": "number"
-                    },
-                    "logoUrl": {
-                        "type": "string"
-                    },
-                    "bannerUrl": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "content": {
-                        "type": "string"
-                    },
-                    "companySize": {
-                        "type": "string"
-                    },
-                    "websiteUrl": {
-                        "type": "string"
-                    },
-                    "facebookUrl": {
-                        "type": "string"
-                    },
-                    "linkedinUrl": {
-                        "type": "string"
-                    },
-                    "businessLicenseUrl": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "enum": [
-                            "idle",
-                            "pending",
-                            "approved",
-                            "rejected"
-                        ],
-                        "type": "string"
-                    },
-                    "rejectionReason": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "verifiedAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "slug": {
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "updatedAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "employers": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/EmployerEntity"
-                        }
-                    },
-                    "images": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/CompanyImageEntity"
-                        }
-                    }
-                },
-                "required": [
-                    "id",
-                    "userCreatorId",
-                    "categoryId",
-                    "name",
-                    "emailContact",
-                    "phoneContact",
-                    "address",
-                    "provinceId",
-                    "logoUrl",
-                    "bannerUrl",
-                    "description",
-                    "content",
-                    "companySize",
-                    "websiteUrl",
-                    "facebookUrl",
-                    "linkedinUrl",
-                    "businessLicenseUrl",
-                    "status",
-                    "rejectionReason",
-                    "verifiedAt",
-                    "slug",
-                    "createdAt",
-                    "updatedAt",
-                    "employers",
-                    "images"
                 ]
             },
             "ProvinceMetadataEntity": {
@@ -6831,6 +6824,472 @@
                     "employer"
                 ]
             },
+            "EmployerEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "userId": {
+                        "type": "number"
+                    },
+                    "companyId": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "fullName": {
+                        "type": "string"
+                    },
+                    "phoneContact": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "isAdminCompany": {
+                        "type": "boolean"
+                    },
+                    "status": {
+                        "enum": [
+                            "active",
+                            "locked"
+                        ],
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserEntity"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/CompanyEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "userId",
+                    "companyId",
+                    "fullName",
+                    "phoneContact",
+                    "avatarUrl",
+                    "isAdminCompany",
+                    "status",
+                    "createdAt",
+                    "updatedAt",
+                    "user",
+                    "company"
+                ]
+            },
+            "CompanyImageEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "companyId": {
+                        "type": "number"
+                    },
+                    "imageUrl": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/CompanyEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "companyId",
+                    "imageUrl",
+                    "createdAt",
+                    "company"
+                ]
+            },
+            "CompanyEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "userCreatorId": {
+                        "type": "number"
+                    },
+                    "categoryId": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "emailContact": {
+                        "type": "string"
+                    },
+                    "phoneContact": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "provinceId": {
+                        "type": "number"
+                    },
+                    "logoUrl": {
+                        "type": "string"
+                    },
+                    "bannerUrl": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "companySize": {
+                        "type": "string"
+                    },
+                    "websiteUrl": {
+                        "type": "string"
+                    },
+                    "facebookUrl": {
+                        "type": "string"
+                    },
+                    "linkedinUrl": {
+                        "type": "string"
+                    },
+                    "businessLicenseUrl": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "enum": [
+                            "idle",
+                            "pending",
+                            "approved",
+                            "rejected"
+                        ],
+                        "type": "string"
+                    },
+                    "rejectionReason": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "verifiedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "employers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EmployerEntity"
+                        }
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CompanyImageEntity"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "userCreatorId",
+                    "categoryId",
+                    "name",
+                    "emailContact",
+                    "phoneContact",
+                    "address",
+                    "provinceId",
+                    "logoUrl",
+                    "bannerUrl",
+                    "description",
+                    "content",
+                    "companySize",
+                    "websiteUrl",
+                    "facebookUrl",
+                    "linkedinUrl",
+                    "businessLicenseUrl",
+                    "status",
+                    "rejectionReason",
+                    "verifiedAt",
+                    "slug",
+                    "createdAt",
+                    "updatedAt",
+                    "employers",
+                    "images"
+                ]
+            },
+            "SubscriptionPackageEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "number"
+                    },
+                    "durationDays": {
+                        "type": "number"
+                    },
+                    "maxActiveJobs": {
+                        "type": "number"
+                    },
+                    "jobDurationDays": {
+                        "type": "number"
+                    },
+                    "maxProfileViewsPerJob": {
+                        "type": "number"
+                    },
+                    "dailyApplicationProcessLimit": {
+                        "type": "number"
+                    },
+                    "bumpPostQuota": {
+                        "type": "number"
+                    },
+                    "maxScreeningQuestions": {
+                        "type": "number"
+                    },
+                    "monthlyHeadhuntProfileViews": {
+                        "type": "number"
+                    },
+                    "monthlyFreeProceeds": {
+                        "type": "number"
+                    },
+                    "canHeadhuntSaveAndInvite": {
+                        "type": "boolean"
+                    },
+                    "canUseAiStrictFilter": {
+                        "type": "boolean"
+                    },
+                    "canExportReport": {
+                        "type": "boolean"
+                    },
+                    "canViewAdvancedAnalytics": {
+                        "type": "boolean"
+                    },
+                    "canHideSalary": {
+                        "type": "boolean"
+                    },
+                    "canRequireCv": {
+                        "type": "boolean"
+                    },
+                    "hasVipBadge": {
+                        "type": "boolean"
+                    },
+                    "canUsePremiumFilters": {
+                        "type": "boolean"
+                    },
+                    "freeContactUnlock": {
+                        "type": "boolean"
+                    },
+                    "freeAiScoring": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "subscriptions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CompanySubscriptionEntity"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "displayName",
+                    "price",
+                    "durationDays",
+                    "maxActiveJobs",
+                    "jobDurationDays",
+                    "maxProfileViewsPerJob",
+                    "dailyApplicationProcessLimit",
+                    "bumpPostQuota",
+                    "maxScreeningQuestions",
+                    "monthlyHeadhuntProfileViews",
+                    "monthlyFreeProceeds",
+                    "canHeadhuntSaveAndInvite",
+                    "canUseAiStrictFilter",
+                    "canExportReport",
+                    "canViewAdvancedAnalytics",
+                    "canHideSalary",
+                    "canRequireCv",
+                    "hasVipBadge",
+                    "canUsePremiumFilters",
+                    "freeContactUnlock",
+                    "freeAiScoring",
+                    "createdAt",
+                    "updatedAt",
+                    "subscriptions"
+                ]
+            },
+            "CompanySubscriptionEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "companyId": {
+                        "type": "number"
+                    },
+                    "packageId": {
+                        "type": "number"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "format": "date-time",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "usedBumpPostQuota": {
+                        "type": "number"
+                    },
+                    "dailyProcessedCount": {
+                        "type": "number"
+                    },
+                    "dailyProcessedDate": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "lastJobPublishedAt": {
+                        "format": "date-time",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "headhuntingViewsUsed": {
+                        "type": "number"
+                    },
+                    "headhuntingViewsResetAt": {
+                        "format": "date-time",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "usedFreeProceeds": {
+                        "type": "number"
+                    },
+                    "proceedsResetAt": {
+                        "format": "date-time",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/CompanyEntity"
+                    },
+                    "package": {
+                        "$ref": "#/components/schemas/SubscriptionPackageEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "companyId",
+                    "packageId",
+                    "status",
+                    "startDate",
+                    "endDate",
+                    "usedBumpPostQuota",
+                    "dailyProcessedCount",
+                    "dailyProcessedDate",
+                    "lastJobPublishedAt",
+                    "headhuntingViewsUsed",
+                    "headhuntingViewsResetAt",
+                    "usedFreeProceeds",
+                    "proceedsResetAt",
+                    "createdAt",
+                    "updatedAt",
+                    "company",
+                    "package"
+                ]
+            },
+            "SetupCompanyDto": {
+                "type": "object",
+                "properties": {
+                    "fullName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "description": "Họ và tên HR"
+                    },
+                    "phoneContact": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 20,
+                        "description": "Số điện thoại cá nhân HR"
+                    },
+                    "companyName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Tên Công ty"
+                    },
+                    "categoryId": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "ID Ngành nghề / Lĩnh vực công ty"
+                    },
+                    "provinceId": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "ID Tỉnh / Thành phố trụ sở"
+                    },
+                    "address": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "description": "Địa chỉ cụ thể"
+                    }
+                },
+                "required": [
+                    "fullName",
+                    "phoneContact",
+                    "companyName",
+                    "categoryId"
+                ]
+            },
             "UpdateEmployerProfileDto": {
                 "type": "object",
                 "properties": {
@@ -7367,6 +7826,10 @@
                         }
                     }
                 }
+            },
+            "CreateCreditTopupDto": {
+                "type": "object",
+                "properties": {}
             }
         }
     }

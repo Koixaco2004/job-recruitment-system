@@ -1,0 +1,72 @@
+# 💎 VIP & Credit Features — Frontend Integration Guide
+
+Tài liệu này tổng hợp **toàn bộ** các tính năng VIP và System Credit, được map trực tiếp với các **API Endpoints** (bao gồm endpoint mới tạo và endpoint cũ được cập nhật logic).
+
+Team Frontend dựa vào bảng này để tích hợp UI (disable/enable components, thêm badge, show confirm dialog, v.v.). Để check gói hiện tại của Employer, FE dùng API `GET /api/subscriptions/status`.
+
+---
+
+## 🏗️ 1. Các Tính Năng Quản Lý Tin Tuyển Dụng (Job Management)
+
+| Tính năng trong DB | Cấu hình | Endpoints bị ảnh hưởng | Hành vi Backend thay đổi |
+|---|---|---|---|
+| **`max_active_jobs`** | Giới hạn slot tin đang tuyển (`published`) cùng lúc | **`PUT`** `/api/jobs/employer/:id`<br>*(Chuyển status sang `published`)* | **[CŨ UPDATE]**: Check số lượng tin đang có status = `published`. Nếu vượt quá (VD Free chỉ có 1) -> Trả về `403`. Có tính thêm số slot mua qua Credit. |
+| **`can_hide_salary`** | VIP ẩn mức lương | **`POST`** `/api/jobs/employer`<br>**`PUT`** `/api/jobs/employer/:id` | **[CŨ UPDATE]**: Thêm field `hideSalary: boolean` vào Request Body. Nếu Free gửi `true` -> Trả về `403`. Lương sẽ bị ẩn ở Public API. |
+| **`can_require_cv`** | VIP yêu cầu UV bắt buộc nộp CV | **`POST`** `/api/jobs/employer`<br>**`PUT`** `/api/jobs/employer/:id`<br><br>**`POST`** `/api/applications/:jobId`<br> *(Candidate Apply)*| **[CŨ UPDATE]**: Thêm field `requireCv: boolean` vào Request. Nếu Free gửi `true` -> Trả về `403`. <br>**[CŨ UPDATE]**: Khi UV apply tin có yêu cầu này mà không có CV -> Trả về `400` với thông báo riêng biệt. |
+| **`max_screening_questions`** | Câu hỏi sàng lọc UV | **`GET`** `/api/jobs/:jobId/screening`<br>**`POST`** `/api/jobs/:jobId/screening`<br>**`GET`** `/api/jobs/:jobId/screening/public`<br>**`POST`** `/api/jobs/applications/:applicationId/screening/answers` | **[MỚI]**: Quản lý bộ câu hỏi sàng lọc. Free có hạn mức `0` -> Sẽ nhận `403`. Candidate get bộ câu hỏi qua `/public` và nộp answer lúc làm bài. |
+
+---
+
+## 👥 2. Các Tính Năng Xử Lý Ứng Viên (Application Processing)
+
+| Tính năng trong DB | Cấu hình | Endpoints bị ảnh hưởng | Hành vi Backend thay đổi |
+|---|---|---|---|
+| **`max_profile_views_per_job`** | Giới hạn xem chi tiết CV / Tin | **`GET`** `/api/employer/applications/:id` | **[CŨ UPDATE]**: Thêm trường `profileViewsRemaining` vào Response. Nếu xem UV mới mà hết lượt -> Trả về `403`. Xem lại UV cũ thuộc Job đó thì không tốn lượt. |
+| **`free_ai_scoring`** | VIP được AI tự động chấm điểm CV | **`POST`** `/api/applications/:jobId`<br>*(Candidate Apply)* | **[CŨ UPDATE]**: Nếu là VIP, khi candidate Apply, AI scoring sẽ được kích tự động ngầm. Kết quả trả về qua Application Detail API. Free user phải bấm tính toán bằng tay (API AI Analyze riêng). |
+| **`daily_application_process_limit`** | Giới hạn số hồ sơ được chuyển trạng thái trong ngày | **`PUT`** `/api/employer/applications/:id/status` | **[CŨ UPDATE]**: Mỗi lần kéo/chuyển trạng thái UV (qua pass/fail) sẽ bị đếm. Nếu vượt hạn mức ngày (Free) -> Trả về `400`. VIP là `-1` (unlimited). |
+| **Phí tiến trình (Pipeline Fee) & `monthly_free_proceeds`** | Phí thu (Credit) khi kéo UV pass vòng đầu tiên | **`PUT`** `/api/employer/applications/:id/status` | **[CŨ UPDATE]**: Kéo UV từ `applied` sang mốc tích cực -> Thu 10 Credit. Nếu VIP còn `monthly_free_proceeds` -> Trừ Quota miễn phí chứ không trừ Credit. Hiển thị thông báo hoặc fail `400` nếu thiếu Credit. |
+
+---
+
+## 🎯 3. Các Tính Năng Headhunting (Tìm kiếm tài năng)
+
+| Tính năng trong DB | Cấu hình | Endpoints bị ảnh hưởng | Hành vi Backend thay đổi |
+|---|---|---|---|
+| **`monthly_headhunt_profile_views`** & **`free_contact_unlock`** | Mở khoá thông tin liên hệ UV (SĐT, Email) | **`GET`** `/api/employers/headhunting/candidates/:id` | **[CŨ UPDATE]**: Thêm `contactUnlocked` (boolean) & `creditSpent` (number). Nếu Free hoặc VIP hết quota tháng -> Thu 5 Credit/lượt. Trả `400` nếu tài khoản không đủ tiền. Nếu đã unlock rồi, gọi lại miễn phí mãi mãi. |
+| **`canHeadhuntSaveAndInvite`** | Lưu UV vào Talent Pool & Gửi thư mời | **`POST`** `/api/employers/headhunting/saved-candidates/:candidateId`<br><br>**`POST`** `/api/employers/headhunting/invitations`| **[CŨ UPDATE]**: Khóa chức năng với Free User. Bắn lỗi `403 Forbidden` yêu cầu gói VIP. |
+
+---
+
+## 🏢 4. Tính Năng Branding Công Ty
+
+| Tính năng trong DB | Cấu hình | Endpoints bị ảnh hưởng | Hành vi Backend thay đổi |
+|---|---|---|---|
+| **`has_vip_badge`** | Hiện tick/badge VIP | **`GET`** `/api/companies/slug/:slug` | **[CŨ UPDATE]**: Response thêm `isVip: boolean`. FE có thể nhận diện và render icon/badge ưu tiên trên thông tin doanh nghiệp. |
+
+---
+
+## 🛍️ 5. Hệ Thống Credit / Cửa Hàng Bán Lẻ Tính Năng
+
+Đây là module API hoàn chỉnh để Employer nạp Credit (giả lập) và mua lẻ vật phẩm hỗ trợ.
+
+| Tên sản phẩm / Tính năng | Mô tả thực tế | Endpoints | Hành vi |
+|---|---|---|---|
+| **Credit Ecosystem** | Xem list SP, Mua, Xem Ví, Lịch sử | **`GET`** `/api/credits/products`<br>**`GET`** `/api/credits/balance`<br>**`GET`** `/api/credits/transactions`<br>**`POST`** `/api/credits/purchase` | **[MỚI]** Hệ thống Core. Body API Mua: `{ "slug": "...", "targetJobId": 42 }`. |
+| **`bump_post`** | Đẩy tin tuyển dụng lên đầu | **`POST`** `/api/credits/purchase` | Trừ Credit. Tin được `+ isBumped: true` và có hạn dùng `bumpedUntil`. <br>👉 **[CŨ UPDATE]**: API public danh sách Job (`GET /api/jobs/public`) tự động Sort các job đẩy tin lên ưu tiên 1st. |
+| **`extend_job`** | Gia hạn hiển thị tin thêm N ngày | **`POST`** `/api/credits/purchase` | Trừ Credit. Tin được kéo dài ngày `deadline` cộng dồn vào `JobEntity`. |
+| **`extra_job_slot`** | Mua thêm 1 max slot đăng bài | **`POST`** `/api/credits/purchase` | Tính thẳng vào Effective `maxActiveJobs` (Giới hạn slot tin) vĩnh viễn hoặc theo hợp đồng gói Credit, ko cần `targetJobId`. |
+
+---
+
+## 🛑 6. Các Tính Năng Đã Khai Báo Trong DB NHƯNG Chưa Implement (Deferred)
+
+Team Frontend **chưa cần vẽ UI hoặc nối API** cho các tính năng dưới đây vì Product Design chưa chốt rule business:
+
+1. **`can_use_premium_filters`**
+   - *Mô tả*: Cho phép VIP dùng bộ lọc nâng cao.
+   - *Lý do Deferred*: Chưa chốt danh sách bộ lọc nào hiện tại được coi là Premium (trường ĐH, kinh nghiệm, mức lương, location...).
+   - *FE Tips*: Có thể tạm disable hoặc ẩn các filter UX trông pro nếu nhận `false` từ `/status`, nhưng API phía sau chưa chặn.
+
+2. **`can_view_advanced_analytics`**
+   - *Mô tả*: Cung cấp dashboard BI, biểu đồ phân tích sâu.
+   - *Lý do Deferred*: Dashboard phân tích Advanced Analytics chưa được xây dựng phía Backend. Backend mới chỉ có metrics dạng cơ bản bằng đếm trạng thái history (funnel đơn giản).

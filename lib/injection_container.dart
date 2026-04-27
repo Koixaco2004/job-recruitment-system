@@ -111,6 +111,10 @@ import 'features/notifications/data/repositories/notification_repository_impl.da
 import 'features/notifications/domain/repositories/notification_repository.dart';
 import 'features/notifications/domain/usecases/notification_usecases.dart';
 import 'features/notifications/presentation/providers/notification_provider.dart';
+import 'features/monetization/data/datasources/monetization_remote_datasource.dart';
+import 'features/monetization/data/repositories/monetization_repository_impl.dart';
+import 'features/monetization/domain/repositories/monetization_repository.dart';
+import 'features/monetization/presentation/providers/monetization_provider.dart';
 
 final sl = GetIt.instance; // Service Locator
 
@@ -503,5 +507,24 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<NotificationRemoteDataSource>(
     () => NotificationRemoteDataSourceImpl(sl()),
+  );
+
+  // ========================
+  // Features - Monetization
+  // ========================
+
+  // Providers
+  sl.registerFactory(
+    () => MonetizationProvider(repository: sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<MonetizationRepository>(
+    () => MonetizationRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<MonetizationRemoteDataSource>(
+    () => MonetizationRemoteDataSourceImpl(apiClient: sl()),
   );
 }
