@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/subscription_package_entity.dart';
 import '../../domain/entities/topup_pack_entity.dart';
 import '../../domain/entities/subscription_entity.dart';
+import '../../domain/entities/credit_transaction_entity.dart';
 import '../../domain/repositories/monetization_repository.dart';
 
 class MonetizationProvider extends ChangeNotifier {
@@ -18,6 +19,10 @@ class MonetizationProvider extends ChangeNotifier {
   // Subscription Status
   int _creditBalance = 0;
   bool _isLoadingStatus = false;
+  List<CreditTransactionEntity> _transactions = [];
+  int _transactionPage = 1;
+  int _transactionLastPage = 1;
+  bool _isLoadingTransactions = false;
 
   bool get isLoading => _isLoading;
   List<SubscriptionPackageEntity> get packages => _packages;
@@ -27,6 +32,9 @@ class MonetizationProvider extends ChangeNotifier {
   SubscriptionEntity? get currentSubscription => _currentSubscription;
   int get creditBalance => _creditBalance;
   bool get isLoadingStatus => _isLoadingStatus;
+  List<CreditTransactionEntity> get transactions => _transactions;
+  bool get isLoadingTransactions => _isLoadingTransactions;
+  bool get hasMoreTransactions => _transactionPage < _transactionLastPage;
 
   Future<void> fetchPackages() async {
     _isLoading = true;
@@ -97,6 +105,39 @@ class MonetizationProvider extends ChangeNotifier {
         notifyListeners();
       },
     );
+  }
+
+  Future<void> fetchCreditTransactions({bool refresh = false}) async {
+    if (refresh) {
+      _transactionPage = 1;
+      _transactions = [];
+    } else if (!hasMoreTransactions && _transactions.isNotEmpty) {
+      return;
+    }
+
+    _isLoadingTransactions = true;
+    notifyListeners();
+
+    final result = await repository.getCreditTransactions(
+      page: refresh ? 1 : _transactionPage + 1,
+    );
+
+    result.fold(
+      (failure) => _errorMessage = failure.message,
+      (data) {
+        final List<CreditTransactionEntity> newTransactions = data['transactions'];
+        if (refresh) {
+          _transactions = newTransactions;
+        } else {
+          _transactions.addAll(newTransactions);
+        }
+        _transactionPage = data['page'];
+        _transactionLastPage = data['lastPage'];
+      },
+    );
+
+    _isLoadingTransactions = false;
+    notifyListeners();
   }
 
   Future<String?> createVipOrder() async {

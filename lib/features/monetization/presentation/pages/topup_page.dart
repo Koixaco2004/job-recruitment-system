@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/monetization_provider.dart';
 import '../../domain/entities/topup_pack_entity.dart';
 import 'payment_webview_page.dart';
+import 'transaction_history_page.dart';
 
 class TopupPage extends StatefulWidget {
   const TopupPage({super.key});
@@ -32,6 +33,14 @@ class _TopupPageState extends State<TopupPage> {
       appBar: AppBar(
         title: const Text('Nạp Credit', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const TransactionHistoryPage()),
+            ),
+          ),
+        ],
       ),
       body: Consumer<MonetizationProvider>(
         builder: (context, provider, child) {

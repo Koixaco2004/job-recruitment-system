@@ -3,6 +3,7 @@ import '../../../../core/network/api_client.dart';
 import '../models/subscription_package_model.dart';
 import '../models/topup_pack_model.dart';
 import '../models/subscription_model.dart';
+import '../models/credit_transaction_model.dart';
 
 abstract class MonetizationRemoteDataSource {
   Future<List<SubscriptionPackageModel>> getSubscriptionPackages();
@@ -93,6 +94,15 @@ class MonetizationRemoteDataSourceImpl implements MonetizationRemoteDataSource {
       '/api/credits/transactions',
       queryParameters: {'page': page, 'limit': limit},
     );
-    return response.data;
+    
+    final List<dynamic> list = response.data['data'];
+    final transactions = list.map((json) => CreditTransactionModel.fromJson(json)).toList();
+    
+    return {
+      'transactions': transactions,
+      'total': response.data['total'],
+      'page': response.data['page'],
+      'lastPage': response.data['lastPage'],
+    };
   }
 }
