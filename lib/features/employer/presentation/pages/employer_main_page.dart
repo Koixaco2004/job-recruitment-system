@@ -22,6 +22,7 @@ import 'package:test1/features/headhunting/presentation/pages/employer_dashboard
 import 'package:test1/features/headhunting/presentation/providers/employer_dashboard_provider.dart';
 import 'package:test1/features/monetization/presentation/pages/pricing_page.dart';
 import 'package:test1/features/monetization/presentation/pages/topup_page.dart';
+import 'package:test1/features/monetization/presentation/providers/monetization_provider.dart';
 
 class EmployerMainPage extends StatefulWidget {
   const EmployerMainPage({super.key});
@@ -228,6 +229,7 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
             onTap: () async {
               context.read<NotificationProvider>().disconnectSocket();
               context.read<EmployerProvider>().clear(); 
+              context.read<MonetizationProvider>().clear();
               await authProvider.logout();
               if (context.mounted) {
                 Navigator.of(context).pushAndRemoveUntil(

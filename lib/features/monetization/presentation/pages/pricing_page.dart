@@ -17,7 +17,9 @@ class _PricingPageState extends State<PricingPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MonetizationProvider>().fetchPackages();
+      final provider = context.read<MonetizationProvider>();
+      provider.fetchPackages();
+      provider.fetchSubscriptionStatus();
     });
   }
 
@@ -80,6 +82,9 @@ class _PricingPageState extends State<PricingPage> {
     NumberFormat currencyFormat,
   ) {
     final theme = Theme.of(context);
+    final provider = context.watch<MonetizationProvider>();
+    final currentSub = provider.currentSubscription;
+    final isCurrentPackage = currentSub?.packageId == package.id;
     final isVip = package.isVip;
 
     return Container(
@@ -191,19 +196,25 @@ class _PricingPageState extends State<PricingPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: package.price == 0 
+                    onPressed: (package.price == 0 || isCurrentPackage)
                       ? null 
                       : () => _handlePayment(context, package),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isVip ? theme.colorScheme.primary : Colors.grey[100],
-                      foregroundColor: isVip ? Colors.white : Colors.black,
+                      backgroundColor: isCurrentPackage 
+                          ? Colors.green[50] 
+                          : (isVip ? theme.colorScheme.primary : Colors.grey[100]),
+                      foregroundColor: isCurrentPackage
+                          ? Colors.green[700]
+                          : (isVip ? Colors.white : Colors.black),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Text(
-                      package.price == 0 ? 'Gói hiện tại' : 'Nâng cấp ngay',
+                      isCurrentPackage 
+                          ? 'Gói hiện tại' 
+                          : (package.price == 0 ? 'Mặc định' : 'Nâng cấp ngay'),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),

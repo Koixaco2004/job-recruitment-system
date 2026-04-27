@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/subscription_package_entity.dart';
 import '../../domain/entities/topup_pack_entity.dart';
+import '../../domain/entities/subscription_entity.dart';
 import '../../domain/repositories/monetization_repository.dart';
 import '../datasources/monetization_remote_datasource.dart';
 
@@ -61,7 +62,7 @@ class MonetizationRepositoryImpl implements MonetizationRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getSubscriptionStatus() async {
+  Future<Either<Failure, SubscriptionEntity>> getSubscriptionStatus() async {
     try {
       final result = await remoteDataSource.getSubscriptionStatus();
       return Right(result);

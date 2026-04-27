@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/subscription_package_model.dart';
 import '../models/topup_pack_model.dart';
+import '../models/subscription_model.dart';
 
 abstract class MonetizationRemoteDataSource {
   Future<List<SubscriptionPackageModel>> getSubscriptionPackages();
@@ -9,7 +10,7 @@ abstract class MonetizationRemoteDataSource {
   Future<Map<String, dynamic>> createVipOrder();
   Future<Map<String, dynamic>> createCreditOrder(String packId);
   Future<Map<String, dynamic>> verifyVnpayPayment(Map<String, dynamic> queryParams);
-  Future<Map<String, dynamic>> getSubscriptionStatus();
+  Future<SubscriptionModel> getSubscriptionStatus();
   Future<int> getCreditBalance();
   Future<Map<String, dynamic>> getCreditTransactions({int page = 1, int limit = 20});
 }
@@ -75,9 +76,9 @@ class MonetizationRemoteDataSourceImpl implements MonetizationRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> getSubscriptionStatus() async {
+  Future<SubscriptionModel> getSubscriptionStatus() async {
     final response = await apiClient.dio.get('/api/subscriptions/my');
-    return response.data;
+    return SubscriptionModel.fromJson(response.data);
   }
 
   @override

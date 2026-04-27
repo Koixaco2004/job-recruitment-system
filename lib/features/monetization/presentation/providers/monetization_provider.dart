@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/subscription_package_entity.dart';
 import '../../domain/entities/topup_pack_entity.dart';
+import '../../domain/entities/subscription_entity.dart';
 import '../../domain/repositories/monetization_repository.dart';
 
 class MonetizationProvider extends ChangeNotifier {
@@ -11,10 +12,10 @@ class MonetizationProvider extends ChangeNotifier {
   bool _isLoading = false;
   List<SubscriptionPackageEntity> _packages = [];
   List<TopupPackEntity> _topupPacks = [];
+  SubscriptionEntity? _currentSubscription;
   String? _errorMessage;
 
   // Subscription Status
-  Map<String, dynamic>? _currentSubscription;
   int _creditBalance = 0;
   bool _isLoadingStatus = false;
 
@@ -23,7 +24,7 @@ class MonetizationProvider extends ChangeNotifier {
   List<TopupPackEntity> get topupPacks => _topupPacks;
   String? get errorMessage => _errorMessage;
 
-  Map<String, dynamic>? get currentSubscription => _currentSubscription;
+  SubscriptionEntity? get currentSubscription => _currentSubscription;
   int get creditBalance => _creditBalance;
   bool get isLoadingStatus => _isLoadingStatus;
 
@@ -69,17 +70,22 @@ class MonetizationProvider extends ChangeNotifier {
 
   Future<void> fetchSubscriptionStatus() async {
     _isLoadingStatus = true;
+    _errorMessage = null;
     notifyListeners();
 
     final result = await repository.getSubscriptionStatus();
     result.fold(
-      (failure) => null,
+      (failure) {
+        _errorMessage = failure.message;
+        _currentSubscription = null;
+      },
       (status) {
         _currentSubscription = status;
-        _isLoadingStatus = false;
-        notifyListeners();
       },
     );
+
+    _isLoadingStatus = false;
+    notifyListeners();
   }
 
   Future<void> fetchCreditBalance() async {
@@ -107,6 +113,17 @@ class MonetizationProvider extends ChangeNotifier {
       (failure) => null,
       (data) => data['paymentUrl'] as String?,
     );
+  }
+
+  void clear() {
+    _packages = [];
+    _topupPacks = [];
+    _currentSubscription = null;
+    _creditBalance = 0;
+    _errorMessage = null;
+    _isLoading = false;
+    _isLoadingStatus = false;
+    notifyListeners();
   }
 
   void clearError() {

@@ -17,7 +17,9 @@ class _TopupPageState extends State<TopupPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MonetizationProvider>().fetchTopupPacks();
+      final provider = context.read<MonetizationProvider>();
+      provider.fetchTopupPacks();
+      provider.fetchCreditBalance();
     });
   }
 
