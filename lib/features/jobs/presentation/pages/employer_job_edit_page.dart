@@ -6,6 +6,8 @@ import '../../../profile/domain/entities/skill_entity.dart';
 import '../../domain/entities/job_post_entity.dart';
 import '../providers/job_provider.dart';
 import '../../../employer/presentation/providers/employer_provider.dart';
+import '../../../monetization/presentation/providers/monetization_provider.dart';
+import '../../../monetization/presentation/pages/pricing_page.dart';
 
 class EmployerJobEditPage extends StatefulWidget {
   final int? jobId;
@@ -39,6 +41,8 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   int? _selectedLevelId;
   String? _selectedRequiredDegree;
   DateTime? _selectedDeadline;
+  bool _hideSalary = false;
+  bool _requireCv = false;
 
   bool _isInit = false;
 
@@ -71,6 +75,9 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     
     final jobProvider = context.read<JobProvider>();
     jobProvider.fetchJobLevelsIfEmpty();
+
+    final monetizationProvider = context.read<MonetizationProvider>();
+    monetizationProvider.fetchSubscriptionStatus();
   }
 
   void _loadJobData() {
@@ -98,6 +105,8 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       _selectedJobTypeId = (job.jobTypeId == 0) ? null : job.jobTypeId;
       _selectedLevelId = (job.levelId == 0) ? null : job.levelId;
       _selectedRequiredDegree = job.requiredDegree;
+      _hideSalary = job.hideSalary;
+      _requireCv = job.requireCv;
       
       if (job.skills != null) {
         _selectedJobSkills.clear();
@@ -160,6 +169,8 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
         }
         return null;
       }).where((s) => s != null).toList(),
+      'hideSalary': _hideSalary,
+      'requireCv': _requireCv,
     };
   }
 
@@ -173,10 +184,43 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     }
 
     final provider = context.read<JobProvider>();
+    final monetizationProvider = context.read<MonetizationProvider>();
     final data = _getFormData();
     
-    // Đảm bảo có status đúng theo quy trình phân tách
-    data['status'] = (widget.jobId == null) ? 'draft' : 'published';
+    // Nếu là hành động đăng tin (publish = true), kiểm tra quota trước
+    if (publish) {
+      final subscription = monetizationProvider.currentSubscription;
+      final activeCount = provider.totalPublishedCount;
+      
+      if (subscription != null && subscription.package != null) {
+        final package = subscription.package!;
+        
+        // 1. Kiểm tra Cooldown Lock (Ưu tiên 1)
+        if (!package.isVip && subscription.lastJobPublishedAt != null) {
+          final cooldownDate = subscription.lastJobPublishedAt!.add(Duration(days: package.jobDurationDays));
+          if (DateTime.now().isBefore(cooldownDate)) {
+            _showQuotaErrorDialog('Bạn đang trong thời gian giãn cách. Vui lòng đợi đến ngày ${cooldownDate.day}/${cooldownDate.month} để đăng tin tiếp theo.');
+            return;
+          }
+        }
+        
+        // 2. Kiểm tra Concurrency Limit (Ưu tiên 2)
+        if (activeCount >= package.maxActiveJobs) {
+          _showQuotaErrorDialog('Bạn đã dùng hết hạn mức tin đăng (${activeCount}/${package.maxActiveJobs}). Vui lòng đóng bớt tin cũ hoặc nâng cấp VIP.');
+          return;
+        }
+      }
+    }
+    
+    // Đặt status dựa trên mục đích
+    if (widget.jobId == null) {
+      // Tạo mới -> Luôn là draft
+      data['status'] = 'draft';
+    } else if (publish) {
+      // Cập nhật và muốn đăng tin -> published
+      data['status'] = 'published';
+    }
+    // Nếu là cập nhật thường (publish = false) -> Không gửi status để BE giữ nguyên
 
     bool success = false;
     if (widget.jobId == null) {
@@ -190,6 +234,9 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
 
     if (mounted) {
       if (success) {
+        // Refresh quota info sau khi lưu/đăng thành công
+        monetizationProvider.fetchSubscriptionStatus();
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(publish ? 'Đã đăng tin thành công!' : 'Đã lưu bản nháp thành công'),
@@ -230,6 +277,19 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 child: const Text('LƯU NHÁP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              ),
+            ),
+          if (widget.jobId != null && isAdmin) // Hiện Lưu thay đổi khi sửa tin
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              child: TextButton(
+                onPressed: jobProvider.isSavingJob ? null : () => _handleSave(publish: false),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.blue[100],
+                  foregroundColor: Colors.blue[900],
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('LƯU THAY ĐỔI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               ),
             ),
         ],
@@ -384,6 +444,19 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildVipFeatureToggle(
+                    label: 'Ẩn mức lương với ứng viên',
+                    value: _hideSalary,
+                    onChanged: (val) => setState(() => _hideSalary = val),
+                    icon: Icons.visibility_off,
+                  ),
+                  _buildVipFeatureToggle(
+                    label: 'Bắt buộc ứng viên đính kèm CV',
+                    value: _requireCv,
+                    onChanged: (val) => setState(() => _requireCv = val),
+                    icon: Icons.file_present,
                   ),
 
                   const SizedBox(height: 24),
@@ -612,6 +685,127 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
         fillColor: Colors.grey[50],
       ),
       validator: (val) => val == null ? 'Vui lòng chọn $label' : null,
+    );
+  }
+
+  Widget _buildVipFeatureToggle({
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required IconData icon,
+  }) {
+    final monetizationProvider = context.watch<MonetizationProvider>();
+    final isVip = monetizationProvider.currentSubscription?.isVip ?? false;
+    final isLoading = monetizationProvider.isLoading && monetizationProvider.currentSubscription == null;
+    final theme = Theme.of(context);
+
+    if (isLoading) {
+      return ListTile(
+        leading: Icon(icon, color: Colors.grey),
+        title: const Text('Đang kiểm tra quyền hạn...', style: TextStyle(fontSize: 14, color: Colors.grey)),
+        trailing: const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+        contentPadding: EdgeInsets.zero,
+        dense: true,
+      );
+    }
+
+    return Opacity(
+      opacity: isVip ? 1.0 : 0.6,
+      child: SwitchListTile(
+        secondary: Icon(icon, color: isVip ? theme.colorScheme.primary : Colors.grey),
+        title: Row(
+          children: [
+            Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
+            if (!isVip)
+              Container(
+                margin: const EdgeInsets.only(left: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber[700],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'VIP',
+                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ),
+          ],
+        ),
+        value: isVip ? value : false,
+        onChanged: (val) {
+          if (isVip) {
+            onChanged(val);
+          } else {
+            _showVipUpgradeDialog();
+          }
+        },
+        activeColor: theme.colorScheme.primary,
+        contentPadding: EdgeInsets.zero,
+        dense: true,
+      ),
+    );
+  }
+
+  void _showVipUpgradeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.stars, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Tính năng VIP'),
+          ],
+        ),
+        content: const Text('Tính năng này chỉ dành cho tài khoản VIP. Vui lòng nâng cấp gói cước để sử dụng.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ĐỂ SAU'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const PricingPage()),
+              );
+            },
+            child: const Text('NÂNG CẤP NGAY'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showQuotaErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Hạn mức đăng tin'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ĐÓNG'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const PricingPage()),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
+            child: const Text('NÂNG CẤP VIP'),
+          ),
+        ],
+      ),
     );
   }
 }

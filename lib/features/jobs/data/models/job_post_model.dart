@@ -35,6 +35,8 @@ class JobPostModel extends JobPostEntity {
     super.skills,
     super.rejectionReason,
     super.companySlug,
+    super.hideSalary = false,
+    super.requireCv = false,
   });
 
   /// Tạo JobPostModel từ JSON
@@ -78,6 +80,8 @@ class JobPostModel extends JobPostEntity {
       skills: json['skills'] as List?,
       rejectionReason: _asString(json['rejection_reason'] ?? json['rejectionReason'] ?? json['reason']),
       companySlug: _asString((json['company'] is Map ? (json['company'] as Map)['slug'] : null) ?? json['company_slug'] ?? json['slug']),
+      hideSalary: json['hide_salary'] == true || json['hideSalary'] == true,
+      requireCv: json['require_cv'] == true || json['requireCv'] == true,
     );
   }
 
@@ -132,6 +136,8 @@ class JobPostModel extends JobPostEntity {
       'skills': skills,
       'rejection_reason': rejectionReason,
       'company_slug': companySlug,
+      'hideSalary': hideSalary,
+      'requireCv': requireCv,
     };
   }
 }

@@ -107,8 +107,9 @@ class ApplicationProvider extends ChangeNotifier {
     required int jobId,
     String? coverLetter,
     String? currentCvUrl,
+    bool requireCv = false,
   }) async {
-    if (currentCvUrl == null || currentCvUrl.isEmpty) {
+    if (requireCv && (currentCvUrl == null || currentCvUrl.isEmpty)) {
       _applyError = 'CV_MISSING';
       notifyListeners();
       return false;

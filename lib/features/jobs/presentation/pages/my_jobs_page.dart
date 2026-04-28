@@ -15,6 +15,9 @@ import '../../../applications/presentation/pages/job_kanban_page.dart';
 import '../../../headhunting/presentation/pages/suggested_candidates_page.dart';
 import '../../../employer/presentation/providers/employer_provider.dart';
 import '../../../headhunting/presentation/pages/job_detailed_stats_page.dart';
+import '../../../monetization/presentation/providers/monetization_provider.dart';
+import '../../../monetization/presentation/pages/pricing_page.dart';
+import '../../../monetization/domain/entities/subscription_entity.dart';
 
 /// Màn hình "Việc của tôi" với 2 tabs: Đã lưu & Đã ứng tuyển
 class MyJobsPage extends StatefulWidget {
@@ -57,8 +60,10 @@ class _MyJobsPageState extends State<MyJobsPage>
             _tabController.addListener(_handleTabSelection);
           });
         }
-        // Fetch ban đầu cho trang đầu (Tất cả)
+        // Fetch ban đầu cho trang đầu (Tất cả) và thông tin quota
         context.read<JobProvider>().fetchEmployerJobs();
+        context.read<JobProvider>().fetchEmployerJobs(status: 'published');
+        context.read<MonetizationProvider>().fetchSubscriptionStatus();
       } else {
         // Nếu là Candidate, fetch saved/applied jobs
         final profileProvider = context.read<ProfileProvider>();
@@ -161,12 +166,24 @@ class _MyJobsPageState extends State<MyJobsPage>
       floatingActionButton: (isEmployer && (context.watch<EmployerProvider>().employer?.isAdminCompany ?? false))
           ? FloatingActionButton.extended(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const EmployerJobEditPage(),
-                  ),
+                final monetizationProvider = context.read<MonetizationProvider>();
+                final jobProvider = context.read<JobProvider>();
+                
+                final error = _checkQuota(
+                  monetizationProvider.currentSubscription,
+                  jobProvider.totalPublishedCount,
                 );
+
+                if (error != null) {
+                  _showQuotaErrorDialog(context, error);
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EmployerJobEditPage(),
+                    ),
+                  );
+                }
               },
               backgroundColor: Theme.of(context).primaryColor,
               icon: const Icon(Icons.add, color: Colors.white),
@@ -306,30 +323,16 @@ class _MyJobsPageState extends State<MyJobsPage>
 
   // === Tab Nhà tuyển dụng (Employer) ===
   Widget _buildEmployerJobsTab(String? status) {
-    return Consumer<JobProvider>(
-      builder: (context, provider, child) {
+    return Consumer2<JobProvider, MonetizationProvider>(
+      builder: (context, provider, monetizationProvider, child) {
         if (provider.isLoadingEmployerJobs) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (provider.errorMessage != null && provider.getEmployerJobsByStatus(status).isEmpty) {
-          return _buildErrorView(provider.errorMessage!, () {
-            provider.fetchEmployerJobs(status: status);
-          });
-        }
-
         final jobs = provider.getEmployerJobsByStatus(status);
-
-        if (jobs.isEmpty) {
-          return _buildEmptyState(
-            icon: Icons.post_add,
-            title: status == 'draft' 
-                ? 'Không có bản nháp nào' 
-                : (status == 'published' ? 'Chưa có tin nào đang đăng' : 'Bạn chưa đăng tin nào'),
-            subtitle: 'Bắt đầu đăng tin để tìm kiếm ứng viên tiềm năng ngay',
-            showButton: false,
-          );
-        }
+        final publishedCount = provider.totalPublishedCount;
+        final subscription = monetizationProvider.currentSubscription;
+        final package = subscription?.package;
 
         return RefreshIndicator(
           onRefresh: () => provider.fetchEmployerJobs(status: status),
@@ -337,17 +340,38 @@ class _MyJobsPageState extends State<MyJobsPage>
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(0, 8, 0, 80),
-            itemCount: jobs.length + (provider.hasMoreEmployerJobs ? 1 : 0),
+            itemCount: jobs.length + (provider.hasMoreEmployerJobs ? 1 : 0) + 1,
             itemBuilder: (context, index) {
-              if (index == jobs.length) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: CircularProgressIndicator(),
-                  ),
+              if (index == 0) {
+                // Hiển thị hạn mức (Quota Info)
+                return _buildQuotaInfoCard(subscription, publishedCount);
+              }
+              
+              final actualIndex = index - 1;
+              if (jobs.isEmpty && actualIndex == 0) {
+                return _buildEmptyState(
+                  icon: Icons.post_add,
+                  title: status == 'draft' 
+                      ? 'Không có bản nháp nào' 
+                      : (status == 'published' ? 'Chưa có tin nào đang đăng' : 'Bạn chưa đăng tin nào'),
+                  subtitle: 'Bắt đầu đăng tin để tìm kiếm ứng viên tiềm năng ngay',
+                  showButton: false,
                 );
               }
-              final job = jobs[index];
+
+              if (actualIndex >= jobs.length) {
+                if (provider.hasMoreEmployerJobs) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }
+
+              final job = jobs[actualIndex];
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -506,12 +530,39 @@ class _MyJobsPageState extends State<MyJobsPage>
                               ),
                             if (job.status == 'draft' && (context.read<EmployerProvider>().employer?.isAdminCompany ?? false))
                               TextButton.icon(
-                                onPressed: () => provider.publishJob(job.jobPostId),
+                                onPressed: () {
+                                  final monetizationProvider = context.read<MonetizationProvider>();
+                                  final error = _checkQuota(
+                                    monetizationProvider.currentSubscription,
+                                    provider.totalPublishedCount,
+                                  );
+
+                                  if (error != null) {
+                                    _showQuotaErrorDialog(context, error);
+                                  } else {
+                                    provider.publishJob(job.jobPostId).then((success) {
+                                      if (success) {
+                                        context.read<MonetizationProvider>().fetchSubscriptionStatus();
+                                      }
+                                    });
+                                  }
+                                },
                                 icon: const Icon(Icons.publish, size: 18),
                                 label: const Text('Đăng ngay'),
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 12),
                                   backgroundColor: Colors.orange.withOpacity(0.05),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                            if ((job.status == 'published' || job.status == 'approved') && (context.read<EmployerProvider>().employer?.isAdminCompany ?? false))
+                              TextButton.icon(
+                                onPressed: () => _showCloseConfirmation(context, job.jobPostId, job.title),
+                                icon: const Icon(Icons.close, size: 18, color: Colors.red),
+                                label: const Text('Đóng tin', style: TextStyle(color: Colors.red)),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  backgroundColor: Colors.red.withOpacity(0.05),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                               ),
@@ -566,9 +617,9 @@ class _MyJobsPageState extends State<MyJobsPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(
         text,
@@ -577,6 +628,171 @@ class _MyJobsPageState extends State<MyJobsPage>
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
+      ),
+    );
+  }
+
+  Widget _buildQuotaInfoCard(SubscriptionEntity? subscription, int activeCount) {
+    final monetizationProvider = context.watch<MonetizationProvider>();
+    
+    if (monetizationProvider.isLoadingStatus) {
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        height: 100,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+
+    if (subscription == null) return const SizedBox.shrink();
+    
+    final package = subscription.package;
+    if (package == null) return const SizedBox.shrink();
+    
+    final maxJobs = package.maxActiveJobs;
+    final isFull = activeCount >= maxJobs;
+    final isVip = package.isVip;
+
+    // Tính toán cooldown
+    DateTime? unlockDate;
+    if (!isVip && subscription.lastJobPublishedAt != null) {
+      final lastPublish = subscription.lastJobPublishedAt!;
+      final cooldownDate = lastPublish.add(Duration(days: package.jobDurationDays));
+      if (DateTime.now().isBefore(cooldownDate)) {
+        unlockDate = cooldownDate;
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isVip ? Colors.amber[50] : Colors.blue[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: (isVip ? Colors.amber[200] : Colors.blue[200])!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isVip ? Icons.workspace_premium : Icons.info_outline,
+                color: isVip ? Colors.amber[800] : Colors.blue[800],
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Hạn mức tin đăng (${package.displayName})',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isVip ? Colors.amber[900] : Colors.blue[900],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Tin đang hiển thị:',
+                style: TextStyle(color: Colors.grey[700]),
+              ),
+              Text(
+                '$activeCount / $maxJobs',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isFull ? Colors.red : Colors.black,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: activeCount / maxJobs,
+              backgroundColor: Colors.white,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isFull ? Colors.red : (isVip ? Colors.amber[700] : Colors.blue[700])!,
+              ),
+              minHeight: 8,
+            ),
+          ),
+          if (unlockDate != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.timer_outlined, size: 16, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Thời gian giãn cách: Bạn có thể đăng tin tiếp theo vào ${unlockDate.day}/${unlockDate.month}/${unlockDate.year} ${unlockDate.hour}:${unlockDate.minute.toString().padLeft(2, '0')}',
+                      style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (!isVip && isFull && unlockDate == null) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Mẹo: Đóng tin cũ để có thể đăng tin mới ngay lập tức.',
+              style: TextStyle(fontSize: 12, color: Colors.blue[800], fontStyle: FontStyle.italic),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showCloseConfirmation(BuildContext context, int jobId, String title) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Xác nhận đóng tin'),
+        content: Text('Bạn có chắc chắn muốn đóng tin tuyển dụng "$title"?\n\nSau khi đóng, ứng viên sẽ không thể tìm thấy hoặc ứng tuyển vào tin này nữa.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final success = await context.read<JobProvider>().updateJob(jobId, {'status': 'closed'});
+              if (context.mounted) {
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã đóng tin tuyển dụng'), backgroundColor: Colors.green),
+                  );
+                  // Refresh quota info
+                  context.read<MonetizationProvider>().fetchSubscriptionStatus();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(context.read<JobProvider>().saveJobError ?? 'Có lỗi xảy ra'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Đóng tin'),
+          ),
+        ],
       ),
     );
   }
@@ -669,6 +885,72 @@ class _MyJobsPageState extends State<MyJobsPage>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  String? _checkQuota(SubscriptionEntity? subscription, int activeCount) {
+    if (subscription == null) return null;
+    final package = subscription.package;
+    if (package == null) return null;
+
+    // 1. Kiểm tra Cooldown Lock (Thứ tự ưu tiên 1)
+    if (!package.isVip && subscription.lastJobPublishedAt != null) {
+      final lastPublish = subscription.lastJobPublishedAt!;
+      final cooldownDate = lastPublish.add(Duration(days: package.jobDurationDays));
+      if (DateTime.now().isBefore(cooldownDate)) {
+        final diff = cooldownDate.difference(DateTime.now());
+        final days = diff.inDays;
+        final hours = diff.inHours % 24;
+        final mins = diff.inMinutes % 60;
+        return 'COOLDOWN:Bạn đang trong thời gian giãn cách. Vui lòng đợi thêm $days ngày $hours giờ $mins phút (Mở khóa vào: ${cooldownDate.day}/${cooldownDate.month}/${cooldownDate.year} ${cooldownDate.hour}:${cooldownDate.minute.toString().padLeft(2, '0')}).';
+      }
+    }
+
+    // 2. Kiểm tra Concurrency Limit (Thứ tự ưu tiên 2)
+    if (activeCount >= package.maxActiveJobs) {
+      return 'LIMIT:Bạn đã dùng hết hạn mức tin đăng cho gói ${package.displayName} ($activeCount/${package.maxActiveJobs}). Vui lòng đóng bớt tin cũ hoặc nâng cấp lên gói VIP để tiếp tục.';
+    }
+
+    return null;
+  }
+
+  void _showQuotaErrorDialog(BuildContext context, String error) {
+    final parts = error.split(':');
+    final type = parts[0];
+    final message = parts[1];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              type == 'COOLDOWN' ? Icons.timer_outlined : Icons.block_flipped,
+              color: Colors.red,
+            ),
+            const SizedBox(width: 8),
+            Text(type == 'COOLDOWN' ? 'Thời gian giãn cách' : 'Hết hạn mức đăng tin'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ĐÓNG'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PricingPage()),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
+            child: const Text('NÂNG CẤP VIP'),
+          ),
+        ],
       ),
     );
   }

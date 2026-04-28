@@ -59,6 +59,8 @@ class JobProvider extends ChangeNotifier {
   List<JobPostEntity> _draftEmployerJobs = [];
   bool _isLoadingEmployerJobs = false;
   int _totalEmployerJobs = 0;
+  int _totalPublishedCount = 0;
+  int _totalDraftCount = 0;
   int _currentEmployerPage = 1;
   int _lastEmployerPage = 1;
 
@@ -104,8 +106,11 @@ class JobProvider extends ChangeNotifier {
     return _allEmployerJobs;
   }
 
-  bool get isLoadingEmployerJobs => _isLoadingEmployerJobs;
   int get totalEmployerJobs => _totalEmployerJobs;
+  int get totalPublishedCount => _totalPublishedCount;
+  int get totalDraftCount => _totalDraftCount;
+
+  bool get isLoadingEmployerJobs => _isLoadingEmployerJobs;
   int get currentEmployerPage => _currentEmployerPage;
   int get lastEmployerPage => _lastEmployerPage;
   bool get hasMoreEmployerJobs => _currentEmployerPage < _lastEmployerPage;
@@ -339,6 +344,12 @@ class JobProvider extends ChangeNotifier {
           }
         }
 
+        if (status == 'published') {
+          _totalPublishedCount = paginatedResponse.total;
+        } else if (status == 'draft') {
+          _totalDraftCount = paginatedResponse.total;
+        }
+        
         _totalEmployerJobs = paginatedResponse.total;
         _currentEmployerPage = paginatedResponse.page;
         _lastEmployerPage = paginatedResponse.lastPage;
@@ -394,7 +405,14 @@ class JobProvider extends ChangeNotifier {
       (job) {
         _isSavingJob = false;
         _saveJobSuccess = true;
-        fetchEmployerJobs(); // Refresh list
+        fetchEmployerJobs(); // Refresh danh sách tổng (Tất cả)
+        
+        // Nếu có thay đổi status, refresh các danh sách con để cập nhật total counts
+        if (data.containsKey('status')) {
+          fetchEmployerJobs(status: 'published');
+          fetchEmployerJobs(status: 'draft');
+        }
+        
         notifyListeners();
         return true;
       },

@@ -25,6 +25,8 @@ class JobPostEntity extends Equatable {
   final int? levelId;
   final String? levelName;
   final String? requiredDegree;
+  final bool hideSalary;
+  final bool requireCv;
 
   // Thông tin công ty (từ join với EMPLOYERS)
   final String companyName;
@@ -75,6 +77,8 @@ class JobPostEntity extends Equatable {
     this.skills,
     this.rejectionReason,
     this.companySlug,
+    this.hideSalary = false,
+    this.requireCv = false,
   });
 
   @override
@@ -111,5 +115,7 @@ class JobPostEntity extends Equatable {
     skills,
     rejectionReason,
     companySlug,
+    hideSalary,
+    requireCv,
   ];
 }

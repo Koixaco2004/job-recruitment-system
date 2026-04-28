@@ -47,6 +47,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
   // === Format helpers ===
 
   String _formatSalary(JobPostEntity job) {
+    if (job.hideSalary) return 'Thỏa thuận';
     if (job.salaryType == 'negotiable') return 'Thỏa thuận';
     final fmt = NumberFormat('#,###', 'vi_VN');
     if (job.salaryMin != null && job.salaryMax != null) {
@@ -735,12 +736,11 @@ class _JobDetailPageState extends State<JobDetailPage> {
                   onPressed: isButtonDisabled 
                     ? null 
                     : () {
-                        // Kiểm tra CV
                         final hasCv = profileProvider.profile?.cvFileUrl != null && 
                                      profileProvider.profile!.cvFileUrl!.isNotEmpty;
                         
-                        if (!hasCv) {
-                          _showCvMissingDialog(context);
+                        if (job.requireCv && !hasCv) {
+                          _showCvRequiredDialog(context);
                         } else {
                           showDialog(
                             context: context,
@@ -780,41 +780,41 @@ class _JobDetailPageState extends State<JobDetailPage> {
     );
   }
 
-  void _showCvMissingDialog(BuildContext context) {
+  void _showCvRequiredDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            Icon(Icons.lock_outline, color: Colors.red),
             SizedBox(width: 10),
-            Text('Thiếu CV'),
+            Text('Bắt buộc đính kèm CV'),
           ],
         ),
         content: const Text(
-          'Bạn cần cập nhật CV trong hồ sơ cá nhân trước khi ứng tuyển vào công việc này.'
+          'Nhà tuyển dụng yêu cầu ứng viên phải có file CV đính kèm cho vị trí này. Vui lòng cập nhật CV tại trang Hồ sơ cá nhân để tiếp tục.'
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+            child: const Text('Đóng', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Close JobDetailPage
-              MainPage.switchTab(context, 3); // Switch to Profile Tab
+              Navigator.pop(context);
+              // Navigate to profile tab - in a real app this should be a callback or shared state
+              // For now, inform user how to do it.
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Vui lòng vào mục "Hồ sơ" để tải lên CV của bạn')),
+              );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Cập nhật ngay'),
+            child: const Text('Đi đến Hồ sơ'),
           ),
         ],
       ),
     );
   }
+
 
 
 

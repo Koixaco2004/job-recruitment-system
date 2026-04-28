@@ -155,6 +155,7 @@ class _ApplyDialogState extends State<ApplyDialog> {
                           jobId: widget.job.jobPostId,
                           coverLetter: _coverLetterController.text,
                           currentCvUrl: profile?.cvFileUrl,
+                          requireCv: widget.job.requireCv,
                         );
 
                         if (mounted) {
