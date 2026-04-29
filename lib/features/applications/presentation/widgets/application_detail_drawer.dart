@@ -237,7 +237,7 @@ class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
       return Consumer2<EmployerApplicationProvider, MonetizationProvider>(
         builder: (context, provider, monetizationProvider, _) {
           final isVip = monetizationProvider.currentSubscription?.isVip ?? false;
-          final fee = isVip ? 0 : 2;
+          final fee = isVip ? 0 : 1;
           
           return _buildCard(
             Column(

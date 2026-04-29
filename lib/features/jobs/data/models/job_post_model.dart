@@ -37,6 +37,9 @@ class JobPostModel extends JobPostEntity {
     super.companySlug,
     super.hideSalary = false,
     super.requireCv = false,
+    super.isBumped = false,
+    super.bumpedUntil,
+    super.bumpedAt,
   });
 
   /// Tạo JobPostModel từ JSON
@@ -82,6 +85,13 @@ class JobPostModel extends JobPostEntity {
       companySlug: _asString((json['company'] is Map ? (json['company'] as Map)['slug'] : null) ?? json['company_slug'] ?? json['slug']),
       hideSalary: json['hide_salary'] == true || json['hideSalary'] == true,
       requireCv: json['require_cv'] == true || json['requireCv'] == true,
+      isBumped: json['is_bumped'] == true || json['isBumped'] == true,
+      bumpedUntil: json['bumped_until'] != null 
+          ? DateTime.parse(json['bumped_until'] as String)
+          : (json['bumpedUntil'] != null ? DateTime.parse(json['bumpedUntil'] as String) : null),
+      bumpedAt: json['bumped_at'] != null
+          ? DateTime.parse(json['bumped_at'] as String)
+          : (json['bumpedAt'] != null ? DateTime.parse(json['bumpedAt'] as String) : null),
     );
   }
 
@@ -138,6 +148,9 @@ class JobPostModel extends JobPostEntity {
       'company_slug': companySlug,
       'hideSalary': hideSalary,
       'requireCv': requireCv,
+      'is_bumped': isBumped,
+      'bumped_until': bumpedUntil?.toIso8601String(),
+      'bumped_at': bumpedAt?.toIso8601String(),
     };
   }
 }

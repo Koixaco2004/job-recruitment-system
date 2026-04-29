@@ -86,4 +86,7 @@ abstract class JobRepository {
 
   /// Lấy lịch sử thay đổi trạng thái của tin tuyển dụng
   Future<Either<Failure, List<JobStatusHistoryEntity>>> getJobHistory(int jobId);
+
+  /// Đẩy tin tuyển dụng (Bump)
+  Future<Either<Failure, Map<String, dynamic>>> bumpJob(int jobId);
 }

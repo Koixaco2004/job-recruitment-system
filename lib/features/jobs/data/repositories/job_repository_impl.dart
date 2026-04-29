@@ -304,4 +304,20 @@ class JobRepositoryImpl implements JobRepository {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> bumpJob(int jobId) async {
+    try {
+      final result = await remoteDataSource.bumpJob(jobId);
+      return Right(result);
+    } on EmailVerificationException catch (e) {
+      return Left(EmailVerificationFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(
+        ServerFailure('Không thể đẩy tin tuyển dụng: ${e.toString()}'),
+      );
+    }
+  }
 }

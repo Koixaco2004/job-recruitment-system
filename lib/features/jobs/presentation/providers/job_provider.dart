@@ -12,6 +12,7 @@ import '../../domain/entities/job_status_history_entity.dart';
 import '../../../metadata/domain/entities/job_level_entity.dart';
 import '../../../metadata/domain/usecases/get_job_levels_usecase.dart';
 import '../../../../features/profile/domain/entities/skill_entity.dart';
+import '../../domain/usecases/bump_job_usecase.dart';
 
 /// Provider quản lý state cho Jobs
 class JobProvider extends ChangeNotifier {
@@ -23,6 +24,7 @@ class JobProvider extends ChangeNotifier {
   final GetJobDetailUseCase getJobDetailUseCase;
   final GetJobHistoryUseCase getJobHistoryUseCase;
   final GetJobLevelsUseCase getJobLevelsUseCase;
+  final BumpJobUseCase bumpJobUseCase;
 
   JobProvider({
     required this.getJobsUseCase,
@@ -33,6 +35,7 @@ class JobProvider extends ChangeNotifier {
     required this.getJobDetailUseCase,
     required this.getJobHistoryUseCase,
     required this.getJobLevelsUseCase,
+    required this.bumpJobUseCase,
   });
 
   // State
@@ -465,6 +468,34 @@ class JobProvider extends ChangeNotifier {
         _isLoadingJobLevels = false;
         _jobLevels = levels;
         notifyListeners();
+      },
+    );
+  }
+
+  /// Đẩy tin tuyển dụng (Bump)
+  Future<Map<String, dynamic>?> bumpJob(int jobId) async {
+    _isSavingJob = true;
+    _saveJobError = null;
+    notifyListeners();
+
+    final result = await bumpJobUseCase(jobId);
+
+    return result.fold(
+      (failure) {
+        _isSavingJob = false;
+        _saveJobError = failure.message;
+        notifyListeners();
+        return null;
+      },
+      (bumpData) async {
+        _isSavingJob = false;
+        _saveJobError = null;
+        
+        // Refresh danh sách để cập nhật trạng thái bump (cả bản nháp và đã đăng)
+        await fetchEmployerJobs(page: 1); 
+        
+        notifyListeners();
+        return bumpData;
       },
     );
   }

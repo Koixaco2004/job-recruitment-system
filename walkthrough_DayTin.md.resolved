@@ -1,0 +1,80 @@
+# Bump Post Feature — Backend Walkthrough
+
+Tính năng **"Đẩy Tin Tuyển Dụng" (Bump Post)** đã được triển khai hoàn tất ở phía Backend. Hệ thống cho phép Nhà tuyển dụng đẩy tin lên top kết quả tìm kiếm thông qua cơ chế trừ quota miễn phí (cho VIP) hoặc trả phí bằng Credit (nếu không phải VIP hoặc đã hết quota).
+
+Dưới đây là tổng hợp những gì đã thực hiện:
+
+## 1. Cơ sở dữ liệu (Database & Entities)
+- **JobEntity (`job`):** Đã thêm trường `bumpedAt` (thời điểm tin được đẩy). Trường này được dùng để giải quyết xung đột khi có nhiều tin được đẩy cùng lúc (tin nào mới đẩy hơn sẽ hiển thị trên tin đẩy cũ hơn).
+- **CompanySubscriptionEntity (`company_subscription`):** Đã thêm trường `bumpQuotaResetAt` để hỗ trợ chu kỳ làm mới quota đẩy tin hàng tháng cho gói VIP.
+- **SubscriptionPackageEntity (`subscription_package`):** Đã xóa các cờ `canViewAdvancedAnalytics` và `canUsePremiumFilters` không còn dùng đến.
+- **Migration:** Đã tạo và chạy thành công migration thủ công (`BumpPostFeature1777455000000`) để cập nhật CSDL một cách an toàn mà không làm mất dữ liệu hiện tại.
+
+## 2. Dịch vụ và Logic Nghiệp vụ (Services)
+- **EmployerJobBumpService:** 
+  - Đã khởi tạo mới service `EmployerJobBumpService` chịu trách nhiệm toàn bộ logic kiểm tra và xử lý "Đẩy tin".
+  - **Logic Chặn (Block):** Chặn nếu tin không ở trạng thái `PUBLISHED`, chặn nếu tin đang được đẩy rồi, hoặc chặn nếu deadline của tin còn dưới 24h.
+  - **Logic Ràng buộc (Clamp):** Mặc định mỗi lần đẩy kéo dài 3 ngày. Tuy nhiên, nếu thời hạn của tin (deadline) ngắn hơn 3 ngày, `bumpedUntil` sẽ được thu hẹp (clamp) bằng đúng thời gian `deadline` của tin để tránh tin còn hiện bump sau khi đã bị đóng.
+- **SubscriptionsService:** Đã bổ sung `consumeBumpPostQuotaWithManager` để xử lý kiểm tra và trừ quota đẩy tin miễn phí trong môi trường giao dịch (transaction) nguyên tử (atomic), đảm bảo không bị race-condition. Đồng thời nó tự động reset quota nếu chu kỳ hàng tháng `bump_quota_reset_at` đã qua.
+- **CreditsService:** Đã refactor logic mua sản phẩm `bump_post` để hỗ trợ giao dịch chung, đồng thời khóa endpoint mua trực tiếp `POST /credits/purchase` với `slug=bump_post` để ép buộc Frontend phải dùng đúng API `POST /jobs/employer/:id/bump` nhằm đảm bảo tính đồng nhất về logic tính toán hạn dùng (deadline clamp). Bổ sung phương thức `spendCreditsWithManager` để tích hợp việc tiêu Credit vào chung transaction với `EmployerJobBumpService`.
+
+## 3. Quản lý trạng thái và Background Jobs (Cron)
+- **JobTasksService:** Đã thêm CronJob `expireOldBumps` chạy mỗi giờ một lần. Job này sử dụng câu truy vấn cơ sở dữ liệu siêu tốc để reset `isBumped = false`, `bumpedUntil = null`, `bumpedAt = null` cho tất cả những tin đã quá thời hạn đẩy, hoặc deadline nộp CV đã trôi qua.
+- **EmployerJobsService:** Cập nhật hàm `updateJob` để tự động reset các thuộc tính Bump (`isBumped`, `bumpedUntil`, `bumpedAt`) khi Nhà tuyển dụng chủ động đóng tin sớm (`JobStatus.CLOSED`).
+
+## 4. API (Controller & Module)
+- Đã thêm API `POST /jobs/employer/:id/bump` vào `EmployerJobsController` để Frontend có thể dễ dàng gọi. Endpoint này yêu cầu token xác thực và trả về chính xác thời gian được đẩy tới (bumpedUntil) và nguồn trừ phí (quota hay credit).
+- Đã đăng ký `EmployerJobBumpService` và import `CreditsModule` vào `JobsModule`.
+
+## 5. Cập nhật giải thuật Sắp Xếp (Sorting)
+- **PublicJobsService:** Cập nhật hàm `applySort()`. Bây giờ thuật toán ưu tiên sẽ là:
+  1. `bump_priority ASC` (Tin đang trong trạng thái Bump đẩy lên trước)
+  2. `bumpedAt DESC` (Trong số các tin đang Bump, tin nào mới nhấn Bump hơn sẽ lên trước)
+  3. Phân cấp Sorting cũ (Relevance, CreatedAt, v.v.).
+
+---
+
+## 6. Hướng dẫn Tích hợp (Dành cho team Frontend)
+
+Để hoàn thiện tính năng "Đẩy Tin", team Frontend cần thực hiện các bước sau trên màn hình quản lý tin tuyển dụng của Nhà Tuyển Dụng (`RecruiterJobManagementPage.tsx` hoặc tương tự):
+
+### a. Endpoint API mới
+- **Method:** `POST`
+- **URL:** `/jobs/employer/:id/bump` (với `:id` là ID của tin tuyển dụng)
+- **Header:** Yêu cầu `Authorization: Bearer <token>`
+- **Response thành công (201 Created):**
+  ```json
+  {
+    "message": "Đẩy tin thành công",
+    "bumpedUntil": "2026-05-02T16:00:00.000Z",
+    "source": "quota", // hoặc "credit"
+    "creditsSpent": 0, // số credit bị trừ (nếu source="credit")
+    "quotaRemaining": 4 // số quota miễn phí còn lại trong tháng
+  }
+  ```
+
+### b. Điều kiện hiển thị nút "Đẩy Tin"
+Nút **"Đẩy Tin"** (hoặc biểu tượng 🚀) chỉ nên được hiển thị / cho phép bấm khi:
+1. **Trạng thái tin:** Tin đang ở trạng thái `PUBLISHED` (Đang hiển thị).
+2. **Chưa được đẩy:** `isBumped` đang là `false` (nếu `true`, có thể hiển thị badge "Đang Đẩy").
+
+### c. Các lỗi Backend có thể trả về (Cần xử lý Alert/Toast)
+Team Frontend cần bắt lỗi `400 Bad Request` và `403 Forbidden` từ endpoint này và hiển thị thông báo lỗi tương ứng lấy từ `error.response.data.message`:
+- `"Chỉ có thể đẩy tin đang được hiển thị (Published)"`
+- `"Tin tuyển dụng này đang được đẩy rồi."`
+- `"Tin tuyển dụng sắp hết hạn (dưới 24h), không thể đẩy tin."` *(Hiển thị cảnh báo rõ ràng cho người dùng biết để tránh nhầm lẫn)*
+- `"Bạn đã dùng hết lượt đẩy tin miễn phí trong tháng."` (Nếu lỗi logic hoặc chưa tích hợp luồng mua credit)
+- `"Không đủ Credit (cần 30, hiện có 10)..."` *(Hiển thị modal gợi ý Nạp thêm Credit)*
+
+### d. Xác nhận trước khi đẩy (Confirm Dialog)
+Vì việc đẩy tin sẽ tiêu tốn Quota hoặc Credit, Frontend **bắt buộc** phải có một Confirm Dialog (Modal xác nhận) trước khi gọi API.
+- Nội dung gợi ý: *"Đẩy tin sẽ giúp bài đăng của bạn lên top tìm kiếm trong tối đa 3 ngày. Bạn có muốn tiếp tục?"*
+- Nếu gọi API lấy thông tin ví (Wallet) trước, có thể ghi rõ: *"Chi phí: 1 lượt đẩy miễn phí"* hoặc *"Chi phí: 30 Credit"*.
+
+### e. Cập nhật UI sau khi gọi API thành công
+Khi API trả về thành công:
+1. Hiển thị Toast thông báo thành công.
+2. Cập nhật local state của Job item trong danh sách:
+   - Cập nhật `isBumped = true`
+   - Cập nhật `bumpedUntil` bằng với giá trị trả về từ API.
+3. Hiển thị UI đặc biệt cho tin đang đẩy (ví dụ: viền màu nổi bật, chữ "Đang đẩy", đếm ngược thời gian hết hạn đẩy).

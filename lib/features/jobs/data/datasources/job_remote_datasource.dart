@@ -79,6 +79,9 @@ abstract class JobRemoteDataSource {
 
   /// Lấy lịch sử thay đổi trạng thái của tin tuyển dụng
   Future<List<JobStatusHistoryModel>> getJobHistory(int jobId);
+
+  /// Đẩy tin tuyển dụng (Bump)
+  Future<Map<String, dynamic>> bumpJob(int jobId);
 }
 
 /// Implementation với API thật (và một số mock cho candidate)
@@ -352,6 +355,22 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
         return data.map((e) => JobStatusHistoryModel.fromJson(e)).toList();
       }
       throw const ServerException('Lấy lịch sử tin tuyển dụng thất bại');
+    } on DioException catch (e) {
+      if (e.error is EmailVerificationException) rethrow;
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> bumpJob(int jobId) async {
+    try {
+      final response = await apiClient.dio.post('/api/jobs/employer/$jobId/bump');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data as Map<String, dynamic>;
+      }
+      throw const ServerException('Đẩy tin thất bại');
     } on DioException catch (e) {
       if (e.error is EmailVerificationException) rethrow;
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());

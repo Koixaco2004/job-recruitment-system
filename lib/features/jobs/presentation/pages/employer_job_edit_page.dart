@@ -520,6 +520,55 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                         child: const Text('ĐĂNG TIN NGAY', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ),
+                  const SizedBox(height: 16),
+                  
+                  // Nút đẩy tin (Bump Job) - Di chuyển từ MyJobsPage sang đây
+                  if (widget.jobId != null && isAdmin && (_currentStatus == 'published' || _currentStatus == 'approved'))
+                    Builder(
+                      builder: (context) {
+                        final monetizationProvider = context.watch<MonetizationProvider>();
+                        final subscription = monetizationProvider.currentSubscription;
+                        final package = subscription?.package;
+                        final usedQuota = subscription?.usedBumpPostQuota ?? 0;
+                        final maxQuota = package?.bumpPostQuota ?? 0;
+                        final hasFreeQuota = (package?.isVip ?? false) && usedQuota < maxQuota;
+                        
+                        // Tìm entity hiện tại để lấy trạng thái isBumped
+                        JobPostEntity? currentJobEntity;
+                        try {
+                          currentJobEntity = jobProvider.employerJobs.firstWhere((j) => j.jobPostId == widget.jobId);
+                        } catch (_) {}
+                        
+                        final isBumped = currentJobEntity?.isBumped ?? false;
+                        
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: OutlinedButton.icon(
+                            onPressed: jobProvider.isSavingJob ? null : () => _handleBumpJob(context, currentJobEntity!),
+                            icon: Icon(
+                              isBumped ? Icons.rocket_launch : Icons.rocket_launch_outlined,
+                              color: Colors.orange[800],
+                            ),
+                            label: Text(
+                              isBumped 
+                                ? 'TIN ĐANG ĐƯỢC ĐẨY' 
+                                : (hasFreeQuota ? 'ĐẨY TIN LÊN ĐẦU (MIỄN PHÍ)' : 'ĐẨY TIN LÊN ĐẦU (30 CREDIT)'),
+                              style: TextStyle(
+                                fontSize: 14, 
+                                fontWeight: FontWeight.bold, 
+                                color: Colors.orange[800]
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.orange[400]!, width: 1.5),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              backgroundColor: Colors.orange[50],
+                            ),
+                          ),
+                        );
+                      }
+                    ),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -828,6 +877,111 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
             child: const Text('NÂNG CẤP VIP'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleBumpJob(BuildContext context, JobPostEntity job) async {
+    final jobProvider = context.read<JobProvider>();
+    final monetizationProvider = context.read<MonetizationProvider>();
+    final subscription = monetizationProvider.currentSubscription;
+    final package = subscription?.package;
+    final usedQuota = subscription?.usedBumpPostQuota ?? 0;
+    final maxQuota = package?.bumpPostQuota ?? 0;
+    final hasFreeQuota = (package?.isVip ?? false) && usedQuota < maxQuota;
+    final remainingFree = maxQuota - usedQuota;
+    
+    // Check if already bumped
+    if (job.isBumped) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tin này đang được đẩy đến ${job.bumpedUntil?.day}/${job.bumpedUntil?.month}'),
+          backgroundColor: Theme.of(context).primaryColor,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    // Confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.rocket_launch, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Xác nhận đẩy tin'),
+          ],
+        ),
+        content: Text(
+          hasFreeQuota 
+            ? 'Bạn có muốn dùng 1 lượt đẩy tin miễn phí cho tin này không?\n(Bạn còn $remainingFree lượt miễn phí trong tháng)'
+            : 'Bạn có muốn dùng 30 Credit để đẩy tin này lên đầu danh sách tìm kiếm không?'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            child: const Text('Đồng ý'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final result = await jobProvider.bumpJob(job.jobPostId);
+    if (result != null) {
+      // Refresh monetization state
+      monetizationProvider.fetchSubscriptionStatus();
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tin của bạn đã được đẩy lên đầu trang thành công!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } else if (jobProvider.saveJobError != null) {
+      // Handle insufficient credits (400 or 402)
+      final error = jobProvider.saveJobError!;
+      if (error.contains('400') || error.contains('402') || error.contains('không đủ') || error.contains('Credit')) {
+        _showInsufficientCreditsDialog(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+        );
+      }
+    }
+  }
+
+  void _showInsufficientCreditsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Không đủ Credit'),
+        content: const Text('Số dư Credit của bạn không đủ để thực hiện đẩy tin (Cần 30 Credit). Vui lòng nạp thêm Credit hoặc nâng cấp VIP để tiếp tục.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PricingPage()));
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            child: const Text('Nạp ngay'),
           ),
         ],
       ),

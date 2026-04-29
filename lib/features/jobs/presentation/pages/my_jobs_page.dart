@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/pages/main_page.dart';
+import '../../domain/entities/job_post_entity.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/job_provider.dart';
 import '../providers/my_jobs_provider.dart';
 import '../pages/employer_job_edit_page.dart';
+import '../../../../core/pages/main_page.dart';
 import '../widgets/saved_job_card.dart';
 import '../../../applications/presentation/widgets/applied_job_card.dart';
 import '../../../applications/presentation/providers/application_provider.dart';
@@ -401,14 +402,28 @@ class _MyJobsPageState extends State<MyJobsPage>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: Text(
-                                job.title,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      job.title,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (job.isBumped)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8),
+                                      child: Tooltip(
+                                        message: 'Tin đang được đẩy',
+                                        child: Icon(Icons.rocket_launch, size: 18, color: Colors.orange[700]),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -561,7 +576,7 @@ class _MyJobsPageState extends State<MyJobsPage>
                                   padding: const EdgeInsets.symmetric(horizontal: 12),
                                   backgroundColor: Colors.purple.withOpacity(0.05),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
+                                  ),
                               ),
                             if (job.status == 'draft' && (context.read<EmployerProvider>().employer?.isAdminCompany ?? false))
                               TextButton.icon(
