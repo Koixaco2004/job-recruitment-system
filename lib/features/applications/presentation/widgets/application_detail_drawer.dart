@@ -231,6 +231,61 @@ class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
   }
 
   Widget _buildAiMatchSection(BuildContext context, ApplicationEntity app) {
+    final hasAiScore = app.cvMatchScore != null && app.cvMatchScore! > 0;
+    
+    if (!hasAiScore) {
+      return Consumer2<EmployerApplicationProvider, MonetizationProvider>(
+        builder: (context, provider, monetizationProvider, _) {
+          final isVip = monetizationProvider.currentSubscription?.isVip ?? false;
+          final fee = isVip ? 0 : 2;
+          
+          return _buildCard(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: Colors.purple, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'AI Phân tích hồ sơ',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isVip 
+                    ? 'Hồ sơ này chưa được AI chấm điểm. Vì là thành viên VIP, bạn có thể kích hoạt AI phân tích ngay miễn phí.'
+                    : 'Hồ sơ này chưa được AI chấm điểm. Kích hoạt AI để phân tích ngay sự phù hợp của ứng viên với công việc.',
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: provider.isLoadingDetail 
+                        ? null 
+                        : () => _handleAiAnalysis(context, provider, monetizationProvider, app.id, fee),
+                    icon: provider.isLoadingDetail 
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.auto_awesome),
+                    label: Text(fee > 0 ? 'Kích hoạt AI ngay (Phí: $fee Credit)' : 'Kích hoạt AI ngay (Miễn phí VIP)'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            color: Colors.purple.withOpacity(0.05),
+          );
+        }
+      );
+    }
+
     final score = app.cvMatchScore ?? 0;
     final color = score >= 70 ? Colors.green : (score >= 40 ? Colors.orange : Colors.red);
 
@@ -1199,5 +1254,112 @@ class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
         );
       }
     }
+  }
+
+  void _handleAiAnalysis(
+    BuildContext context, 
+    EmployerApplicationProvider provider, 
+    MonetizationProvider monetizationProvider, 
+    int appId, 
+    int fee
+  ) async {
+    if (fee > 0) {
+      // Check balance first
+      if ((monetizationProvider.creditBalance ?? 0) < fee) {
+        _showInsufficientCreditsDialog(context);
+        return;
+      }
+
+      // Show confirmation dialog
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.auto_awesome, color: Colors.purple),
+              SizedBox(width: 8),
+              Text('Xác nhận sử dụng AI'),
+            ],
+          ),
+          content: Text('Bạn có đồng ý dùng $fee Credit để AI chấm điểm hồ sơ này không? Kết quả sẽ có ngay sau vài giây.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Đồng ý'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+    }
+
+    final success = await provider.analyzeAi(appId);
+    if (success) {
+      // Refresh balance and subscription after successful analysis
+      monetizationProvider.fetchSubscriptionStatus();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Phân tích AI hoàn tất!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } else if (provider.errorMessage != null) {
+      final error = provider.errorMessage!;
+      // Handle 402 or custom error messages for insufficient credits
+      if (error.contains('402') || error.contains('không đủ') || error.contains('Credit')) {
+        if (context.mounted) _showInsufficientCreditsDialog(context);
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  void _showInsufficientCreditsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Không đủ Credit'),
+          ],
+        ),
+        content: const Text('Số dư Credit của bạn không đủ để thực hiện thao tác này. Vui lòng nạp thêm Credit để tiếp tục.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PricingPage()));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber[700],
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Nạp ngay'),
+          ),
+        ],
+      ),
+    );
   }
 }

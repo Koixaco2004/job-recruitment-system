@@ -194,4 +194,16 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, ApplicationEntity>> analyzeAi(int id) async {
+    try {
+      final result = await employerRemoteDataSource.analyzeAi(id);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

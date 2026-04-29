@@ -52,4 +52,5 @@ abstract class ApplicationRepository {
     required int noteId,
     required String content,
   });
+  Future<Either<Failure, ApplicationEntity>> analyzeAi(int id);
 }

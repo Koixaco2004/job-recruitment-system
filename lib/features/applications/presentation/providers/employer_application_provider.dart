@@ -10,6 +10,7 @@ import '../../domain/usecases/get_application_status_history_usecase.dart';
 import '../../domain/usecases/update_application_status_usecase.dart';
 import '../../domain/usecases/add_application_note_usecase.dart';
 import '../../domain/usecases/update_application_note_usecase.dart';
+import '../../domain/usecases/analyze_ai_usecase.dart';
 
 class EmployerApplicationProvider with ChangeNotifier {
   final GetJobApplicationsUseCase getJobApplicationsUseCase;
@@ -19,6 +20,7 @@ class EmployerApplicationProvider with ChangeNotifier {
   final UpdateApplicationStatusUseCase updateApplicationStatusUseCase;
   final AddApplicationNoteUseCase addApplicationNoteUseCase;
   final UpdateApplicationNoteUseCase updateApplicationNoteUseCase;
+  final AnalyzeAiUseCase analyzeAiUseCase;
 
   EmployerApplicationProvider({
     required this.getJobApplicationsUseCase,
@@ -28,6 +30,7 @@ class EmployerApplicationProvider with ChangeNotifier {
     required this.updateApplicationStatusUseCase,
     required this.addApplicationNoteUseCase,
     required this.updateApplicationNoteUseCase,
+    required this.analyzeAiUseCase,
   });
 
   List<ApplicationKanbanColumnEntity> _kanbanColumns = [];
@@ -259,6 +262,29 @@ class EmployerApplicationProvider with ChangeNotifier {
       (note) async {
         // Refresh detail to get the updated notes list
         await fetchApplicationDetail(applicationId);
+        _isLoadingDetail = false;
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> analyzeAi(int applicationId) async {
+    _isLoadingDetail = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await analyzeAiUseCase(applicationId);
+
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _isLoadingDetail = false;
+        notifyListeners();
+        return false;
+      },
+      (application) {
+        _selectedApplication = application;
         _isLoadingDetail = false;
         notifyListeners();
         return true;

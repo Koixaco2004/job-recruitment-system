@@ -85,6 +85,7 @@ import 'features/applications/domain/usecases/get_application_status_history_use
 import 'features/applications/domain/usecases/update_application_status_usecase.dart';
 import 'features/applications/domain/usecases/add_application_note_usecase.dart';
 import 'features/applications/domain/usecases/update_application_note_usecase.dart';
+import 'features/applications/domain/usecases/analyze_ai_usecase.dart';
 import 'features/applications/presentation/providers/application_provider.dart';
 import 'features/applications/presentation/providers/employer_application_provider.dart';
 import 'features/headhunting/data/datasources/headhunting_remote_datasource.dart';
@@ -385,6 +386,7 @@ Future<void> init() async {
       updateApplicationStatusUseCase: sl(),
       addApplicationNoteUseCase: sl(),
       updateApplicationNoteUseCase: sl(),
+      analyzeAiUseCase: sl(),
     ),
   );
 
@@ -400,6 +402,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateApplicationStatusUseCase(sl()));
   sl.registerLazySingleton(() => AddApplicationNoteUseCase(sl()));
   sl.registerLazySingleton(() => UpdateApplicationNoteUseCase(sl()));
+  sl.registerLazySingleton(() => AnalyzeAiUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<ApplicationRepository>(

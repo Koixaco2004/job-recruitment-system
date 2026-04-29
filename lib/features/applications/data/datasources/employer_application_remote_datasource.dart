@@ -30,6 +30,7 @@ abstract class EmployerApplicationRemoteDataSource {
 
   Future<ApplicationNoteModel> addNote(int applicationId, String content);
   Future<ApplicationNoteModel> updateNote(int noteId, String content);
+  Future<ApplicationModel> analyzeAi(int id);
 }
 
 class EmployerApplicationRemoteDataSourceImpl
@@ -206,6 +207,23 @@ class EmployerApplicationRemoteDataSourceImpl
         return ApplicationNoteModel.fromJson(response.data as Map<String, dynamic>);
       }
       throw const ServerException('Cập nhật ghi chú thất bại');
+    } on DioException catch (e) {
+      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<ApplicationModel> analyzeAi(int id) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/employer/applications/$id/ai-analyze',
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return ApplicationModel.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw const ServerException('Phân tích AI thất bại');
     } on DioException catch (e) {
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {
