@@ -43,6 +43,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   DateTime? _selectedDeadline;
   bool _hideSalary = false;
   bool _requireCv = false;
+  String? _currentStatus;
 
   bool _isInit = false;
 
@@ -107,6 +108,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       _selectedRequiredDegree = job.requiredDegree;
       _hideSalary = job.hideSalary;
       _requireCv = job.requireCv;
+      _currentStatus = job.status.toLowerCase();
       
       if (job.skills != null) {
         _selectedJobSkills.clear();
@@ -114,6 +116,8 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       }
     } catch (_) {}
   }
+
+  bool get _isFieldLocked => _currentStatus != null && _currentStatus != 'draft';
 
   @override
   void dispose() {
@@ -129,11 +133,32 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
   }
 
   Future<void> _selectDeadline() async {
+    if (_currentStatus != null && _currentStatus != 'draft') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể thay đổi hạn chót cho tin đã đăng hoặc đang chờ duyệt')),
+      );
+      return;
+    }
+
+    final monetizationProvider = context.read<MonetizationProvider>();
+    final subscription = monetizationProvider.currentSubscription;
+    final isVip = subscription?.package?.isVip ?? false;
+    final maxDays = isVip ? 30 : 7;
+    
+    final now = DateTime.now();
+    final firstAllowed = DateTime(now.year, now.month, now.day);
+    final lastAllowed = firstAllowed.add(Duration(days: maxDays));
+
+    // Đảm bảo initialDate nằm trong khoảng [firstDate, lastDate]
+    DateTime initialDate = _selectedDeadline ?? firstAllowed.add(const Duration(days: 1));
+    if (initialDate.isBefore(firstAllowed)) initialDate = firstAllowed;
+    if (initialDate.isAfter(lastAllowed)) initialDate = lastAllowed;
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDeadline ?? DateTime.now().add(const Duration(days: 30)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initialDate,
+      firstDate: firstAllowed,
+      lastDate: lastAllowed,
     );
     if (picked != null) {
       setState(() {
@@ -304,7 +329,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('Thông tin chung'),
-                  _buildTextField(_titleController, 'Tiêu đề công việc', Icons.work, required: true, enabled: isAdmin),
+                  _buildTextField(_titleController, 'Tiêu đề công việc', Icons.work, required: true, enabled: isAdmin && !_isFieldLocked),
                   const SizedBox(height: 16),
                   
                   _buildDropdown<int>(
@@ -315,7 +340,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                         value: c.id, 
                         child: Text(c.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))
                       )).toList(),
-                    onChanged: isAdmin ? (val) => setState(() => _selectedCategoryId = val) : null,
+                    onChanged: (isAdmin && !_isFieldLocked) ? (val) => setState(() => _selectedCategoryId = val) : null,
                     icon: Icons.category,
                   ),
                   const SizedBox(height: 16),
@@ -481,7 +506,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                   ),
                   
                   const SizedBox(height: 40),
-                  if (widget.jobId != null && isAdmin) // Chỉ hiện Đăng tin khi đang sửa và là admin
+                  if (widget.jobId != null && isAdmin && _currentStatus == 'draft') // Chỉ hiện Đăng tin khi đang là nháp và là admin
                     SizedBox(
                       width: double.infinity,
                       height: 50,
