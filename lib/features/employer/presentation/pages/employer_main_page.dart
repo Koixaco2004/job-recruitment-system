@@ -51,6 +51,8 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
     await employerProvider.getProfile();
     
     if (mounted) {
+      context.read<MonetizationProvider>().fetchSubscriptionStatus();
+      context.read<MonetizationProvider>().fetchCreditBalance();
       context.read<JobProvider>().fetchEmployerJobs(status: 'published');
       context.read<HeadhuntingProvider>().fetchEmployerInvitations();
       context.read<HeadhuntingProvider>().fetchSavedCandidates();

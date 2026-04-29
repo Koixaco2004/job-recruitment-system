@@ -7,6 +7,8 @@ import '../../domain/entities/application_note_entity.dart';
 import '../../../../features/profile/presentation/providers/profile_provider.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
+import '../../../monetization/presentation/providers/monetization_provider.dart';
+import '../../../monetization/presentation/pages/pricing_page.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
 
 class ApplicationDetailDrawer extends StatefulWidget {
@@ -835,6 +837,104 @@ class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
                   maxLines: 2,
                 ),
                 const SizedBox(height: 24),
+                
+                // Pipeline Fee Logic UI
+                Builder(
+                  builder: (context) {
+                    final monetizationProvider = context.watch<MonetizationProvider>();
+                    final subscription = monetizationProvider.currentSubscription;
+                    final creditBalance = monetizationProvider.creditBalance;
+                    final isVip = subscription?.isVip ?? false;
+                    
+                    final isFirstProcessing = (app.status.toLowerCase() == 'applied' && 
+                                              selectedStatus != 'applied' && 
+                                              selectedStatus != 'rejected' && 
+                                              selectedStatus != 'withdrawn');
+                    
+                    if (!isFirstProcessing) return const SizedBox();
+
+                    int cost = 0;
+                    bool hasVipQuota = false;
+                    
+                    if (isVip && subscription != null) {
+                      final remaining = (subscription.package?.monthlyFreeProceeds ?? 0) - subscription.usedFreeProceeds;
+                      if (remaining > 0) {
+                        cost = 0;
+                        hasVipQuota = true;
+                      } else {
+                        cost = 10;
+                      }
+                    } else {
+                      cost = 10;
+                    }
+
+                    final canAfford = cost == 0 || creditBalance >= cost;
+
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: canAfford ? Theme.of(context).primaryColor.withOpacity(0.05) : Colors.red.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: canAfford ? Theme.of(context).primaryColor.withOpacity(0.2) : Colors.red.withOpacity(0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.payments_outlined, 
+                                size: 18, 
+                                color: canAfford ? Theme.of(context).primaryColor : Colors.red
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Phí xử lý hồ sơ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: canAfford ? Theme.of(context).primaryColor : Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (hasVipQuota)
+                            Text(
+                              'Bạn đang sử dụng quyền lợi VIP. Miễn phí xử lý hồ sơ này (${(subscription?.package?.monthlyFreeProceeds ?? 0) - subscription!.usedFreeProceeds} lượt còn lại).',
+                              style: const TextStyle(fontSize: 12),
+                            )
+                          else
+                            Text(
+                              'Thao tác này sẽ tiêu tốn 10 Credit. Số dư hiện tại: $creditBalance Credit.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: canAfford ? Colors.black87 : Colors.red,
+                              ),
+                            ),
+                          if (!canAfford) ...[
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const PricingPage()));
+                              },
+                              child: const Text(
+                                'Số dư không đủ. Nạp thêm ngay ->',
+                                style: TextStyle(
+                                  fontSize: 12, 
+                                  color: Colors.red, 
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -845,6 +945,58 @@ class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
                           const SnackBar(content: Text('Vui lòng nhập lý do từ chối')),
                         );
                         return;
+                      }
+
+                      final monetizationProvider = context.read<MonetizationProvider>();
+                      final subscription = monetizationProvider.currentSubscription;
+                      final creditBalance = monetizationProvider.creditBalance;
+                      final isVip = subscription?.isVip ?? false;
+
+                      final isFirstProcessing = (app.status.toLowerCase() == 'applied' && 
+                                                selectedStatus != 'applied' && 
+                                                selectedStatus != 'rejected' && 
+                                                selectedStatus != 'withdrawn');
+                      
+                      int cost = 0;
+                      if (isFirstProcessing) {
+                        if (isVip && subscription != null) {
+                          final remaining = (subscription.package?.monthlyFreeProceeds ?? 0) - subscription.usedFreeProceeds;
+                          cost = remaining > 0 ? 0 : 10;
+                        } else {
+                          cost = 10;
+                        }
+
+                        if (cost > creditBalance) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Số dư Credit không đủ để thực hiện thao tác này.')),
+                          );
+                          return;
+                        }
+
+                        // Confirmation Dialog
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Xác nhận xử lý hồ sơ'),
+                            content: Text(
+                              cost > 0 
+                                ? 'Thao tác này sẽ tiêu tốn 10 Credit để đưa ứng viên vào vòng trong. Bạn có chắc chắn muốn tiếp tục?'
+                                : 'Thao tác này sẽ sử dụng 1 lượt xử lý miễn phí của gói VIP. Bạn có chắc chắn muốn tiếp tục?'
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text('Xác nhận', style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm != true) return;
                       }
 
                       final provider = context.read<EmployerApplicationProvider>();
@@ -858,6 +1010,11 @@ class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
                       if (context.mounted) {
                         Navigator.pop(context);
                         if (success) {
+                          // Refresh balance after successful payment
+                          if (isFirstProcessing) {
+                            monetizationProvider.fetchCreditBalance();
+                            monetizationProvider.fetchSubscriptionStatus();
+                          }
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Cập nhật trạng thái thành công')),
                           );
