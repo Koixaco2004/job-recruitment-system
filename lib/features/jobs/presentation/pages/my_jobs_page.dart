@@ -398,6 +398,7 @@ class _MyJobsPageState extends State<MyJobsPage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Text(
@@ -410,8 +411,42 @@ class _MyJobsPageState extends State<MyJobsPage>
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            _buildStatusBadge(job.status),
                             const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                _buildStatusBadge(job.status),
+                                if ((job.status == 'published' || job.status == 'approved') && (context.read<EmployerProvider>().employer?.isAdminCompany ?? false))
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: InkWell(
+                                      onTap: () => _showCloseConfirmation(context, job.jobPostId, job.title),
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.block, size: 12, color: Colors.red[400]),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Đóng tin',
+                                              style: TextStyle(
+                                                color: Colors.red[400], 
+                                                fontSize: 11, 
+                                                fontWeight: FontWeight.w500,
+                                                decoration: TextDecoration.underline,
+                                                decorationColor: Colors.red[200],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(width: 4),
                             IconButton(
                               onPressed: () {
                                 showModalBottomSheet(
@@ -552,17 +587,6 @@ class _MyJobsPageState extends State<MyJobsPage>
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 12),
                                   backgroundColor: Colors.orange.withOpacity(0.05),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
-                            if ((job.status == 'published' || job.status == 'approved') && (context.read<EmployerProvider>().employer?.isAdminCompany ?? false))
-                              TextButton.icon(
-                                onPressed: () => _showCloseConfirmation(context, job.jobPostId, job.title),
-                                icon: const Icon(Icons.close, size: 18, color: Colors.red),
-                                label: const Text('Đóng tin', style: TextStyle(color: Colors.red)),
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  backgroundColor: Colors.red.withOpacity(0.05),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                               ),

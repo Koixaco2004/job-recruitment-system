@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/headhunting_candidate_entity.dart';
 import 'package:provider/provider.dart';
 import '../providers/headhunting_provider.dart';
+import '../../../monetization/presentation/providers/monetization_provider.dart';
+import '../../../monetization/presentation/pages/pricing_page.dart';
 
 class CandidateCard extends StatelessWidget {
   final HeadhuntingCandidateEntity candidate;
@@ -168,12 +170,19 @@ class CandidateCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Save Button (Heart)
-                  Consumer<HeadhuntingProvider>(
-                    builder: (context, provider, _) {
+                  Consumer2<HeadhuntingProvider, MonetizationProvider>(
+                    builder: (context, provider, monetizationProvider, _) {
                       final isSaved = provider.isSaved(candidate.id);
+                      final isVip = monetizationProvider.currentSubscription?.isVip ?? false;
+                      
                       return IconButton(
-                        onPressed: () => provider.toggleSaveCandidate(candidate.id),
+                        onPressed: () {
+                          if (!isVip) {
+                            _showVipRequiredDialog(context, 'Lưu ứng viên');
+                            return;
+                          }
+                          provider.toggleSaveCandidate(candidate.id);
+                        },
                         icon: Icon(
                           isSaved ? Icons.favorite : Icons.favorite_border,
                           color: isSaved ? Colors.red : Colors.grey[400],
@@ -311,6 +320,42 @@ class CandidateCard extends StatelessWidget {
               color: color,
               fontWeight: FontWeight.bold,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showVipRequiredDialog(BuildContext context, String feature) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.workspace_premium, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Tính năng VIP'),
+          ],
+        ),
+        content: Text('Tính năng "$feature" chỉ dành cho thành viên VIP. Vui lòng nâng cấp để sử dụng toàn bộ các công cụ Headhunting cao cấp.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PricingPage()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber[700],
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Nâng cấp ngay'),
           ),
         ],
       ),

@@ -65,6 +65,9 @@ class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
 
           final app = provider.selectedApplication;
           if (app == null) {
+            if (provider.errorMessage != null) {
+              return _buildErrorView(context, provider.errorMessage!);
+            }
             return const Center(child: Text('Không tìm thấy dữ liệu hồ sơ'));
           }
 
@@ -159,6 +162,22 @@ class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
                   app.candidate?.email ?? 'Chưa có email',
                   style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
+                if (app.profileViewsRemaining != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      app.profileViewsRemaining == -1 
+                        ? 'Lượt xem: Không giới hạn (VIP)' 
+                        : 'Còn ${app.profileViewsRemaining} lượt xem hồ sơ',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -168,6 +187,46 @@ class _ApplicationDetailDrawerState extends State<ApplicationDetailDrawer> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildErrorView(BuildContext context, String message) {
+    final isQuotaError = message.contains('30 hồ sơ') || message.contains('giới hạn');
+    
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.error_outline, size: 60, color: Colors.red),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+        ),
+        const SizedBox(height: 24),
+        if (isQuotaError)
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PricingPage()));
+            },
+            icon: const Icon(Icons.workspace_premium),
+            label: const Text('Nâng cấp VIP ngay'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber[700],
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          )
+        else
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đóng'),
+          ),
+      ],
     );
   }
 

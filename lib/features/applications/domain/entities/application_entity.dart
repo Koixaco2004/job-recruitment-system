@@ -24,6 +24,7 @@ class ApplicationEntity extends Equatable {
   final CandidateProfileEntity? candidate;
   final List<ApplicationStatusHistoryEntity>? statusHistory;
   final List<ApplicationNoteEntity>? notes;
+  final int? profileViewsRemaining;
 
   const ApplicationEntity({
     required this.id,
@@ -44,6 +45,7 @@ class ApplicationEntity extends Equatable {
     this.candidate,
     this.statusHistory,
     this.notes,
+    this.profileViewsRemaining,
   });
 
   @override
@@ -66,5 +68,6 @@ class ApplicationEntity extends Equatable {
         candidate,
         statusHistory,
         notes,
+        profileViewsRemaining,
       ];
 }

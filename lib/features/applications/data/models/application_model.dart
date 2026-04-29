@@ -25,6 +25,7 @@ class ApplicationModel extends ApplicationEntity {
     super.candidate,
     super.statusHistory,
     super.notes,
+    super.profileViewsRemaining,
   });
 
   factory ApplicationModel.fromJson(Map<String, dynamic> json) {
@@ -61,6 +62,7 @@ class ApplicationModel extends ApplicationEntity {
               .map((e) => ApplicationNoteModel.fromJson(e))
               .toList()
           : null,
+      profileViewsRemaining: json['profileViewsRemaining'] != null ? _asInt(json['profileViewsRemaining']) : null,
     );
   }
 

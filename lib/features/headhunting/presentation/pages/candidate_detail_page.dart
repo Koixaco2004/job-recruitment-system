@@ -6,6 +6,8 @@ import '../providers/headhunting_provider.dart';
 import '../../domain/entities/candidate_detail_entity.dart';
 import '../../../../features/profile/presentation/providers/profile_provider.dart';
 import '../widgets/send_invitation_dialog.dart';
+import '../../../monetization/presentation/providers/monetization_provider.dart';
+import '../../../monetization/presentation/pages/pricing_page.dart';
 
 class CandidateDetailPage extends StatefulWidget {
   final int candidateId;
@@ -56,15 +58,23 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
               );
             },
           ),
-          Consumer<HeadhuntingProvider>(
-            builder: (context, provider, _) {
+          Consumer2<HeadhuntingProvider, MonetizationProvider>(
+            builder: (context, provider, monetizationProvider, _) {
               final isSaved = provider.isSaved(widget.candidateId);
+              final isVip = monetizationProvider.currentSubscription?.isVip ?? false;
+              
               return IconButton(
                 icon: Icon(
                   isSaved ? Icons.favorite : Icons.favorite_border,
                   color: isSaved ? Colors.red : Colors.white70,
                 ),
-                onPressed: () => provider.toggleSaveCandidate(widget.candidateId),
+                onPressed: () {
+                  if (!isVip) {
+                    _showVipRequiredDialog(context, 'Lưu ứng viên');
+                    return;
+                  }
+                  provider.toggleSaveCandidate(widget.candidateId);
+                },
                 tooltip: isSaved ? 'Bỏ lưu' : 'Lưu ứng viên',
               );
             },
@@ -344,9 +354,10 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
   }
 
   Widget _buildBottomActions(BuildContext context, CandidateDetailEntity candidate) {
-    return Consumer<HeadhuntingProvider>(
-      builder: (context, provider, child) {
+    return Consumer2<HeadhuntingProvider, MonetizationProvider>(
+      builder: (context, provider, monetizationProvider, child) {
         final bool isAlreadyApplied = widget.jobId != null && provider.isApplied(candidate.id, widget.jobId!);
+        final isVip = monetizationProvider.currentSubscription?.isVip ?? false;
         
         return Container(
           padding: const EdgeInsets.all(16),
@@ -365,7 +376,15 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton.icon(
-                onPressed: isAlreadyApplied ? null : () => _showInvitationDialog(context, candidate),
+                onPressed: isAlreadyApplied 
+                    ? null 
+                    : () {
+                        if (!isVip) {
+                          _showVipRequiredDialog(context, 'Gửi thư mời');
+                          return;
+                        }
+                        _showInvitationDialog(context, candidate);
+                      },
                 icon: Icon(isAlreadyApplied ? Icons.check_circle_outline : Icons.mail_outline),
                 label: Text(
                   isAlreadyApplied ? 'Ứng viên đã ứng tuyển' : 'Gửi thư mời',
@@ -438,5 +457,41 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
+  }
+
+  void _showVipRequiredDialog(BuildContext context, String feature) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.workspace_premium, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Tính năng VIP'),
+          ],
+        ),
+        content: Text('Tính năng "$feature" chỉ dành cho thành viên VIP. Vui lòng nâng cấp để sử dụng toàn bộ các công cụ Headhunting cao cấp.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PricingPage()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber[700],
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Nâng cấp ngay'),
+          ),
+        ],
+      ),
+    );
   }
 }
