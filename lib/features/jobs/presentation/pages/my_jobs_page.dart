@@ -420,7 +420,7 @@ class _MyJobsPageState extends State<MyJobsPage>
                                       padding: const EdgeInsets.only(left: 8),
                                       child: Tooltip(
                                         message: 'Tin đang được đẩy',
-                                        child: Icon(Icons.rocket_launch, size: 18, color: Colors.orange[700]),
+                                        child: Icon(Icons.whatshot, size: 18, color: Colors.orange[700]),
                                       ),
                                     ),
                                 ],
@@ -717,20 +717,38 @@ class _MyJobsPageState extends State<MyJobsPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                isVip ? Icons.workspace_premium : Icons.info_outline,
-                color: isVip ? Colors.amber[800] : Colors.blue[800],
-                size: 20,
+              Row(
+                children: [
+                  Icon(
+                    isVip ? Icons.workspace_premium : Icons.info_outline,
+                    color: isVip ? Colors.amber[800] : Colors.blue[800],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Hạn mức tin đăng (${package.displayName})',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isVip ? Colors.amber[900] : Colors.blue[900],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Hạn mức tin đăng (${package.displayName})',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isVip ? Colors.amber[900] : Colors.blue[900],
+              if (isVip)
+                TextButton.icon(
+                  onPressed: () => _handleBuyExtraSlot(context),
+                  icon: const Icon(Icons.add_circle_outline, size: 16),
+                  label: const Text('Mua Slot', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: Colors.amber[900],
+                    backgroundColor: Colors.amber[100],
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -988,6 +1006,123 @@ class _MyJobsPageState extends State<MyJobsPage>
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
             child: const Text('NÂNG CẤP VIP'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleBuyExtraSlot(BuildContext context) async {
+    final monetizationProvider = context.read<MonetizationProvider>();
+    final subscription = monetizationProvider.currentSubscription;
+    
+    if (subscription == null || !subscription.isVip) {
+      _showVipOnlyDialog(context);
+      return;
+    }
+
+    // Confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mua thêm Slot đăng tin'),
+        content: const Text('Bạn có muốn mua thêm 1 Slot đăng tin với giá 40 Credit?\n\nLưu ý: Slot mua thêm có thời hạn sử dụng trong 7 ngày.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+            child: const Text('Xác nhận mua'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final result = await monetizationProvider.purchaseProduct(slug: 'extra_job_slot');
+    
+    if (context.mounted) {
+      if (result != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Mua thêm Slot thành công!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        // Refresh quota info
+        await monetizationProvider.fetchSubscriptionStatus();
+      } else {
+        final error = monetizationProvider.errorMessage ?? 'Có lỗi xảy ra';
+        if (error.contains('400') || error.contains('không đủ') || error.contains('Credit')) {
+           _showInsufficientCreditsDialog(context, 40);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error), 
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showVipOnlyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.stars, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Tính năng VIP'),
+          ],
+        ),
+        content: const Text('Tính năng mua thêm Slot đăng tin chỉ dành cho tài khoản VIP. Vui lòng nâng cấp gói cước để sử dụng.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ĐỂ SAU'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const PricingPage()),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
+            child: const Text('NÂNG CẤP NGAY'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInsufficientCreditsDialog(BuildContext context, int cost) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Không đủ Credit'),
+        content: Text('Số dư Credit của bạn không đủ để thực hiện thao tác này (Cần $cost Credit). Vui lòng nạp thêm Credit để tiếp tục.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const PricingPage()));
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            child: const Text('Nạp ngay'),
           ),
         ],
       ),

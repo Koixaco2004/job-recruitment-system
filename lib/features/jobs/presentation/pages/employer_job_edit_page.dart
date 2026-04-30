@@ -612,7 +612,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                             onPressed: monetizationProvider.isLoading ? null : () => _handleExtendJob(context),
                             icon: const Icon(Icons.event_available, color: Colors.blue),
                             label: Text(
-                              'GIA HẠN TIN (+7 NGÀY) ($cost CREDIT)',
+                              'GIA HẠN TIN (+15 NGÀY) ($cost CREDIT)',
                               style: const TextStyle(
                                 fontSize: 14, 
                                 fontWeight: FontWeight.bold, 
@@ -1104,7 +1104,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
           ],
         ),
         content: Text(
-          'Bạn có muốn dùng ${product.creditCost} Credit để gia hạn tin này thêm 7 ngày không?'
+          'Bạn có muốn dùng ${product.creditCost} Credit để gia hạn tin này thêm 15 ngày không?'
         ),
         actions: [
           TextButton(

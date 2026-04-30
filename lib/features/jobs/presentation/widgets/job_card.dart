@@ -70,6 +70,7 @@ class JobCard extends StatelessWidget {
             children: [
               // Header: Company logo + name + heart button
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Company logo
                   Container(
@@ -171,55 +172,63 @@ class JobCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Heart button
-                  Consumer<MyJobsProvider>(
-                    builder: (context, myJobsProvider, child) {
-                      final isSaved = myJobsProvider.isJobSaved(job.jobPostId);
-                      return IconButton(
-                        icon: Icon(
-                          isSaved ? Icons.favorite : Icons.favorite_border,
-                          color: isSaved ? Colors.red : Colors.grey,
-                        ),
-                        onPressed: () async {
-                          final profileProvider = context
-                              .read<ProfileProvider>();
-                          final candidateId =
-                              profileProvider.profile?.candidateId ?? 1;
+                            Column(
+                    children: [
+                      Consumer<MyJobsProvider>(
+                        builder: (context, myJobsProvider, child) {
+                          final isSaved = myJobsProvider.isJobSaved(job.jobPostId);
+                          return IconButton(
+                            icon: Icon(
+                              isSaved ? Icons.favorite : Icons.favorite_border,
+                              color: isSaved ? Colors.red : Colors.grey,
+                            ),
+                            onPressed: () async {
+                              final profileProvider = context
+                                  .read<ProfileProvider>();
+                              final candidateId =
+                                  profileProvider.profile?.candidateId ?? 1;
 
-                          if (isSaved) {
-                            // Unsave
-                            final success = await myJobsProvider
-                                .unsaveJobByJobPostId(
+                              if (isSaved) {
+                                // Unsave
+                                final success = await myJobsProvider
+                                    .unsaveJobByJobPostId(
+                                      candidateId: candidateId,
+                                      jobPostId: job.jobPostId,
+                                    );
+                                if (context.mounted && success) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Đã bỏ lưu việc làm'),
+                                      duration: Duration(seconds: 1),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                // Save
+                                final success = await myJobsProvider.saveJob(
                                   candidateId: candidateId,
                                   jobPostId: job.jobPostId,
                                 );
-                            if (context.mounted && success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Đã bỏ lưu việc làm'),
-                                  duration: Duration(seconds: 1),
-                                ),
-                              );
-                            }
-                          } else {
-                            // Save
-                            final success = await myJobsProvider.saveJob(
-                              candidateId: candidateId,
-                              jobPostId: job.jobPostId,
-                            );
-                            if (context.mounted && success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Đã lưu việc làm'),
-                                  duration: Duration(seconds: 1),
-                                ),
-                              );
-                            }
-                          }
+                                if (context.mounted && success) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Đã lưu việc làm'),
+                                      duration: Duration(seconds: 1),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            tooltip: isSaved ? 'Bỏ lưu' : 'Lưu việc làm',
+                          );
                         },
-                        tooltip: isSaved ? 'Bỏ lưu' : 'Lưu việc làm',
-                      );
-                    },
+                      ),
+                      if (job.isBumped)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Icon(Icons.whatshot, size: 28, color: Colors.orange),
+                        ),
+                    ],
                   ),
                 ],
               ),

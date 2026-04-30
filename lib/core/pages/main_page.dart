@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../features/companies/presentation/pages/companies_page.dart';
 import '../../features/jobs/presentation/pages/home_page.dart';
 import '../../features/jobs/presentation/pages/my_jobs_page.dart';
 import '../../features/jobs/presentation/providers/my_jobs_provider.dart';
@@ -40,7 +39,6 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _pages = const [
     HomePage(),
-    CompaniesPage(),
     MyJobsPage(),
     ProfilePage(),
   ];
@@ -51,7 +49,7 @@ class _MainPageState extends State<MainPage> {
     });
 
     // Auto-refresh data khi chuyển sang tab "Việc của tôi"
-    if (index == 2) {
+    if (index == 1) {
       final profileProvider = context.read<ProfileProvider>();
       final myJobsProvider = context.read<MyJobsProvider>();
       final candidateId = profileProvider.profile?.candidateId ?? 1;
@@ -81,7 +79,6 @@ class _MainPageState extends State<MainPage> {
         unselectedFontSize: 12,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Khám phá'),
-          BottomNavigationBarItem(icon: Icon(Icons.business), label: 'Công ty'),
           BottomNavigationBarItem(
             icon: Icon(Icons.work_history),
             label: 'Việc của tôi',

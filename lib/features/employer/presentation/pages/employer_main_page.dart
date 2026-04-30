@@ -216,14 +216,6 @@ class _EmployerMainPageState extends State<EmployerMainPage> {
               );
             },
           ),
-          ListTile(
-            leading: Icon(Icons.settings_outlined, color: Theme.of(context).primaryColor),
-            title: const Text('Cài đặt tài khoản'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // Future: Link to settings page
-            },
-          ),
           const Divider(indent: 16, endIndent: 16),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),

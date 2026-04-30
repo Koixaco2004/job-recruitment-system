@@ -78,6 +78,7 @@ class SavedJobCard extends StatelessWidget {
             children: [
               // Header: Company logo + name + heart button
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Company logo
                   Container(
@@ -134,11 +135,19 @@ class SavedJobCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Heart button (always filled)
-                  IconButton(
-                    icon: const Icon(Icons.favorite, color: Colors.red),
-                    onPressed: onUnsave,
-                    tooltip: 'Bỏ lưu',
+                  Column(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.favorite, color: Colors.red),
+                        onPressed: onUnsave,
+                        tooltip: 'Bỏ lưu',
+                      ),
+                      if (savedJob.job?.isBumped ?? false)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Icon(Icons.whatshot, size: 28, color: Colors.orange),
+                        ),
+                    ],
                   ),
                 ],
               ),
