@@ -3,6 +3,7 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/subscription_package_entity.dart';
 import '../../domain/entities/topup_pack_entity.dart';
 import '../../domain/entities/subscription_entity.dart';
+import '../../domain/entities/credit_product_entity.dart';
 
 abstract class MonetizationRepository {
   Future<Either<Failure, List<SubscriptionPackageEntity>>> getSubscriptionPackages();
@@ -13,4 +14,6 @@ abstract class MonetizationRepository {
   Future<Either<Failure, SubscriptionEntity>> getSubscriptionStatus();
   Future<Either<Failure, int>> getCreditBalance();
   Future<Either<Failure, Map<String, dynamic>>> getCreditTransactions({int page = 1, int limit = 20});
+  Future<Either<Failure, List<CreditProductEntity>>> getCreditProducts();
+  Future<Either<Failure, Map<String, dynamic>>> purchaseProduct({required String slug, int? targetJobId});
 }

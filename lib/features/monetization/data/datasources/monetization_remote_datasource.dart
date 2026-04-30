@@ -4,6 +4,7 @@ import '../models/subscription_package_model.dart';
 import '../models/topup_pack_model.dart';
 import '../models/subscription_model.dart';
 import '../models/credit_transaction_model.dart';
+import '../models/credit_product_model.dart';
 
 abstract class MonetizationRemoteDataSource {
   Future<List<SubscriptionPackageModel>> getSubscriptionPackages();
@@ -14,6 +15,8 @@ abstract class MonetizationRemoteDataSource {
   Future<SubscriptionModel> getSubscriptionStatus();
   Future<int> getCreditBalance();
   Future<Map<String, dynamic>> getCreditTransactions({int page = 1, int limit = 20});
+  Future<List<CreditProductModel>> getCreditProducts();
+  Future<Map<String, dynamic>> purchaseProduct({required String slug, int? targetJobId});
 }
 
 class MonetizationRemoteDataSourceImpl implements MonetizationRemoteDataSource {
@@ -104,5 +107,24 @@ class MonetizationRemoteDataSourceImpl implements MonetizationRemoteDataSource {
       'page': response.data['page'],
       'lastPage': response.data['lastPage'],
     };
+  }
+
+  @override
+  Future<List<CreditProductModel>> getCreditProducts() async {
+    final response = await apiClient.dio.get('/api/credits/products');
+    final List<dynamic> data = response.data;
+    return data.map((json) => CreditProductModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> purchaseProduct({required String slug, int? targetJobId}) async {
+    final response = await apiClient.dio.post(
+      '/api/credits/purchase',
+      data: {
+        'slug': slug,
+        if (targetJobId != null) 'targetJobId': targetJobId,
+      },
+    );
+    return response.data;
   }
 }

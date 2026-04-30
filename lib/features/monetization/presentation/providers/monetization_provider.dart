@@ -3,6 +3,7 @@ import '../../domain/entities/subscription_package_entity.dart';
 import '../../domain/entities/topup_pack_entity.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../../domain/entities/credit_transaction_entity.dart';
+import '../../domain/entities/credit_product_entity.dart';
 import '../../domain/repositories/monetization_repository.dart';
 
 class MonetizationProvider extends ChangeNotifier {
@@ -15,6 +16,7 @@ class MonetizationProvider extends ChangeNotifier {
   List<TopupPackEntity> _topupPacks = [];
   SubscriptionEntity? _currentSubscription;
   String? _errorMessage;
+  List<CreditProductEntity> _creditProducts = [];
 
   // Subscription Status
   int _creditBalance = 0;
@@ -27,6 +29,7 @@ class MonetizationProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   List<SubscriptionPackageEntity> get packages => _packages;
   List<TopupPackEntity> get topupPacks => _topupPacks;
+  List<CreditProductEntity> get creditProducts => _creditProducts;
   String? get errorMessage => _errorMessage;
 
   SubscriptionEntity? get currentSubscription => _currentSubscription;
@@ -153,6 +156,47 @@ class MonetizationProvider extends ChangeNotifier {
     return result.fold(
       (failure) => null,
       (data) => data['paymentUrl'] as String?,
+    );
+  }
+
+  Future<void> fetchCreditProducts() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await repository.getCreditProducts();
+    result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _isLoading = false;
+        notifyListeners();
+      },
+      (products) {
+        _creditProducts = products;
+        _isLoading = false;
+        notifyListeners();
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>?> purchaseProduct({required String slug, int? targetJobId}) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await repository.purchaseProduct(slug: slug, targetJobId: targetJobId);
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.message;
+        _isLoading = false;
+        notifyListeners();
+        return null;
+      },
+      (data) {
+        _isLoading = false;
+        notifyListeners();
+        return data;
+      },
     );
   }
 

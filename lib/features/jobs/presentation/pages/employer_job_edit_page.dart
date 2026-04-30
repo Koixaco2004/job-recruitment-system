@@ -79,6 +79,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
 
     final monetizationProvider = context.read<MonetizationProvider>();
     monetizationProvider.fetchSubscriptionStatus();
+    monetizationProvider.fetchCreditProducts();
   }
 
   void _loadJobData() {
@@ -91,30 +92,36 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
         job = jobProvider.employerJobs.firstWhere((j) => j.jobPostId == widget.jobId);
       }
       
-      _titleController.text = job.title;
-      _descriptionController.text = job.description;
-      _requirementsController.text = job.requirements;
-      _benefitsController.text = job.benefits;
-      _salaryMinController.text = job.salaryMin?.toString() ?? '';
-      _salaryMaxController.text = job.salaryMax?.toString() ?? '';
-      _slotsController.text = (job.numberOfPositions > 0) ? job.numberOfPositions.toString() : '1';
-      _expController.text = (job.experienceRequired >= 0) ? job.experienceRequired.toString() : '0';
-      _selectedDeadline = job.deadline;
+      _loadJobDataFromEntity(job);
+    } catch (e) {
+      debugPrint('Error loading job data: $e');
+    }
+  }
+
+  void _loadJobDataFromEntity(JobPostEntity job) {
+    _titleController.text = job.title;
+    _descriptionController.text = job.description;
+    _requirementsController.text = job.requirements;
+    _benefitsController.text = job.benefits;
+    _salaryMinController.text = job.salaryMin?.toString() ?? '';
+    _salaryMaxController.text = job.salaryMax?.toString() ?? '';
+    _slotsController.text = (job.numberOfPositions > 0) ? job.numberOfPositions.toString() : '1';
+    _expController.text = (job.experienceRequired >= 0) ? job.experienceRequired.toString() : '0';
+    _selectedDeadline = job.deadline;
+    
+    _selectedProvinceId = (job.provinceId == 0) ? null : job.provinceId;
+    _selectedCategoryId = (job.categoryId == 0) ? null : job.categoryId;
+    _selectedJobTypeId = (job.jobTypeId == 0) ? null : job.jobTypeId;
+    _selectedLevelId = (job.levelId == 0) ? null : job.levelId;
+    _selectedRequiredDegree = job.requiredDegree;
+    _hideSalary = job.hideSalary;
+    _requireCv = job.requireCv;
+    _currentStatus = job.status.toLowerCase();
       
-      _selectedProvinceId = (job.provinceId == 0) ? null : job.provinceId;
-      _selectedCategoryId = (job.categoryId == 0) ? null : job.categoryId;
-      _selectedJobTypeId = (job.jobTypeId == 0) ? null : job.jobTypeId;
-      _selectedLevelId = (job.levelId == 0) ? null : job.levelId;
-      _selectedRequiredDegree = job.requiredDegree;
-      _hideSalary = job.hideSalary;
-      _requireCv = job.requireCv;
-      _currentStatus = job.status.toLowerCase();
-      
-      if (job.skills != null) {
-        _selectedJobSkills.clear();
-        _selectedJobSkills.addAll(job.skills!);
-      }
-    } catch (_) {}
+    if (job.skills != null) {
+      _selectedJobSkills.clear();
+      _selectedJobSkills.addAll(job.skills!);
+    }
   }
 
   bool get _isFieldLocked => _currentStatus != null && _currentStatus != 'draft';
@@ -520,6 +527,21 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                         child: const Text('ĐĂNG TIN NGAY', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ),
+                  if (widget.jobId != null && isAdmin && _currentStatus == 'closed') // Hiện Đăng lại khi tin bị đóng
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: jobProvider.isSavingJob ? null : () => _handleRepublish(context),
+                        icon: const Icon(Icons.publish),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        label: const Text('ĐĂNG LẠI TIN NÀY', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   
                   // Nút đẩy tin (Bump Job) - Di chuyển từ MyJobsPage sang đây
@@ -537,7 +559,11 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                         JobPostEntity? currentJobEntity;
                         try {
                           currentJobEntity = jobProvider.employerJobs.firstWhere((j) => j.jobPostId == widget.jobId);
-                        } catch (_) {}
+                        } catch (_) {
+                          try {
+                            currentJobEntity = jobProvider.publishedJobs.firstWhere((j) => j.jobPostId == widget.jobId);
+                          } catch (_) {}
+                        }
                         
                         final isBumped = currentJobEntity?.isBumped ?? false;
                         
@@ -545,7 +571,7 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                           width: double.infinity,
                           height: 50,
                           child: OutlinedButton.icon(
-                            onPressed: jobProvider.isSavingJob ? null : () => _handleBumpJob(context, currentJobEntity!),
+                            onPressed: (jobProvider.isSavingJob || currentJobEntity == null) ? null : () => _handleBumpJob(context, currentJobEntity!),
                             icon: Icon(
                               isBumped ? Icons.rocket_launch : Icons.rocket_launch_outlined,
                               color: Colors.orange[800],
@@ -564,6 +590,39 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
                               side: BorderSide(color: Colors.orange[400]!, width: 1.5),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               backgroundColor: Colors.orange[50],
+                            ),
+                          ),
+                        );
+                      }
+                    ),
+                  const SizedBox(height: 16),
+
+                  // Nút gia hạn (Extend Job) - Nằm cạnh nút đẩy tin
+                  if (widget.jobId != null && isAdmin && (_currentStatus == 'published' || _currentStatus == 'approved' || _currentStatus == 'closed'))
+                    Builder(
+                      builder: (context) {
+                        final monetizationProvider = context.watch<MonetizationProvider>();
+                        final product = monetizationProvider.creditProducts.where((p) => p.slug == 'extend_job').firstOrNull;
+                        final cost = product?.creditCost ?? 20;
+
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: OutlinedButton.icon(
+                            onPressed: monetizationProvider.isLoading ? null : () => _handleExtendJob(context),
+                            icon: const Icon(Icons.event_available, color: Colors.blue),
+                            label: Text(
+                              'GIA HẠN TIN (+7 NGÀY) ($cost CREDIT)',
+                              style: const TextStyle(
+                                fontSize: 14, 
+                                fontWeight: FontWeight.bold, 
+                                color: Colors.blue
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.blue, width: 1.5),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              backgroundColor: Colors.blue[50],
                             ),
                           ),
                         );
@@ -964,12 +1023,150 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     }
   }
 
-  void _showInsufficientCreditsDialog(BuildContext context) {
+  Future<void> _handleRepublish(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận đăng lại'),
+        content: const Text('Bạn có chắc chắn muốn đăng lại tin tuyển dụng này không? Tin sẽ hiển thị lại với ứng viên.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+            child: const Text('Đăng lại'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final provider = context.read<JobProvider>();
+    final data = _getFormData();
+    data['status'] = 'published';
+
+    final success = await provider.updateJob(widget.jobId!, data);
+
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã đăng lại tin thành công!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        
+        // Refresh lại dữ liệu trang
+        await provider.fetchEmployerJobs();
+        if (mounted) {
+          setState(() {
+            final updatedJob = provider.employerJobs.firstWhere((j) => j.jobPostId == widget.jobId);
+            _loadJobDataFromEntity(updatedJob);
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(provider.saveJobError ?? 'Có lỗi xảy ra khi đăng lại tin'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleExtendJob(BuildContext context) async {
+    final monetizationProvider = context.read<MonetizationProvider>();
+    final product = monetizationProvider.creditProducts.where((p) => p.slug == 'extend_job').firstOrNull;
+    
+    if (product == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không tìm thấy thông tin gói gia hạn')),
+      );
+      return;
+    }
+
+    // Confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.event_available, color: Colors.blue),
+            SizedBox(width: 8),
+            Text('Gia hạn tin đăng'),
+          ],
+        ),
+        content: Text(
+          'Bạn có muốn dùng ${product.creditCost} Credit để gia hạn tin này thêm 7 ngày không?'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+            child: const Text('Đồng ý'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final result = await monetizationProvider.purchaseProduct(
+      slug: 'extend_job',
+      targetJobId: widget.jobId,
+    );
+
+    if (result != null) {
+      // Success
+      await monetizationProvider.fetchSubscriptionStatus(); // Refresh balance
+      if (context.mounted) {
+        // Đợi fetch lại danh sách để có deadline mới
+        await context.read<JobProvider>().fetchEmployerJobs();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gia hạn tin thành công!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        
+        // Cập nhật lại dữ liệu trên trang từ provider đã fetch
+        setState(() {
+          final updatedJob = context.read<JobProvider>().employerJobs.firstWhere((j) => j.jobPostId == widget.jobId);
+          _loadJobDataFromEntity(updatedJob);
+        });
+      }
+    } else if (monetizationProvider.errorMessage != null) {
+       // Handle insufficient credits (400)
+       final error = monetizationProvider.errorMessage!;
+       if (error.contains('400') || error.contains('không đủ') || error.contains('Credit')) {
+          _showInsufficientCreditsDialog(context, product.creditCost);
+       } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red, behavior: SnackBarBehavior.floating),
+          );
+       }
+    }
+  }
+
+  void _showInsufficientCreditsDialog(BuildContext context, [int cost = 30]) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Không đủ Credit'),
-        content: const Text('Số dư Credit của bạn không đủ để thực hiện đẩy tin (Cần 30 Credit). Vui lòng nạp thêm Credit hoặc nâng cấp VIP để tiếp tục.'),
+        content: Text('Số dư Credit của bạn không đủ để thực hiện thao tác này (Cần $cost Credit). Vui lòng nạp thêm Credit hoặc nâng cấp VIP để tiếp tục.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
