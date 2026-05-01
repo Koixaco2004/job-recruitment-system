@@ -29,6 +29,8 @@ class CandidateDetailModel extends CandidateDetailEntity {
     super.educations,
     super.projects,
     super.skills,
+    super.contactUnlocked,
+    super.email,
   });
 
   factory CandidateDetailModel.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,8 @@ class CandidateDetailModel extends CandidateDetailEntity {
       linkedinUrl: json['linkedinUrl'] as String?,
       githubUrl: json['githubUrl'] as String?,
       portfolioUrl: json['portfolioUrl'] as String?,
+      contactUnlocked: json['contactUnlocked'] as bool? ?? false,
+      email: json['email'] as String?,
       certificates: (json['certificates'] as List<dynamic>?)
               ?.map((e) => HeadhuntingCertificateModel.fromJson(e as Map<String, dynamic>))
               .toList() ??

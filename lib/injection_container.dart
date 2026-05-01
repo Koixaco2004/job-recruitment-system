@@ -106,6 +106,8 @@ import 'features/headhunting/domain/usecases/get_saved_candidates_usecase.dart';
 import 'features/headhunting/presentation/providers/headhunting_provider.dart';
 import 'features/headhunting/domain/usecases/get_dashboard_stats_usecase.dart';
 import 'features/headhunting/domain/usecases/get_job_detailed_stats_usecase.dart';
+import 'features/headhunting/domain/usecases/get_headhunting_quota_usecase.dart';
+import 'features/headhunting/domain/usecases/unlock_candidate_contact_usecase.dart';
 import 'features/headhunting/presentation/providers/employer_dashboard_provider.dart';
 import 'features/headhunting/presentation/providers/candidate_search_provider.dart';
 import 'features/notifications/data/datasources/notification_remote_datasource.dart';
@@ -442,6 +444,8 @@ Future<void> init() async {
       saveCandidateUseCase: sl(),
       unsaveCandidateUseCase: sl(),
       getSavedCandidatesUseCase: sl(),
+      getHeadhuntingQuotaUseCase: sl(),
+      unlockCandidateContactUseCase: sl(),
     ),
   );
 
@@ -472,6 +476,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetSavedCandidatesUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetDashboardStatsUseCase(sl()));
   sl.registerLazySingleton(() => GetJobDetailedStatsUseCase(sl()));
+  sl.registerLazySingleton(() => GetHeadhuntingQuotaUseCase(sl()));
+  sl.registerLazySingleton(() => UnlockCandidateContactUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<HeadhuntingRepository>(

@@ -51,10 +51,15 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
             builder: (context, provider, child) {
               final candidate = provider.selectedCandidateDetail;
               if (candidate?.cvUrl == null) return const SizedBox();
+              
+              final isUnlocked = candidate?.contactUnlocked ?? false;
+              
               return IconButton(
-                icon: const Icon(Icons.description_outlined),
-                onPressed: () => _openUrl(candidate!.cvUrl!),
-                tooltip: 'Xem CV',
+                icon: Icon(isUnlocked ? Icons.description_outlined : Icons.lock_outline),
+                onPressed: isUnlocked 
+                    ? () => _openUrl(candidate!.cvUrl!) 
+                    : () => _showUnlockDialog(context),
+                tooltip: isUnlocked ? 'Xem CV' : 'Mở khóa để xem CV',
               );
             },
           ),
@@ -172,9 +177,34 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
                   children: [
                     const Icon(Icons.phone, size: 14, color: Colors.grey),
                     const SizedBox(width: 4),
-                    Text(candidate.phone ?? 'Chưa cập nhật', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                    Text(
+                      candidate.contactUnlocked 
+                          ? (candidate.phone ?? 'Chưa cập nhật')
+                          : (candidate.phone?.replaceAll(RegExp(r'.'), '*') ?? '**********'),
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                    if (!candidate.contactUnlocked)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 4),
+                        child: Icon(Icons.lock, size: 12, color: Colors.orange),
+                      ),
                   ],
                 ),
+                if (candidate.email != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.email_outlined, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        candidate.contactUnlocked 
+                            ? candidate.email!
+                            : candidate.email!.replaceAll(RegExp(r'.'), '*'),
+                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -358,6 +388,7 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
       builder: (context, provider, monetizationProvider, child) {
         final bool isAlreadyApplied = widget.jobId != null && provider.isApplied(candidate.id, widget.jobId!);
         final isVip = monetizationProvider.currentSubscription?.isVip ?? false;
+        final isUnlocked = candidate.contactUnlocked;
         
         return Container(
           padding: const EdgeInsets.all(16),
@@ -372,34 +403,145 @@ class _CandidateDetailPageState extends State<CandidateDetailPage> {
             ],
           ),
           child: SafeArea(
-            child: SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                onPressed: isAlreadyApplied 
-                    ? null 
-                    : () {
-                        if (!isVip) {
-                          _showVipRequiredDialog(context, 'Gửi thư mời');
-                          return;
-                        }
-                        _showInvitationDialog(context, candidate);
-                      },
-                icon: Icon(isAlreadyApplied ? Icons.check_circle_outline : Icons.mail_outline),
-                label: Text(
-                  isAlreadyApplied ? 'Ứng viên đã ứng tuyển' : 'Gửi thư mời',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            child: Row(
+              children: [
+                if (!isUnlocked) ...[
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: provider.isUnlocking 
+                            ? null 
+                            : () => _handleUnlock(context, provider),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange[700],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: provider.isUnlocking
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    'Mở khóa liên hệ',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    provider.quota?.freeContactUnlock == true 
+                                        ? 'Miễn phí cho VIP' 
+                                        : '5 Credits',
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: SizedBox(
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: isAlreadyApplied 
+                          ? null 
+                          : () {
+                              if (!isVip) {
+                                _showVipRequiredDialog(context, 'Gửi thư mời');
+                                return;
+                              }
+                              _showInvitationDialog(context, candidate);
+                            },
+                      icon: Icon(isAlreadyApplied ? Icons.check_circle_outline : Icons.mail_outline),
+                      label: Text(
+                        isAlreadyApplied ? 'Đã ứng tuyển' : 'Gửi thư mời',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isAlreadyApplied ? Colors.grey[400] : Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isAlreadyApplied ? Colors.grey[400] : Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
+              ],
             ),
           ),
         );
       },
+    );
+  }
+
+  void _handleUnlock(BuildContext context, HeadhuntingProvider provider) async {
+    final result = await provider.unlockContact(widget.candidateId);
+    if (result != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Mở khóa hồ sơ thành công!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else if (provider.unlockError != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(provider.unlockError!),
+            backgroundColor: Colors.red,
+            action: provider.unlockError!.contains('credit') 
+                ? SnackBarAction(
+                    label: 'Nạp thêm', 
+                    textColor: Colors.white,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const PricingPage()),
+                      );
+                    },
+                  )
+                : null,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showUnlockDialog(BuildContext context) {
+    final provider = context.read<HeadhuntingProvider>();
+    final isFree = provider.quota?.freeContactUnlock != true;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mở khóa hồ sơ'),
+        content: Text(isFree 
+            ? 'Bạn sẽ tiêu tốn 5 Credits để xem thông tin liên hệ và CV của ứng viên này. Bạn có muốn tiếp tục?'
+            : 'Bạn đang sử dụng quyền lợi VIP để mở khóa hồ sơ này miễn phí. Tiếp tục?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _handleUnlock(context, provider);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[700],
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Xác nhận'),
+          ),
+        ],
+      ),
     );
   }
 

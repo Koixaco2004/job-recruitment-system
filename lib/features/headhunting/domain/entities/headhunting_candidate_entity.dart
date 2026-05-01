@@ -25,6 +25,8 @@ class HeadhuntingCandidateEntity extends Equatable {
   final int certificateBonusCount;
   final int? matchScore;
   final ScoreBreakdownEntity? scoreBreakdown;
+  final bool contactUnlocked;
+  final String? email;
 
   const HeadhuntingCandidateEntity({
     required this.id,
@@ -50,6 +52,8 @@ class HeadhuntingCandidateEntity extends Equatable {
     this.certificateBonusCount = 0,
     this.matchScore,
     this.scoreBreakdown,
+    this.contactUnlocked = false,
+    this.email,
   });
 
   @override
@@ -77,6 +81,8 @@ class HeadhuntingCandidateEntity extends Equatable {
         certificateBonusCount,
         matchScore,
         scoreBreakdown,
+        contactUnlocked,
+        email,
       ];
 }
 

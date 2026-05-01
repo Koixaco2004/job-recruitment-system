@@ -7,6 +7,7 @@ import '../models/employer_invitation_model.dart';
 import '../models/saved_candidate_model.dart';
 import '../models/employer_dashboard_stats_model.dart';
 import '../models/job_detailed_stats_model.dart';
+import '../models/headhunting_quota_model.dart';
 
 abstract class HeadhuntingRemoteDataSource {
   Future<List<HeadhuntingCandidateModel>> getSuggestedCandidates(int jobId);
@@ -47,6 +48,9 @@ abstract class HeadhuntingRemoteDataSource {
   Future<EmployerDashboardStatsModel> getDashboardStats({int expiringSoonDays = 7});
 
   Future<JobDetailedStatsModel> getJobDetailedStats(int jobId);
+
+  Future<HeadhuntingQuotaModel> getHeadhuntingQuota();
+  Future<CandidateDetailModel> unlockCandidateContact(int candidateId);
 }
 
 class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
@@ -232,6 +236,36 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
       final response = await apiClient.dio.get('/api/employers/dashboard/jobs/$jobId/stats');
       return JobDetailedStatsModel.fromJson(response.data);
     } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<HeadhuntingQuotaModel> getHeadhuntingQuota() async {
+    final response = await apiClient.dio.get('/api/employers/headhunting/quota');
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return HeadhuntingQuotaModel.fromJson(response.data as Map<String, dynamic>);
+    } else {
+      throw Exception('Failed to load headhunting quota');
+    }
+  }
+
+  @override
+  Future<CandidateDetailModel> unlockCandidateContact(int candidateId) async {
+    try {
+      final response = await apiClient.dio.post('/api/employers/headhunting/candidates/$candidateId/unlock');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return CandidateDetailModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to unlock candidate contact');
+      }
+    } on DioException catch (e) {
+      if (e.response != null && e.response!.data is Map) {
+        final errorMessage = e.response!.data['message'];
+        if (errorMessage != null) {
+          throw Exception(errorMessage);
+        }
+      }
       rethrow;
     }
   }

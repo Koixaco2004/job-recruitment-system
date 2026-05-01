@@ -28,6 +28,8 @@ class CandidateDetailEntity extends Equatable {
   final List<HeadhuntingEducationEntity> educations;
   final List<HeadhuntingProjectEntity> projects;
   final List<HeadhuntingSkillEntity> skills;
+  final bool contactUnlocked;
+  final String? email;
 
   const CandidateDetailEntity({
     required this.id,
@@ -55,6 +57,8 @@ class CandidateDetailEntity extends Equatable {
     this.educations = const [],
     this.projects = const [],
     this.skills = const [],
+    this.contactUnlocked = false,
+    this.email,
   });
 
   @override
@@ -84,6 +88,8 @@ class CandidateDetailEntity extends Equatable {
         educations,
         projects,
         skills,
+        contactUnlocked,
+        email,
       ];
 }
 

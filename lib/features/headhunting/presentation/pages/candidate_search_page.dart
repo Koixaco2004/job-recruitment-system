@@ -7,6 +7,7 @@ import '../../../profile/domain/entities/skill_entity.dart';
 import '../providers/candidate_search_provider.dart';
 import '../widgets/candidate_card.dart';
 import '../widgets/candidate_filter_bottom_sheet.dart';
+import '../providers/headhunting_provider.dart';
 import 'candidate_detail_page.dart';
 
 class CandidateSearchPage extends StatefulWidget {
@@ -30,6 +31,7 @@ class _CandidateSearchPageState extends State<CandidateSearchPage> {
     // Initial fetch
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CandidateSearchProvider>().searchCandidates(refresh: true);
+      context.read<HeadhuntingProvider>().fetchQuota();
     });
   }
 
@@ -162,6 +164,91 @@ class _CandidateSearchPageState extends State<CandidateSearchPage> {
                 ),
               ],
             ),
+          ),
+
+          // Quota Banner (Moved & Styled as Card)
+          Consumer<HeadhuntingProvider>(
+            builder: (context, provider, _) {
+              if (provider.isLoadingQuota) {
+                return const LinearProgressIndicator(minHeight: 2);
+              }
+              final quota = provider.quota;
+              if (quota == null) return const SizedBox.shrink();
+
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (quota.remainingThisMonth == 0 ? Colors.red : theme.primaryColor).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          quota.remainingThisMonth == -1 ? Icons.workspace_premium : Icons.visibility_outlined,
+                          size: 20,
+                          color: quota.remainingThisMonth == 0 ? Colors.red : theme.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              quota.remainingThisMonth == -1
+                                  ? 'Hạn mức: Không giới hạn (VIP)'
+                                  : 'Lượt xem hồ sơ: ${quota.remainingThisMonth}/${quota.totalMonthlyQuota}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: quota.remainingThisMonth == 0 ? Colors.red : Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              quota.freeContactUnlock 
+                                  ? 'Đặc quyền VIP: Mở khóa miễn phí'
+                                  : 'Mỗi lượt mở khóa tốn 5 Credit',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (quota.remainingThisMonth != -1 && quota.remainingThisMonth < 5)
+                        TextButton(
+                          onPressed: () {
+                            // Link to pricing or more info
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text('Nâng cấp', style: TextStyle(fontSize: 12)),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
 
           // Active filters

@@ -26,6 +26,8 @@ class HeadhuntingCandidateModel extends HeadhuntingCandidateEntity {
     super.certificateBonusCount,
     super.matchScore,
     super.scoreBreakdown,
+    super.contactUnlocked,
+    super.email,
   });
 
   factory HeadhuntingCandidateModel.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,8 @@ class HeadhuntingCandidateModel extends HeadhuntingCandidateEntity {
       linkedinUrl: json['linkedinUrl'] as String?,
       githubUrl: json['githubUrl'] as String?,
       portfolioUrl: json['portfolioUrl'] as String?,
+      contactUnlocked: json['contactUnlocked'] as bool? ?? false,
+      email: json['email'] as String?,
       skills: (json['skills'] as List<dynamic>?)
               ?.map((e) => HeadhuntingSkillModel.fromJson(e as Map<String, dynamic>))
               .toList() ??

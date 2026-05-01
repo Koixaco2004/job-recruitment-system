@@ -5,6 +5,7 @@ import '../../domain/entities/candidate_detail_entity.dart';
 import '../../domain/entities/candidate_invitation_entity.dart';
 import '../../domain/entities/employer_invitation_entity.dart';
 import '../../domain/entities/saved_candidate_entity.dart';
+import '../../domain/entities/headhunting_quota_entity.dart';
 import '../models/employer_dashboard_stats_model.dart';
 import '../models/job_detailed_stats_model.dart';
 import '../../domain/repositories/headhunting_repository.dart';
@@ -175,6 +176,27 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
       return Right(stats);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, HeadhuntingQuotaEntity>> getHeadhuntingQuota() async {
+    try {
+      final quota = await remoteDataSource.getHeadhuntingQuota();
+      return Right(quota);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CandidateDetailEntity>> unlockCandidateContact(int candidateId) async {
+    try {
+      final detail = await remoteDataSource.unlockCandidateContact(candidateId);
+      return Right(detail);
+    } catch (e) {
+      final message = e.toString().replaceAll('Exception: ', '');
+      return Left(ServerFailure(message));
     }
   }
 }

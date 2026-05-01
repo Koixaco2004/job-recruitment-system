@@ -15,6 +15,9 @@ import '../../domain/usecases/save_candidate_usecase.dart';
 import '../../domain/usecases/unsave_candidate_usecase.dart';
 import '../../domain/usecases/get_saved_candidates_usecase.dart';
 import '../../domain/entities/saved_candidate_entity.dart';
+import '../../domain/entities/headhunting_quota_entity.dart';
+import '../../domain/usecases/get_headhunting_quota_usecase.dart';
+import '../../domain/usecases/unlock_candidate_contact_usecase.dart';
 
 class HeadhuntingProvider extends ChangeNotifier {
   final GetSuggestedCandidatesUseCase getSuggestedCandidatesUseCase;
@@ -28,6 +31,8 @@ class HeadhuntingProvider extends ChangeNotifier {
   final SaveCandidateUseCase saveCandidateUseCase;
   final UnsaveCandidateUseCase unsaveCandidateUseCase;
   final GetSavedCandidatesUseCase getSavedCandidatesUseCase;
+  final GetHeadhuntingQuotaUseCase getHeadhuntingQuotaUseCase;
+  final UnlockCandidateContactUseCase unlockCandidateContactUseCase;
 
   HeadhuntingProvider({
     required this.getSuggestedCandidatesUseCase,
@@ -41,6 +46,8 @@ class HeadhuntingProvider extends ChangeNotifier {
     required this.saveCandidateUseCase,
     required this.unsaveCandidateUseCase,
     required this.getSavedCandidatesUseCase,
+    required this.getHeadhuntingQuotaUseCase,
+    required this.unlockCandidateContactUseCase,
   });
 
   bool _isLoading = false;
@@ -77,6 +84,15 @@ class HeadhuntingProvider extends ChangeNotifier {
   bool _isLoadingSavedCandidates = false;
   String? _savedCandidatesError;
 
+  // Quota State
+  HeadhuntingQuotaEntity? _quota;
+  bool _isLoadingQuota = false;
+  String? _quotaError;
+
+  // Unlock State
+  bool _isUnlocking = false;
+  String? _unlockError;
+
   bool get isLoading => _isLoading;
   List<HeadhuntingCandidateEntity> get suggestedCandidates => _suggestedCandidates;
   String? get errorMessage => _errorMessage;
@@ -104,6 +120,12 @@ class HeadhuntingProvider extends ChangeNotifier {
   List<SavedCandidateEntity> get savedCandidates => _savedCandidates;
   bool get isLoadingSavedCandidates => _isLoadingSavedCandidates;
   String? get savedCandidatesError => _savedCandidatesError;
+
+  HeadhuntingQuotaEntity? get quota => _quota;
+  bool get isLoadingQuota => _isLoadingQuota;
+  String? get quotaError => _quotaError;
+  bool get isUnlocking => _isUnlocking;
+  String? get unlockError => _unlockError;
 
   bool isInvited(int candidateId, int jobId) {
     return _invitedCandidateJobs[candidateId]?.contains(jobId) ?? false;
@@ -484,5 +506,93 @@ class HeadhuntingProvider extends ChangeNotifier {
         },
       );
     }
+  }
+
+  // ─── Headhunting Quota Methods ──────────────────────────────────────────
+
+  Future<void> fetchQuota() async {
+    _isLoadingQuota = true;
+    _quotaError = null;
+    notifyListeners();
+
+    final result = await getHeadhuntingQuotaUseCase.execute();
+
+    result.fold(
+      (failure) {
+        _quotaError = failure.message;
+        _isLoadingQuota = false;
+        notifyListeners();
+      },
+      (quota) {
+        _quota = quota;
+        _isLoadingQuota = false;
+        notifyListeners();
+      },
+    );
+  }
+
+  // ─── Unlock Contact Methods ─────────────────────────────────────────────
+
+  Future<CandidateDetailEntity?> unlockContact(int candidateId) async {
+    _isUnlocking = true;
+    _unlockError = null;
+    notifyListeners();
+
+    final result = await unlockCandidateContactUseCase.execute(candidateId);
+
+    return result.fold(
+      (failure) {
+        _unlockError = failure.message;
+        _isUnlocking = false;
+        notifyListeners();
+        return null;
+      },
+      (updatedDetail) {
+        // Update selected detail if matches
+        if (_selectedCandidateDetail?.id == candidateId) {
+          _selectedCandidateDetail = updatedDetail;
+        }
+
+        // Update suggested candidates if exists
+        final suggestedIndex = _suggestedCandidates.indexWhere((c) => c.id == candidateId);
+        if (suggestedIndex != -1) {
+          final old = _suggestedCandidates[suggestedIndex];
+          _suggestedCandidates[suggestedIndex] = HeadhuntingCandidateEntity(
+            id: old.id,
+            userId: old.userId,
+            fullName: old.fullName,
+            gender: old.gender,
+            phone: updatedDetail.phone,
+            avatarUrl: old.avatarUrl,
+            cvUrl: updatedDetail.cvUrl,
+            bio: old.bio,
+            provinceId: old.provinceId,
+            position: old.position,
+            salaryMin: old.salaryMin,
+            salaryMax: old.salaryMax,
+            jobType: old.jobType,
+            yearsWorkingExperience: old.yearsWorkingExperience,
+            isPublic: old.isPublic,
+            linkedinUrl: updatedDetail.linkedinUrl,
+            githubUrl: updatedDetail.githubUrl,
+            portfolioUrl: updatedDetail.portfolioUrl,
+            skills: old.skills,
+            matchedSkillsCount: old.matchedSkillsCount,
+            certificateBonusCount: old.certificateBonusCount,
+            matchScore: old.matchScore,
+            scoreBreakdown: old.scoreBreakdown,
+            contactUnlocked: true,
+            email: updatedDetail.email,
+          );
+        }
+
+        // Refetch quota to update remaining count
+        fetchQuota();
+
+        _isUnlocking = false;
+        notifyListeners();
+        return updatedDetail;
+      },
+    );
   }
 }
