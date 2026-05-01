@@ -49,7 +49,9 @@ import 'features/jobs/domain/usecases/get_job_detail_usecase.dart';
 import 'features/jobs/domain/usecases/get_job_history_usecase.dart';
 import 'features/jobs/domain/usecases/is_job_saved_usecase.dart';
 import 'features/jobs/domain/usecases/bump_job_usecase.dart';
+import 'features/jobs/domain/usecases/get_recommended_jobs_usecase.dart';
 import 'features/jobs/presentation/providers/job_provider.dart';
+import 'features/jobs/presentation/providers/recommended_jobs_provider.dart';
 
 import 'features/jobs/presentation/providers/my_jobs_provider.dart';
 import 'features/profile/data/datasources/profile_remote_datasource.dart';
@@ -200,6 +202,12 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(
+    () => RecommendedJobsProvider(
+      getRecommendedJobsUseCase: sl(),
+    ),
+  );
+
   // Use cases
   sl.registerLazySingleton(() => GetJobsUseCase(sl()));
   sl.registerLazySingleton(() => SubmitApplicationUseCase(sl()));
@@ -209,6 +217,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UnsaveJobByPostIdUseCase(sl()));
   sl.registerLazySingleton(() => job_usecase.GetMyApplicationsUseCase(sl()));
   sl.registerLazySingleton(() => IsJobSavedUseCase(sl()));
+  sl.registerLazySingleton(() => GetRecommendedJobsUseCase(sl()));
 
   sl.registerLazySingleton(() => CreateJobUseCase(sl()));
   sl.registerLazySingleton(() => UpdateJobUseCase(sl()));

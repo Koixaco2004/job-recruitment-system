@@ -26,6 +26,12 @@ abstract class JobRepository {
     String? sortOrder,
   });
 
+  /// Lấy danh sách việc làm gợi ý cho ứng viên
+  Future<Either<Failure, PaginatedResponse<JobPostEntity>>> getRecommendedJobs({
+    int page = 1,
+    int limit = 20,
+  });
+
   /// Lấy job post theo ID
   Future<Either<Failure, JobPostEntity>> getJobById(int jobId);
 

@@ -8,6 +8,7 @@ import '../../../notifications/presentation/widgets/notification_bell.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
+import 'recommended_jobs_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -192,6 +193,73 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ],
+                ),
+              ),
+
+              // Recommended Jobs Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const RecommendedJobsPage()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue[600]!, Colors.blue[400]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Việc làm gợi ý cho bạn',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Phù hợp với hồ sơ của bạn',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Colors.white24,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 14),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
 
