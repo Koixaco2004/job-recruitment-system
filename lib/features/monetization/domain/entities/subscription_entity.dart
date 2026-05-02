@@ -15,6 +15,8 @@ class SubscriptionEntity {
   final DateTime? headhuntingViewsResetAt;
   final int usedFreeProceeds;
   final DateTime? proceedsResetAt;
+  final int extraSlots;
+  final int effectiveMaxJobs;
   final SubscriptionPackageEntity? package;
 
   SubscriptionEntity({
@@ -32,6 +34,8 @@ class SubscriptionEntity {
     this.headhuntingViewsResetAt,
     required this.usedFreeProceeds,
     this.proceedsResetAt,
+    this.extraSlots = 0,
+    this.effectiveMaxJobs = 0,
     this.package,
   });
 

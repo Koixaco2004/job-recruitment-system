@@ -195,9 +195,12 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
         if (s is SkillEntity) return {'skillId': s.id};
         if (s is String) return {'tagText': s};
         if (s is Map<String, dynamic>) {
-          if (s.containsKey('skill_metadata_id')) return {'skillId': s['skill_metadata_id']};
-          if (s.containsKey('skillId')) return {'skillId': s['skillId']};
-          if (s.containsKey('tagText')) return {'tagText': s['tagText']};
+          // Handle both snake_case (from BE response) and camelCase (from our own DTO)
+          final skillId = s['skillId'] ?? s['skill_metadata_id'];
+          final tagText = s['tagText'] ?? s['tag_text'];
+          
+          if (skillId != null) return {'skillId': skillId};
+          if (tagText != null) return {'tagText': tagText};
         }
         return null;
       }).where((s) => s != null).toList(),
@@ -211,6 +214,16 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
     if (_selectedDeadline == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng chọn hạn chót nộp hồ sơ')),
+      );
+      return;
+    }
+
+    if (_selectedJobSkills.length < 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn tối thiểu 5 kỹ năng yêu cầu'),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -237,8 +250,12 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
         }
         
         // 2. Kiểm tra Concurrency Limit (Ưu tiên 2)
-        if (activeCount >= package.maxActiveJobs) {
-          _showQuotaErrorDialog('Bạn đã dùng hết hạn mức tin đăng (${activeCount}/${package.maxActiveJobs}). Vui lòng đóng bớt tin cũ hoặc nâng cấp VIP.');
+        final maxJobs = subscription.effectiveMaxJobs > 0 
+            ? subscription.effectiveMaxJobs 
+            : package.maxActiveJobs;
+
+        if (activeCount >= maxJobs) {
+          _showQuotaErrorDialog('Bạn đã dùng hết hạn mức tin đăng (${activeCount}/${maxJobs}). Vui lòng đóng bớt tin cũ hoặc nâng cấp VIP.');
           return;
         }
       }
@@ -656,6 +673,15 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Kỹ năng yêu cầu', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+        const SizedBox(height: 4),
+        Text(
+          'Vui lòng chọn ít nhất 5 kỹ năng (đã chọn: ${_selectedJobSkills.length})',
+          style: TextStyle(
+            fontSize: 11,
+            color: _selectedJobSkills.length < 5 ? Colors.orange[800] : Colors.green[700],
+            fontStyle: FontStyle.italic,
+          ),
+        ),
         const SizedBox(height: 8),
         _buildSkillChips(isAdmin),
         if (isAdmin)
@@ -747,10 +773,16 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
         runSpacing: 8,
         children: _selectedJobSkills.map((skill) {
           String name = '';
-          if (skill is SkillEntity) name = skill.canonicalName;
-          else if (skill is String) name = skill;
-          else if (skill is Map<String, dynamic>) {
-            name = skill['tagText'] ?? (skill['skillMetadata']?['canonicalName'] ?? 'Skill');
+          if (skill is SkillEntity) {
+            name = skill.canonicalName;
+          } else if (skill is String) {
+            name = skill;
+          } else if (skill is Map<String, dynamic>) {
+            // Handle both camelCase and snake_case from Backend
+            name = (skill['tagText'] ?? skill['tag_text']) ?? 
+                   (skill['skillMetadata']?['canonicalName'] ?? 
+                    skill['skill_metadata']?['canonical_name'] ?? 
+                    'Skill');
           }
           
           return Chip(

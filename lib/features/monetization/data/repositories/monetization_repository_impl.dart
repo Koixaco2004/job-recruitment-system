@@ -44,9 +44,9 @@ class MonetizationRepositoryImpl implements MonetizationRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> createCreditOrder(String packId) async {
+  Future<Either<Failure, Map<String, dynamic>>> createCreditOrder(String packSlug) async {
     try {
-      final result = await remoteDataSource.createCreditOrder(packId);
+      final result = await remoteDataSource.createCreditOrder(packSlug);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

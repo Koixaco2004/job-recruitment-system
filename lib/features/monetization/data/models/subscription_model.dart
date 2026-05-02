@@ -17,11 +17,14 @@ class SubscriptionModel extends SubscriptionEntity {
     super.headhuntingViewsResetAt,
     required super.usedFreeProceeds,
     super.proceedsResetAt,
+    super.extraSlots,
+    super.effectiveMaxJobs,
     super.package,
   });
 
   factory SubscriptionModel.fromJson(Map<String, dynamic> json) {
-    // The API might return the subscription object inside a 'subscription' key or directly
+    // The API returns the subscription object inside a 'subscription' key
+    // and extraSlots/effectiveMaxJobs at the root level.
     final subData = json.containsKey('subscription') ? json['subscription'] : json;
     
     return SubscriptionModel(
@@ -47,6 +50,8 @@ class SubscriptionModel extends SubscriptionEntity {
       proceedsResetAt: subData['proceedsResetAt'] != null 
           ? DateTime.parse(subData['proceedsResetAt']) 
           : null,
+      extraSlots: json['extraSlots'] ?? subData['extraSlots'] ?? 0,
+      effectiveMaxJobs: json['effectiveMaxJobs'] ?? subData['effectiveMaxJobs'] ?? 0,
       package: subData['package'] != null 
           ? SubscriptionPackageModel.fromJson(subData['package']) 
           : null,

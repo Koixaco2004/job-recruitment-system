@@ -151,8 +151,8 @@ class MonetizationProvider extends ChangeNotifier {
     );
   }
 
-  Future<String?> createCreditOrder(String packId) async {
-    final result = await repository.createCreditOrder(packId);
+  Future<String?> createCreditOrder(String packSlug) async {
+    final result = await repository.createCreditOrder(packSlug);
     return result.fold(
       (failure) => null,
       (data) => data['paymentUrl'] as String?,

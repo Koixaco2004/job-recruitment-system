@@ -9,7 +9,7 @@ abstract class MonetizationRepository {
   Future<Either<Failure, List<SubscriptionPackageEntity>>> getSubscriptionPackages();
   Future<Either<Failure, List<TopupPackEntity>>> getTopupPacks();
   Future<Either<Failure, Map<String, dynamic>>> createVipOrder();
-  Future<Either<Failure, Map<String, dynamic>>> createCreditOrder(String packId);
+  Future<Either<Failure, Map<String, dynamic>>> createCreditOrder(String packSlug);
   Future<Either<Failure, Map<String, dynamic>>> verifyVnpayPayment(Map<String, dynamic> queryParams);
   Future<Either<Failure, SubscriptionEntity>> getSubscriptionStatus();
   Future<Either<Failure, int>> getCreditBalance();

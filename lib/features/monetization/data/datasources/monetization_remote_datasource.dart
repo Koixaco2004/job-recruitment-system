@@ -10,7 +10,7 @@ abstract class MonetizationRemoteDataSource {
   Future<List<SubscriptionPackageModel>> getSubscriptionPackages();
   Future<List<TopupPackModel>> getTopupPacks();
   Future<Map<String, dynamic>> createVipOrder();
-  Future<Map<String, dynamic>> createCreditOrder(String packId);
+  Future<Map<String, dynamic>> createCreditOrder(String packSlug);
   Future<Map<String, dynamic>> verifyVnpayPayment(Map<String, dynamic> queryParams);
   Future<SubscriptionModel> getSubscriptionStatus();
   Future<int> getCreditBalance();
@@ -45,10 +45,10 @@ class MonetizationRemoteDataSourceImpl implements MonetizationRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> createCreditOrder(String packId) async {
+  Future<Map<String, dynamic>> createCreditOrder(String packSlug) async {
     final response = await apiClient.dio.post(
       '/api/payments/credit/create-order',
-      data: {'packId': packId},
+      data: {'packSlug': packSlug},
     );
     return response.data;
   }

@@ -691,7 +691,9 @@ class _MyJobsPageState extends State<MyJobsPage>
     final package = subscription.package;
     if (package == null) return const SizedBox.shrink();
     
-    final maxJobs = package.maxActiveJobs;
+    final maxJobs = subscription.effectiveMaxJobs > 0 
+        ? subscription.effectiveMaxJobs 
+        : package.maxActiveJobs;
     final isFull = activeCount >= maxJobs;
     final isVip = package.isVip;
 
@@ -768,6 +770,26 @@ class _MyJobsPageState extends State<MyJobsPage>
               ),
             ],
           ),
+          if (subscription.extraSlots > 0) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Slot mua thêm:',
+                  style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                ),
+                Text(
+                  '+${subscription.extraSlots}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 4),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
@@ -965,8 +987,12 @@ class _MyJobsPageState extends State<MyJobsPage>
     }
 
     // 2. Kiểm tra Concurrency Limit (Thứ tự ưu tiên 2)
-    if (activeCount >= package.maxActiveJobs) {
-      return 'LIMIT:Bạn đã dùng hết hạn mức tin đăng cho gói ${package.displayName} ($activeCount/${package.maxActiveJobs}). Vui lòng đóng bớt tin cũ hoặc nâng cấp lên gói VIP để tiếp tục.';
+    final maxJobs = subscription.effectiveMaxJobs > 0 
+        ? subscription.effectiveMaxJobs 
+        : package.maxActiveJobs;
+        
+    if (activeCount >= maxJobs) {
+      return 'LIMIT:Bạn đã dùng hết hạn mức tin đăng cho gói ${package.displayName} ($activeCount/$maxJobs). Vui lòng đóng bớt tin cũ hoặc nâng cấp lên gói VIP để tiếp tục.';
     }
 
     return null;
