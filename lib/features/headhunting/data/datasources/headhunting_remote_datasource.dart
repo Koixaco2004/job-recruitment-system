@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/headhunting_candidate_model.dart';
@@ -22,8 +23,11 @@ abstract class HeadhuntingRemoteDataSource {
     int? jobTypeId,
     int? salaryMin,
     int? salaryMax,
+    String? requiredDegree,
+    int? jobId,
     String? sortBy,
     String? sortOrder,
+    Map<String, int>? scoring,
     int page = 1,
   });
 
@@ -80,8 +84,11 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
     int? jobTypeId,
     int? salaryMin,
     int? salaryMax,
+    String? requiredDegree,
+    int? jobId,
     String? sortBy,
     String? sortOrder,
+    Map<String, int>? scoring,
     int page = 1,
   }) async {
     final queryParams = {
@@ -93,11 +100,17 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
       if (jobTypeId != null) 'jobTypeId': jobTypeId,
       if (salaryMin != null) 'salaryMin': salaryMin,
       if (salaryMax != null) 'salaryMax': salaryMax,
+      if (requiredDegree != null && requiredDegree.isNotEmpty) 'requiredDegree': requiredDegree,
+      if (jobId != null) 'jobId': jobId,
       if (sortBy != null) 'sortBy': sortBy,
       if (sortOrder != null) 'sortOrder': sortOrder,
       'page': page,
       'limit': 10,
     };
+
+    if (scoring != null && scoring.isNotEmpty) {
+      queryParams.addAll(scoring.map((key, value) => MapEntry(key, value)));
+    }
 
     final response = await apiClient.dio.get(
       '/api/employers/headhunting/candidates',
@@ -112,6 +125,7 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
       'total': response.data['total'],
       'page': response.data['page'],
       'lastPage': response.data['lastPage'],
+      'totalSkillsCount': response.data['totalSkillsCount'] as int? ?? 0,
     };
   }
 

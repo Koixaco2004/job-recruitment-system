@@ -22,8 +22,11 @@ abstract class HeadhuntingRepository {
     int? jobTypeId,
     int? salaryMin,
     int? salaryMax,
+    String? requiredDegree,
+    int? jobId,
     String? sortBy,
     String? sortOrder,
+    Map<String, int>? scoring,
     int page = 1,
   });
 

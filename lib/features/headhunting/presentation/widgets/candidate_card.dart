@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../providers/headhunting_provider.dart';
 import '../../../monetization/presentation/providers/monetization_provider.dart';
 import '../../../monetization/presentation/pages/pricing_page.dart';
+import '../providers/candidate_search_provider.dart';
 
 class CandidateCard extends StatelessWidget {
   final HeadhuntingCandidateEntity candidate;
@@ -182,6 +183,40 @@ class CandidateCard extends StatelessWidget {
                                 ],
                               ),
                             ),
+                            if (jobId != null) ...[
+                              const SizedBox(width: 8),
+                              Consumer<CandidateSearchProvider>(
+                                builder: (context, searchProvider, _) {
+                                  final totalSkills = searchProvider.totalSkillsCount;
+                                  if (totalSkills > 0) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue[50],
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: Colors.blue[200]!),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.check_circle_outline, size: 14, color: Colors.blue),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Khớp ${candidate.matchedSkillsCount}/$totalSkills skill',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blue[700],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox();
+                                },
+                              ),
+                            ],
                           ],
                         ),
                       ],

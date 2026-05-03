@@ -4,6 +4,8 @@ import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../../profile/domain/entities/skill_entity.dart';
 import '../../domain/models/candidate_filter_model.dart';
 import '../providers/candidate_search_provider.dart';
+import '../../../jobs/presentation/providers/job_provider.dart';
+import '../../../jobs/domain/entities/job_post_entity.dart';
 
 class CandidateFilterBottomSheet extends StatefulWidget {
   const CandidateFilterBottomSheet({super.key});
@@ -42,6 +44,9 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
       profileProvider.fetchProvincesIfEmpty();
       profileProvider.fetchJobTypesIfEmpty();
       profileProvider.fetchJobCategoriesMetadata();
+
+      final jobProvider = context.read<JobProvider>();
+      jobProvider.fetchEmployerJobs(status: 'published');
     });
   }
 
@@ -353,6 +358,145 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
                             },
                           ),
                         ),
+                        const SizedBox(height: 24),
+
+                        // --- Required Degree ---
+                        _buildDropdownSection(
+                          title: 'Bằng cấp tối thiểu',
+                          icon: Icons.school_outlined,
+                          child: DropdownButtonFormField<String>(
+                            value: _tempFilter.requiredDegree,
+                            isExpanded: true,
+                            decoration: _dropdownDecoration('Chọn bằng cấp'),
+                            items: const [
+                              DropdownMenuItem(value: null, child: Text('Tất cả bằng cấp')),
+                              DropdownMenuItem(value: 'none', child: Text('Không yêu cầu')),
+                              DropdownMenuItem(value: 'high_school', child: Text('Trung học')),
+                              DropdownMenuItem(value: 'college', child: Text('Cao đẳng')),
+                              DropdownMenuItem(value: 'university', child: Text('Đại học')),
+                              DropdownMenuItem(value: 'post_graduate', child: Text('Sau đại học')),
+                            ],
+                            onChanged: (val) {
+                              setState(() {
+                                _tempFilter = _tempFilter.copyWith(
+                                  requiredDegree: val,
+                                  clearDegree: val == null,
+                                );
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Job Matching (jobId) ---
+                        _buildDropdownSection(
+                          title: 'Đề xuất dựa trên công việc',
+                          icon: Icons.auto_awesome_outlined,
+                          child: Consumer<JobProvider>(
+                            builder: (context, jobProvider, _) {
+                              final jobs = jobProvider.publishedJobs;
+                              return DropdownButtonFormField<int>(
+                                value: jobs.any((j) => j.jobPostId == _tempFilter.jobId) ? _tempFilter.jobId : null,
+                                isExpanded: true,
+                                decoration: _dropdownDecoration('Chọn tin tuyển dụng để đối soát'),
+                                items: [
+                                  const DropdownMenuItem<int>(value: null, child: Text('Không đối soát')),
+                                  ...jobs.map((j) => DropdownMenuItem<int>(
+                                    value: j.jobPostId,
+                                    child: Text(j.title, overflow: TextOverflow.ellipsis),
+                                  )),
+                                ],
+                                onChanged: (val) {
+                                  setState(() {
+                                    _tempFilter = _tempFilter.copyWith(
+                                      jobId: val,
+                                      clearJobId: val == null,
+                                      // If job selected, default sort to relevance
+                                      sortBy: val != null ? 'relevance' : 'createdAt',
+                                    );
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Sorting Section ---
+                        _buildDropdownSection(
+                          title: 'Sắp xếp theo',
+                          icon: Icons.sort_outlined,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: DropdownButtonFormField<String>(
+                                  value: _tempFilter.sortBy,
+                                  decoration: _dropdownDecoration('Sắp xếp'),
+                                  items: [
+                                    const DropdownMenuItem(value: 'createdAt', child: Text('Mới nhất')),
+                                    const DropdownMenuItem(value: 'yearWorkingExperience', child: Text('Kinh nghiệm')),
+                                    if (_tempFilter.jobId != null)
+                                      const DropdownMenuItem(value: 'relevance', child: Text('Độ phù hợp (AI)')),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setState(() {
+                                        _tempFilter = _tempFilter.copyWith(sortBy: val);
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                flex: 2,
+                                child: DropdownButtonFormField<String>(
+                                  value: _tempFilter.sortOrder,
+                                  decoration: _dropdownDecoration('Thứ tự'),
+                                  items: const [
+                                    DropdownMenuItem(value: 'DESC', child: Text('Giảm dần')),
+                                    DropdownMenuItem(value: 'ASC', child: Text('Tăng dần')),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setState(() {
+                                        _tempFilter = _tempFilter.copyWith(sortOrder: val);
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- Custom Scoring Weights ---
+                        if (_tempFilter.sortBy == 'relevance')
+                          _buildDropdownSection(
+                            title: 'Trọng số đánh giá (AI)',
+                            icon: Icons.tune_outlined,
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[300]!),
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildWeightSlider('Kỹ năng', 'skillWeight'),
+                                  _buildWeightSlider('Kinh nghiệm', 'experienceWeight'),
+                                  _buildWeightSlider('Cấp bậc', 'levelWeight'),
+                                  _buildWeightSlider('Bằng cấp', 'degreeWeight'),
+                                  _buildWeightSlider('Lương', 'salaryWeight'),
+                                  _buildWeightSlider('Địa điểm', 'locationWeight'),
+                                  _buildWeightSlider('Hồ sơ', 'profileWeight'),
+                                ],
+                              ),
+                            ),
+                          ),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -469,6 +613,55 @@ class _CandidateFilterBottomSheetState extends State<CandidateFilterBottomSheet>
       ),
       filled: true,
       fillColor: Colors.grey[50],
+    );
+  }
+
+  Widget _buildWeightSlider(String label, String key) {
+    final Map<String, int> scoring = _tempFilter.scoring ?? {
+      'skillWeight': 30,
+      'levelWeight': 20,
+      'experienceWeight': 15,
+      'salaryWeight': 15,
+      'degreeWeight': 10,
+      'locationWeight': 5,
+      'profileWeight': 5,
+    };
+    final int value = scoring[key] ?? 20;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 13, color: Colors.black54)),
+              Text('$value%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 2,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+            ),
+            child: Slider(
+              value: value.toDouble(),
+              min: 0,
+              max: 100,
+              divisions: 20,
+              onChanged: (val) {
+                setState(() {
+                  final newScoring = Map<String, int>.from(scoring);
+                  newScoring[key] = val.round();
+                  _tempFilter = _tempFilter.copyWith(scoring: newScoring);
+                });
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

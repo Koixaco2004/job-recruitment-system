@@ -27,6 +27,9 @@ class CandidateSearchProvider extends ChangeNotifier {
   bool _hasMore = true;
   bool get hasMore => _hasMore;
 
+  int _totalSkillsCount = 0;
+  int get totalSkillsCount => _totalSkillsCount;
+
   List<SkillEntity> _selectedSkillEntities = [];
   List<SkillEntity> get selectedSkillEntities => _selectedSkillEntities;
 
@@ -55,8 +58,11 @@ class CandidateSearchProvider extends ChangeNotifier {
       jobTypeId: _filter.jobTypeId,
       salaryMin: _filter.salaryMin,
       salaryMax: _filter.salaryMax,
+      requiredDegree: _filter.requiredDegree,
+      jobId: _filter.jobId,
       sortBy: _filter.sortBy,
       sortOrder: _filter.sortOrder,
+      scoring: _filter.scoring,
       page: _filter.page,
     );
 
@@ -78,6 +84,7 @@ class CandidateSearchProvider extends ChangeNotifier {
         }
 
         _totalCount = data['total'] ?? 0;
+        _totalSkillsCount = data['totalSkillsCount'] ?? 0;
         final int lastPage = data['lastPage'] ?? 1;
         _hasMore = _filter.page < lastPage;
 

@@ -16,8 +16,11 @@ class SearchCandidatesUseCase {
     int? jobTypeId,
     int? salaryMin,
     int? salaryMax,
+    String? requiredDegree,
+    int? jobId,
     String? sortBy,
     String? sortOrder,
+    Map<String, int>? scoring,
     int page = 1,
   }) {
     return repository.searchCandidates(
@@ -29,8 +32,11 @@ class SearchCandidatesUseCase {
       jobTypeId: jobTypeId,
       salaryMin: salaryMin,
       salaryMax: salaryMax,
+      requiredDegree: requiredDegree,
+      jobId: jobId,
       sortBy: sortBy,
       sortOrder: sortOrder,
+      scoring: scoring,
       page: page,
     );
   }

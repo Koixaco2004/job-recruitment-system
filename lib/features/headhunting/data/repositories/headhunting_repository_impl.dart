@@ -37,8 +37,11 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
     int? jobTypeId,
     int? salaryMin,
     int? salaryMax,
+    String? requiredDegree,
+    int? jobId,
     String? sortBy,
     String? sortOrder,
+    Map<String, int>? scoring,
     int page = 1,
   }) async {
     try {
@@ -51,8 +54,11 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
         jobTypeId: jobTypeId,
         salaryMin: salaryMin,
         salaryMax: salaryMax,
+        requiredDegree: requiredDegree,
+        jobId: jobId,
         sortBy: sortBy,
         sortOrder: sortOrder,
+        scoring: scoring,
         page: page,
       );
       return Right(result);

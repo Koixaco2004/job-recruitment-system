@@ -9,6 +9,8 @@ import '../widgets/candidate_card.dart';
 import '../widgets/candidate_filter_bottom_sheet.dart';
 import '../providers/headhunting_provider.dart';
 import 'candidate_detail_page.dart';
+import '../../../jobs/presentation/providers/job_provider.dart';
+import '../../../jobs/domain/entities/job_post_entity.dart';
 
 class CandidateSearchPage extends StatefulWidget {
   const CandidateSearchPage({super.key});
@@ -428,6 +430,44 @@ class _CandidateSearchPageState extends State<CandidateSearchPage> {
           );
         }));
       }
+    }
+
+    if (filter.requiredDegree != null) {
+      String degreeLabel = filter.requiredDegree!;
+      switch (filter.requiredDegree) {
+        case 'none': degreeLabel = 'Không bằng cấp'; break;
+        case 'high_school': degreeLabel = 'Trung học'; break;
+        case 'college': degreeLabel = 'Cao đẳng'; break;
+        case 'university': degreeLabel = 'Đại học'; break;
+        case 'post_graduate': degreeLabel = 'Sau đại học'; break;
+      }
+      chips.add(_buildFilterChip(degreeLabel, () {
+        provider.updateFilter(filter.copyWith(clearDegree: true));
+      }));
+    }
+
+    if (filter.jobId != null) {
+      final jobProvider = context.read<JobProvider>();
+      final matchedJobs = jobProvider.publishedJobs.where((j) => j.jobPostId == filter.jobId);
+      
+      if (matchedJobs.isNotEmpty) {
+        final job = matchedJobs.first;
+        chips.add(_buildFilterChip('Match: ${job.title}', () {
+          provider.updateFilter(filter.copyWith(clearJobId: true, sortBy: 'createdAt'));
+        }));
+      }
+    }
+
+    if (filter.sortBy != 'createdAt') {
+      String sortLabel = 'Sắp xếp';
+      if (filter.sortBy == 'experience' || filter.sortBy == 'yearWorkingExperience') {
+        sortLabel = 'KN ${filter.sortOrder == 'DESC' ? '↓' : '↑'}';
+      }
+      if (filter.sortBy == 'relevance') sortLabel = 'Phù hợp AI';
+      
+      chips.add(_buildFilterChip(sortLabel, () {
+        provider.updateFilter(filter.copyWith(sortBy: 'createdAt', sortOrder: 'DESC'));
+      }));
     }
 
     return chips;

@@ -10,6 +10,9 @@ class CandidateFilterModel extends Equatable {
   final int? salaryMax;
   final int? minExperience;
   final int? jobTypeId;
+  final String? requiredDegree;
+  final int? jobId;
+  final Map<String, int>? scoring;
   final String sortBy;
   final String sortOrder;
   final int page;
@@ -23,6 +26,9 @@ class CandidateFilterModel extends Equatable {
     this.salaryMax,
     this.minExperience,
     this.jobTypeId,
+    this.requiredDegree,
+    this.jobId,
+    this.scoring,
     this.sortBy = 'createdAt',
     this.sortOrder = 'DESC',
     this.page = 1,
@@ -36,6 +42,9 @@ class CandidateFilterModel extends Equatable {
         salaryMax != null ||
         minExperience != null ||
         jobTypeId != null ||
+        requiredDegree != null ||
+        jobId != null ||
+        scoring != null ||
         sortBy != 'createdAt' ||
         sortOrder != 'DESC';
   }
@@ -49,6 +58,9 @@ class CandidateFilterModel extends Equatable {
     if (salaryMax != null) count++;
     if (minExperience != null) count++;
     if (jobTypeId != null) count++;
+    if (requiredDegree != null) count++;
+    if (jobId != null) count++;
+    if (scoring != null) count++;
     if (sortBy != 'createdAt') count++;
     if (sortOrder != 'DESC') count++;
     return count;
@@ -63,6 +75,9 @@ class CandidateFilterModel extends Equatable {
     int? salaryMax,
     int? minExperience,
     int? jobTypeId,
+    String? requiredDegree,
+    int? jobId,
+    Map<String, int>? scoring,
     String? sortBy,
     String? sortOrder,
     int? page,
@@ -73,6 +88,9 @@ class CandidateFilterModel extends Equatable {
     bool? clearSalaryMin,
     bool? clearSalaryMax,
     bool? clearSkillIds,
+    bool? clearDegree,
+    bool? clearJobId,
+    bool? clearScoring,
   }) {
     return CandidateFilterModel(
       keyword: keyword ?? this.keyword,
@@ -83,6 +101,9 @@ class CandidateFilterModel extends Equatable {
       minExperience: clearExperience == true ? null : (minExperience ?? this.minExperience),
       salaryMin: clearSalaryMin == true ? null : (salaryMin ?? this.salaryMin),
       salaryMax: clearSalaryMax == true ? null : (salaryMax ?? this.salaryMax),
+      requiredDegree: clearDegree == true ? null : (requiredDegree ?? this.requiredDegree),
+      jobId: clearJobId == true ? null : (jobId ?? this.jobId),
+      scoring: clearScoring == true ? null : (scoring ?? this.scoring),
       sortBy: sortBy ?? this.sortBy,
       sortOrder: sortOrder ?? this.sortOrder,
       page: page ?? this.page,
@@ -103,6 +124,9 @@ class CandidateFilterModel extends Equatable {
     salaryMax,
     minExperience,
     jobTypeId,
+    requiredDegree,
+    jobId,
+    scoring,
     sortBy,
     sortOrder,
     page,
