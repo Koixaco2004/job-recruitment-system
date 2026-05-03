@@ -90,32 +90,92 @@ class _SuggestedCandidatesPageState extends State<SuggestedCandidatesPage> {
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: () => provider.fetchSuggestedCandidates(widget.jobId),
-            child: ListView.builder(
-              padding: const EdgeInsets.only(top: 8, bottom: 24),
-              itemCount: provider.suggestedCandidates.length,
-              itemBuilder: (context, index) {
-                final candidate = provider.suggestedCandidates[index];
-                return CandidateCard(
-                  candidate: candidate,
-                  jobId: widget.jobId,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CandidateDetailPage(
-                          candidateId: candidate.id,
-                          jobId: widget.jobId,
+          return Column(
+            children: [
+              if (provider.appliedWeights != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  color: Colors.white,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.info_outline, size: 16, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Tìm thấy ${provider.suggestedTotal} ứng viên phù hợp nhất',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildWeightBadge('Kỹ năng', provider.appliedWeights!.skillWeight),
+                            _buildWeightBadge('KN', provider.appliedWeights!.experienceWeight),
+                            _buildWeightBadge('Lương', provider.appliedWeights!.salaryWeight),
+                            _buildWeightBadge('Cấp bậc', provider.appliedWeights!.levelWeight),
+                            _buildWeightBadge('Địa điểm', provider.appliedWeights!.locationWeight),
+                          ],
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
+                    ],
+                  ),
+                ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => provider.fetchSuggestedCandidates(widget.jobId),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 8, bottom: 24),
+                    itemCount: provider.suggestedCandidates.length,
+                    itemBuilder: (context, index) {
+                      final candidate = provider.suggestedCandidates[index];
+                      return CandidateCard(
+                        candidate: candidate,
+                        jobId: widget.jobId,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CandidateDetailPage(
+                                candidateId: candidate.id,
+                                jobId: widget.jobId,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
           );
         },
+      ),
+    );
+  }
+  
+  Widget _buildWeightBadge(String label, int weight) {
+    if (weight <= 0) return const SizedBox();
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Text(
+        '$label: $weight%',
+        style: TextStyle(fontSize: 10, color: Colors.grey[700]),
       ),
     );
   }

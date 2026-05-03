@@ -31,9 +31,9 @@ class CandidateJobCategoryModel extends CandidateJobCategoryEntity {
 
   factory CandidateJobCategoryModel.fromJson(Map<String, dynamic> json) {
     return CandidateJobCategoryModel(
-      id: json['id'] as int,
-      candidateId: json['candidateId'] as int,
-      jobCategoryId: json['jobCategoryId'] as int,
+      id: json['id'] as int? ?? 0,
+      candidateId: json['candidateId'] as int? ?? 0,
+      jobCategoryId: json['jobCategoryId'] as int? ?? (json['jobCategory'] != null ? (json['jobCategory']['id'] as int? ?? 0) : 0),
       jobCategory: json['jobCategory'] != null
           ? JobCategoryModel.fromJson(json['jobCategory'] as Map<String, dynamic>)
           : null,

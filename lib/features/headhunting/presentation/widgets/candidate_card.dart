@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/headhunting_candidate_entity.dart';
+import '../../../profile/domain/entities/job_category_entity.dart';
+import '../../../profile/domain/entities/job_type_entity.dart';
 import 'package:provider/provider.dart';
 import '../providers/headhunting_provider.dart';
 import '../../../monetization/presentation/providers/monetization_provider.dart';
@@ -170,7 +172,7 @@ class CandidateCard extends StatelessWidget {
                                       size: 14, color: Colors.green),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Độ phù hợp: ${candidate.matchScore ?? 0}%',
+                                    'Độ phù hợp: ${candidate.matchScore?.toStringAsFixed(1) ?? 0}%',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -236,24 +238,44 @@ class CandidateCard extends StatelessWidget {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: candidate.skills.take(5).map((skill) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: theme.primaryColor.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        skill.skillMetadata.canonicalName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.primaryColor.withOpacity(0.7), // Fallback if direct color is needed, but sticking to opacity pattern
-                          fontWeight: FontWeight.w500,
+                  children: [
+                    ...candidate.skills.take(5).map((skill) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                        child: Text(
+                          skill.skillMetadata.canonicalName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.primaryColor.withOpacity(0.7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }),
+                    ...candidate.jobCategories.map((cat) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          cat.jobCategory?.name ?? '',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange.withOpacity(0.8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
                 ),
                 const SizedBox(height: 16),
               ],

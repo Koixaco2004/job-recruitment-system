@@ -8,9 +8,10 @@ import '../models/saved_candidate_model.dart';
 import '../models/employer_dashboard_stats_model.dart';
 import '../models/job_detailed_stats_model.dart';
 import '../models/headhunting_quota_model.dart';
+import '../models/suggested_candidates_response_model.dart';
 
 abstract class HeadhuntingRemoteDataSource {
-  Future<List<HeadhuntingCandidateModel>> getSuggestedCandidates(int jobId);
+  Future<SuggestedCandidatesResponseModel> getSuggestedCandidates(int jobId);
 
   Future<Map<String, dynamic>> searchCandidates({
     String? keyword,
@@ -59,12 +60,11 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
   HeadhuntingRemoteDataSourceImpl({required this.apiClient});
 
   @override
-  Future<List<HeadhuntingCandidateModel>> getSuggestedCandidates(int jobId) async {
+  Future<SuggestedCandidatesResponseModel> getSuggestedCandidates(int jobId) async {
     final response = await apiClient.dio.get('/api/employers/headhunting/jobs/$jobId/suggested-candidates');
     
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => HeadhuntingCandidateModel.fromJson(json as Map<String, dynamic>)).toList();
+      return SuggestedCandidatesResponseModel.fromJson(response.data as Map<String, dynamic>);
     } else {
       throw Exception('Failed to load suggested candidates');
     }

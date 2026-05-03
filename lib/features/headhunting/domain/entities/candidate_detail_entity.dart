@@ -193,12 +193,12 @@ class HeadhuntingJobCategoryEntity extends Equatable {
 class HeadhuntingCategoryEntity extends Equatable {
   final int id;
   final String name;
-  final String slug;
+  final String? slug;
 
   const HeadhuntingCategoryEntity({
     required this.id,
     required this.name,
-    required this.slug,
+    this.slug,
   });
 
   @override

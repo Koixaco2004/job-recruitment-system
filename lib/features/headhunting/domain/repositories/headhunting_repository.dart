@@ -8,9 +8,10 @@ import '../entities/saved_candidate_entity.dart';
 import '../entities/headhunting_quota_entity.dart';
 import '../../data/models/employer_dashboard_stats_model.dart';
 import '../../data/models/job_detailed_stats_model.dart';
+import '../entities/suggested_candidates_response_entity.dart';
 
 abstract class HeadhuntingRepository {
-  Future<Either<Failure, List<HeadhuntingCandidateEntity>>> getSuggestedCandidates(int jobId);
+  Future<Either<Failure, SuggestedCandidatesResponseEntity>> getSuggestedCandidates(int jobId);
   
   Future<Either<Failure, Map<String, dynamic>>> searchCandidates({
     String? keyword,

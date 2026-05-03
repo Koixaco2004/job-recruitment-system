@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../../features/profile/domain/entities/job_type_entity.dart';
+import '../../../../features/profile/domain/entities/job_category_entity.dart';
 
 class HeadhuntingCandidateEntity extends Equatable {
   final int id;
@@ -21,9 +22,10 @@ class HeadhuntingCandidateEntity extends Equatable {
   final String? githubUrl;
   final String? portfolioUrl;
   final List<HeadhuntingSkillEntity> skills;
+  final List<CandidateJobCategoryEntity> jobCategories;
   final int matchedSkillsCount;
   final int certificateBonusCount;
-  final int? matchScore;
+  final double? matchScore;
   final ScoreBreakdownEntity? scoreBreakdown;
   final bool contactUnlocked;
   final String? email;
@@ -48,6 +50,7 @@ class HeadhuntingCandidateEntity extends Equatable {
     this.githubUrl,
     this.portfolioUrl,
     this.skills = const [],
+    this.jobCategories = const [],
     this.matchedSkillsCount = 0,
     this.certificateBonusCount = 0,
     this.matchScore,
@@ -77,6 +80,7 @@ class HeadhuntingCandidateEntity extends Equatable {
         githubUrl,
         portfolioUrl,
         skills,
+        jobCategories,
         matchedSkillsCount,
         certificateBonusCount,
         matchScore,
@@ -113,12 +117,12 @@ class ScoreBreakdownEntity extends Equatable {
 
 class HeadhuntingSkillEntity extends Equatable {
   final int id;
-  final int skillMetadataId;
+  final int? skillMetadataId;
   final SkillMetadataEntity skillMetadata;
 
   const HeadhuntingSkillEntity({
     required this.id,
-    required this.skillMetadataId,
+    this.skillMetadataId,
     required this.skillMetadata,
   });
 
@@ -129,13 +133,13 @@ class HeadhuntingSkillEntity extends Equatable {
 class SkillMetadataEntity extends Equatable {
   final int id;
   final String canonicalName;
-  final String slug;
+  final String? slug;
   final String type; // 'hard' or 'soft'
 
   const SkillMetadataEntity({
     required this.id,
     required this.canonicalName,
-    required this.slug,
+    this.slug,
     required this.type,
   });
 

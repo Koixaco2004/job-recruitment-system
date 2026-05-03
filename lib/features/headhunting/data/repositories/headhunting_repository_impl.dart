@@ -8,6 +8,7 @@ import '../../domain/entities/saved_candidate_entity.dart';
 import '../../domain/entities/headhunting_quota_entity.dart';
 import '../models/employer_dashboard_stats_model.dart';
 import '../models/job_detailed_stats_model.dart';
+import '../../domain/entities/suggested_candidates_response_entity.dart';
 import '../../domain/repositories/headhunting_repository.dart';
 import '../datasources/headhunting_remote_datasource.dart';
 
@@ -17,10 +18,10 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
   HeadhuntingRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<HeadhuntingCandidateEntity>>> getSuggestedCandidates(int jobId) async {
+  Future<Either<Failure, SuggestedCandidatesResponseEntity>> getSuggestedCandidates(int jobId) async {
     try {
-      final candidates = await remoteDataSource.getSuggestedCandidates(jobId);
-      return Right(candidates);
+      final response = await remoteDataSource.getSuggestedCandidates(jobId);
+      return Right(response);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

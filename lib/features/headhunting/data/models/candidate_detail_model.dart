@@ -195,9 +195,9 @@ class HeadhuntingCategoryModel extends HeadhuntingCategoryEntity {
 
   factory HeadhuntingCategoryModel.fromJson(Map<String, dynamic> json) {
     return HeadhuntingCategoryModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      slug: json['slug'] as String,
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+      slug: json['slug'] as String?,
     );
   }
 }

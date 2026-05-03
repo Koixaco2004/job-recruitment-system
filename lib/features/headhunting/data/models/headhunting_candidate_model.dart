@@ -1,3 +1,4 @@
+import '../../../profile/data/models/job_category_model.dart';
 import '../../../profile/data/models/job_type_model.dart';
 import '../../domain/entities/headhunting_candidate_entity.dart';
 
@@ -22,6 +23,7 @@ class HeadhuntingCandidateModel extends HeadhuntingCandidateEntity {
     super.githubUrl,
     super.portfolioUrl,
     super.skills,
+    super.jobCategories,
     super.matchedSkillsCount,
     super.certificateBonusCount,
     super.matchScore,
@@ -45,6 +47,10 @@ class HeadhuntingCandidateModel extends HeadhuntingCandidateEntity {
       salaryMin: json['salaryMin'] != null ? double.tryParse(json['salaryMin'].toString()) : null,
       salaryMax: json['salaryMax'] != null ? double.tryParse(json['salaryMax'].toString()) : null,
       jobType: json['jobType'] != null ? JobTypeModel.fromJson(json['jobType'] as Map<String, dynamic>) : null,
+      jobCategories: (json['jobCategories'] as List<dynamic>?)
+              ?.map((e) => CandidateJobCategoryModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       yearsWorkingExperience: json['yearWorkingExperience'] as int? ?? 0,
       isPublic: json['isPublic'] as bool? ?? false,
       linkedinUrl: json['linkedinUrl'] as String?,
@@ -58,7 +64,7 @@ class HeadhuntingCandidateModel extends HeadhuntingCandidateEntity {
           const [],
       matchedSkillsCount: json['matchedSkillsCount'] as int? ?? 0,
       certificateBonusCount: json['certificateBonusCount'] as int? ?? 0,
-      matchScore: json['matchScore'] as int?,
+      matchScore: json['matchScore'] != null ? double.tryParse(json['matchScore'].toString()) : null,
       scoreBreakdown: json['scoreBreakdown'] != null
           ? ScoreBreakdownModel.fromJson(json['scoreBreakdown'] as Map<String, dynamic>)
           : null,
@@ -89,14 +95,14 @@ class ScoreBreakdownModel extends ScoreBreakdownEntity {
 class HeadhuntingSkillModel extends HeadhuntingSkillEntity {
   const HeadhuntingSkillModel({
     required super.id,
-    required super.skillMetadataId,
+    super.skillMetadataId,
     required super.skillMetadata,
   });
 
   factory HeadhuntingSkillModel.fromJson(Map<String, dynamic> json) {
     return HeadhuntingSkillModel(
       id: json['id'] as int? ?? 0,
-      skillMetadataId: json['skillMetadataId'] as int? ?? 0,
+      skillMetadataId: json['skillMetadataId'] as int? ?? (json['skillMetadata'] != null ? (json['skillMetadata']['id'] as int? ?? 0) : 0),
       skillMetadata: SkillMetadataModel.fromJson(json['skillMetadata'] as Map<String, dynamic>),
     );
   }
@@ -106,7 +112,7 @@ class SkillMetadataModel extends SkillMetadataEntity {
   const SkillMetadataModel({
     required super.id,
     required super.canonicalName,
-    required super.slug,
+    super.slug,
     required super.type,
   });
 
@@ -114,7 +120,7 @@ class SkillMetadataModel extends SkillMetadataEntity {
     return SkillMetadataModel(
       id: json['id'] as int? ?? 0,
       canonicalName: json['canonicalName'] as String? ?? '',
-      slug: json['slug'] as String? ?? '',
+      slug: json['slug'] as String?,
       type: json['type'] as String? ?? '',
     );
   }

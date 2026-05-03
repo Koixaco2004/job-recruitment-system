@@ -2150,6 +2150,86 @@
                         }
                     },
                     {
+                        "name": "jobId",
+                        "required": false,
+                        "in": "query",
+                        "description": "ID của Job để tự động lấy tiêu chí so khớp",
+                        "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "levelId",
+                        "required": false,
+                        "in": "query",
+                        "description": "ID của trình độ (Senior, Junior, ...)",
+                        "schema": {
+                            "maximum": 9007199254740991,
+                            "exclusiveMinimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "requiredDegree",
+                        "required": false,
+                        "in": "query",
+                        "description": "Bằng cấp tối thiểu yêu cầu",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "postgraduate",
+                                "university",
+                                "college",
+                                "intermediate",
+                                "high_school",
+                                "certificate",
+                                "none"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "scoring",
+                        "required": false,
+                        "in": "query",
+                        "x-nestjs_zod-self-required": false,
+                        "description": "Tùy chỉnh trọng số điểm (tổng tự normalize về 100)",
+                        "schema": {
+                            "properties": {
+                                "skillWeight": {
+                                    "type": "number",
+                                    "example": 30
+                                },
+                                "levelWeight": {
+                                    "type": "number",
+                                    "example": 20
+                                },
+                                "experienceWeight": {
+                                    "type": "number",
+                                    "example": 15
+                                },
+                                "salaryWeight": {
+                                    "type": "number",
+                                    "example": 15
+                                },
+                                "degreeWeight": {
+                                    "type": "number",
+                                    "example": 10
+                                },
+                                "locationWeight": {
+                                    "type": "number",
+                                    "example": 5
+                                },
+                                "profileWeight": {
+                                    "type": "number",
+                                    "example": 5
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    {
                         "name": "sortBy",
                         "required": false,
                         "in": "query",
@@ -2159,7 +2239,8 @@
                             "type": "string",
                             "enum": [
                                 "createdAt",
-                                "yearWorkingExperience"
+                                "yearWorkingExperience",
+                                "relevance"
                             ]
                         }
                     },
@@ -6385,6 +6466,25 @@
                     "slug"
                 ]
             },
+            "JobLevelMetadataEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug"
+                ]
+            },
             "CertificateEntity": {
                 "type": "object",
                 "properties": {
@@ -6904,25 +7004,6 @@
                     "createdAt"
                 ]
             },
-            "JobLevelMetadataEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "slug": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "name",
-                    "slug"
-                ]
-            },
             "JobSkillTagEntity": {
                 "type": "object",
                 "properties": {
@@ -7015,7 +7096,14 @@
                         ]
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "pending",
+                            "published",
+                            "rejected",
+                            "closed"
+                        ]
                     },
                     "slots": {
                         "type": "number"
@@ -7349,6 +7437,12 @@
                     "jobType": {
                         "$ref": "#/components/schemas/JobTypeMetadataEntity"
                     },
+                    "levelId": {
+                        "type": "number"
+                    },
+                    "level": {
+                        "$ref": "#/components/schemas/JobLevelMetadataEntity"
+                    },
                     "yearWorkingExperience": {
                         "type": "number"
                     },
@@ -7425,6 +7519,8 @@
                     "salaryMax",
                     "jobTypeId",
                     "jobType",
+                    "levelId",
+                    "level",
                     "yearWorkingExperience",
                     "isPublic",
                     "linkedinUrl",

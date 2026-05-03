@@ -16,6 +16,7 @@ import '../../domain/usecases/unsave_candidate_usecase.dart';
 import '../../domain/usecases/get_saved_candidates_usecase.dart';
 import '../../domain/entities/saved_candidate_entity.dart';
 import '../../domain/entities/headhunting_quota_entity.dart';
+import '../../domain/entities/suggested_candidates_response_entity.dart';
 import '../../domain/usecases/get_headhunting_quota_usecase.dart';
 import '../../domain/usecases/unlock_candidate_contact_usecase.dart';
 
@@ -52,6 +53,8 @@ class HeadhuntingProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   List<HeadhuntingCandidateEntity> _suggestedCandidates = [];
+  AppliedWeightsEntity? _appliedWeights;
+  int _suggestedTotal = 0;
   String? _errorMessage;
 
   // Detailed Candidate State
@@ -95,6 +98,8 @@ class HeadhuntingProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   List<HeadhuntingCandidateEntity> get suggestedCandidates => _suggestedCandidates;
+  AppliedWeightsEntity? get appliedWeights => _appliedWeights;
+  int get suggestedTotal => _suggestedTotal;
   String? get errorMessage => _errorMessage;
 
   CandidateDetailEntity? get selectedCandidateDetail => _selectedCandidateDetail;
@@ -160,8 +165,10 @@ class HeadhuntingProvider extends ChangeNotifier {
         _isLoading = false;
         notifyListeners();
       },
-      (candidates) {
-        _suggestedCandidates = candidates;
+      (response) {
+        _suggestedCandidates = List<HeadhuntingCandidateEntity>.from(response.data);
+        _appliedWeights = response.appliedWeights;
+        _suggestedTotal = response.total;
         _isLoading = false;
         notifyListeners();
       },
@@ -538,61 +545,66 @@ class HeadhuntingProvider extends ChangeNotifier {
     _unlockError = null;
     notifyListeners();
 
-    final result = await unlockCandidateContactUseCase.execute(candidateId);
+    try {
+      final result = await unlockCandidateContactUseCase.execute(candidateId);
 
-    return result.fold(
-      (failure) {
-        _unlockError = failure.message;
-        _isUnlocking = false;
-        notifyListeners();
-        return null;
-      },
-      (updatedDetail) {
-        // Update selected detail if matches
-        if (_selectedCandidateDetail?.id == candidateId) {
-          _selectedCandidateDetail = updatedDetail;
-        }
+      return result.fold(
+        (failure) {
+          _unlockError = failure.message;
+          return null;
+        },
+        (updatedDetail) {
+          // Update selected detail if matches
+          if (_selectedCandidateDetail?.id == candidateId) {
+            _selectedCandidateDetail = updatedDetail;
+          }
 
-        // Update suggested candidates if exists
-        final suggestedIndex = _suggestedCandidates.indexWhere((c) => c.id == candidateId);
-        if (suggestedIndex != -1) {
-          final old = _suggestedCandidates[suggestedIndex];
-          _suggestedCandidates[suggestedIndex] = HeadhuntingCandidateEntity(
-            id: old.id,
-            userId: old.userId,
-            fullName: old.fullName,
-            gender: old.gender,
-            phone: updatedDetail.phone,
-            avatarUrl: old.avatarUrl,
-            cvUrl: updatedDetail.cvUrl,
-            bio: old.bio,
-            provinceId: old.provinceId,
-            position: old.position,
-            salaryMin: old.salaryMin,
-            salaryMax: old.salaryMax,
-            jobType: old.jobType,
-            yearsWorkingExperience: old.yearsWorkingExperience,
-            isPublic: old.isPublic,
-            linkedinUrl: updatedDetail.linkedinUrl,
-            githubUrl: updatedDetail.githubUrl,
-            portfolioUrl: updatedDetail.portfolioUrl,
-            skills: old.skills,
-            matchedSkillsCount: old.matchedSkillsCount,
-            certificateBonusCount: old.certificateBonusCount,
-            matchScore: old.matchScore,
-            scoreBreakdown: old.scoreBreakdown,
-            contactUnlocked: true,
-            email: updatedDetail.email,
-          );
-        }
+          // Update suggested candidates if exists
+          final suggestedIndex = _suggestedCandidates.indexWhere((c) => c.id == candidateId);
+          if (suggestedIndex != -1) {
+            final old = _suggestedCandidates[suggestedIndex];
+            _suggestedCandidates[suggestedIndex] = HeadhuntingCandidateEntity(
+              id: old.id,
+              userId: old.userId,
+              fullName: old.fullName,
+              gender: old.gender,
+              phone: updatedDetail.phone,
+              avatarUrl: old.avatarUrl,
+              cvUrl: updatedDetail.cvUrl,
+              bio: old.bio,
+              provinceId: old.provinceId,
+              position: old.position,
+              salaryMin: old.salaryMin,
+              salaryMax: old.salaryMax,
+              jobType: old.jobType,
+              yearsWorkingExperience: old.yearsWorkingExperience,
+              isPublic: old.isPublic,
+              linkedinUrl: updatedDetail.linkedinUrl,
+              githubUrl: updatedDetail.githubUrl,
+              portfolioUrl: updatedDetail.portfolioUrl,
+              skills: old.skills,
+              jobCategories: old.jobCategories,
+              matchedSkillsCount: old.matchedSkillsCount,
+              certificateBonusCount: old.certificateBonusCount,
+              matchScore: old.matchScore,
+              scoreBreakdown: old.scoreBreakdown,
+              contactUnlocked: true,
+              email: updatedDetail.email,
+            );
+          }
 
-        // Refetch quota to update remaining count
-        fetchQuota();
+          // Refetch quota to update remaining count
+          fetchQuota();
 
-        _isUnlocking = false;
-        notifyListeners();
-        return updatedDetail;
-      },
-    );
+          return updatedDetail;
+        },
+      );
+    } catch (e) {
+      _unlockError = e.toString();
+      return null;
+    } finally {
+      _isUnlocking = false;
+      notifyListeners();
+    }
   }
 }
