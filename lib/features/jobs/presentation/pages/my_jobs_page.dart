@@ -232,7 +232,13 @@ class _MyJobsPageState extends State<MyJobsPage>
               return SavedJobCard(
                 savedJob: savedJob,
                 onUnsave: () async {
-                  final success = await provider.unsaveJob(savedJob.savedJobId);
+                  final profileProvider = context.read<ProfileProvider>();
+                  final candidateId = profileProvider.profile?.candidateId ?? 1;
+
+                  final success = await provider.unsaveJobByJobPostId(
+                    candidateId: candidateId,
+                    jobPostId: savedJob.jobPostId,
+                  );
                   if (mounted && success) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

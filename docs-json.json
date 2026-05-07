@@ -22,6 +22,291 @@
                 ]
             }
         },
+        "/api/metadata/skills/search": {
+            "get": {
+                "operationId": "SkillsMetadataController_search",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "required": true,
+                        "in": "query",
+                        "description": "Từ khóa tìm kiếm",
+                        "schema": {
+                            "example": "java",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số kết quả tối đa",
+                        "schema": {
+                            "example": 10,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách skills gợi ý"
+                    }
+                },
+                "summary": "Tìm kiếm / gợi ý skills (autocomplete)",
+                "tags": [
+                    "Metadata - Skills"
+                ]
+            }
+        },
+        "/api/metadata/provinces": {
+            "get": {
+                "operationId": "ProvincesController_findAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách các tỉnh thành"
+                    }
+                },
+                "summary": "Lấy danh sách tất cả tỉnh / thành phố",
+                "tags": [
+                    "Metadata - Provinces"
+                ]
+            }
+        },
+        "/api/metadata/provinces/search": {
+            "get": {
+                "operationId": "ProvincesController_search",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "required": false,
+                        "in": "query",
+                        "description": "Từ khóa tìm kiếm",
+                        "schema": {
+                            "example": "hà nội",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách tỉnh thành phù hợp"
+                    }
+                },
+                "summary": "Tìm kiếm tỉnh / thành phố",
+                "tags": [
+                    "Metadata - Provinces"
+                ]
+            }
+        },
+        "/api/metadata/provinces/{id}": {
+            "get": {
+                "operationId": "ProvincesController_findOne",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "Mã tỉnh / thành phố (code)",
+                        "schema": {
+                            "example": "01",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thông tin tỉnh / thành phố"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy tỉnh / thành phố"
+                    }
+                },
+                "summary": "Lấy thông tin một tỉnh / thành phố theo ID",
+                "tags": [
+                    "Metadata - Provinces"
+                ]
+            }
+        },
+        "/api/metadata/job-categories": {
+            "get": {
+                "operationId": "JobCategoriesController_findAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/JobCategoryMetadataEntity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Lấy danh sách ngành nghề (Job Categories)",
+                "tags": [
+                    "Metadata"
+                ]
+            }
+        },
+        "/api/metadata/job-types": {
+            "get": {
+                "operationId": "JobTypesController_findAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/JobTypeMetadataEntity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Lấy danh sách hình thức làm việc (Job Types)",
+                "tags": [
+                    "Metadata"
+                ]
+            }
+        },
+        "/api/metadata/job-levels": {
+            "get": {
+                "operationId": "JobLevelsController_findAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách cấp bậc"
+                    }
+                },
+                "summary": "Lấy danh sách các cấp bậc công việc",
+                "tags": [
+                    "Metadata - Danh mục cấp bậc"
+                ]
+            }
+        },
+        "/api/notifications": {
+            "get": {
+                "operationId": "NotificationsController_getMyNotifications",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "tags": [
+                    "Notifications"
+                ]
+            }
+        },
+        "/api/notifications/unread-count": {
+            "get": {
+                "operationId": "NotificationsController_getUnreadCount",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "tags": [
+                    "Notifications"
+                ]
+            }
+        },
+        "/api/notifications/mark-all-read": {
+            "patch": {
+                "operationId": "NotificationsController_markAllAsRead",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "tags": [
+                    "Notifications"
+                ]
+            }
+        },
+        "/api/notifications/{id}/read": {
+            "patch": {
+                "operationId": "NotificationsController_markAsRead",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "tags": [
+                    "Notifications"
+                ]
+            }
+        },
         "/api/auth/register": {
             "post": {
                 "operationId": "AuthController_register",
@@ -2230,6 +2515,76 @@
                         }
                     },
                     {
+                        "name": "skillWeight",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trọng số kỹ năng",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "levelWeight",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trọng số trình độ",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "experienceWeight",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trọng số kinh nghiệm",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "salaryWeight",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trọng số lương",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "degreeWeight",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trọng số bằng cấp",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "locationWeight",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trọng số địa điểm",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "profileWeight",
+                        "required": false,
+                        "in": "query",
+                        "description": "Trọng số độ đầy đủ hồ sơ",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
                         "name": "sortBy",
                         "required": false,
                         "in": "query",
@@ -2592,291 +2947,6 @@
                 "summary": "Thống kê chi tiết cho 1 tin tuyển dụng (Per-Job Drill-down)",
                 "tags": [
                     "Employers - Dashboard"
-                ]
-            }
-        },
-        "/api/notifications": {
-            "get": {
-                "operationId": "NotificationsController_getMyNotifications",
-                "parameters": [
-                    {
-                        "name": "page",
-                        "required": true,
-                        "in": "query",
-                        "schema": {
-                            "type": "number"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "required": true,
-                        "in": "query",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "tags": [
-                    "Notifications"
-                ]
-            }
-        },
-        "/api/notifications/unread-count": {
-            "get": {
-                "operationId": "NotificationsController_getUnreadCount",
-                "parameters": [],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "tags": [
-                    "Notifications"
-                ]
-            }
-        },
-        "/api/notifications/mark-all-read": {
-            "patch": {
-                "operationId": "NotificationsController_markAllAsRead",
-                "parameters": [],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "tags": [
-                    "Notifications"
-                ]
-            }
-        },
-        "/api/notifications/{id}/read": {
-            "patch": {
-                "operationId": "NotificationsController_markAsRead",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "tags": [
-                    "Notifications"
-                ]
-            }
-        },
-        "/api/metadata/skills/search": {
-            "get": {
-                "operationId": "SkillsMetadataController_search",
-                "parameters": [
-                    {
-                        "name": "q",
-                        "required": true,
-                        "in": "query",
-                        "description": "Từ khóa tìm kiếm",
-                        "schema": {
-                            "example": "java",
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "required": false,
-                        "in": "query",
-                        "description": "Số kết quả tối đa",
-                        "schema": {
-                            "example": 10,
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Danh sách skills gợi ý"
-                    }
-                },
-                "summary": "Tìm kiếm / gợi ý skills (autocomplete)",
-                "tags": [
-                    "Metadata - Skills"
-                ]
-            }
-        },
-        "/api/metadata/provinces": {
-            "get": {
-                "operationId": "ProvincesController_findAll",
-                "parameters": [],
-                "responses": {
-                    "200": {
-                        "description": "Danh sách các tỉnh thành"
-                    }
-                },
-                "summary": "Lấy danh sách tất cả tỉnh / thành phố",
-                "tags": [
-                    "Metadata - Provinces"
-                ]
-            }
-        },
-        "/api/metadata/provinces/search": {
-            "get": {
-                "operationId": "ProvincesController_search",
-                "parameters": [
-                    {
-                        "name": "q",
-                        "required": false,
-                        "in": "query",
-                        "description": "Từ khóa tìm kiếm",
-                        "schema": {
-                            "example": "hà nội",
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Danh sách tỉnh thành phù hợp"
-                    }
-                },
-                "summary": "Tìm kiếm tỉnh / thành phố",
-                "tags": [
-                    "Metadata - Provinces"
-                ]
-            }
-        },
-        "/api/metadata/provinces/{id}": {
-            "get": {
-                "operationId": "ProvincesController_findOne",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "required": true,
-                        "in": "path",
-                        "description": "Mã tỉnh / thành phố (code)",
-                        "schema": {
-                            "example": "01",
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Thông tin tỉnh / thành phố"
-                    },
-                    "404": {
-                        "description": "Không tìm thấy tỉnh / thành phố"
-                    }
-                },
-                "summary": "Lấy thông tin một tỉnh / thành phố theo ID",
-                "tags": [
-                    "Metadata - Provinces"
-                ]
-            }
-        },
-        "/api/metadata/job-categories": {
-            "get": {
-                "operationId": "JobCategoriesController_findAll",
-                "parameters": [],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/JobCategoryMetadataEntity"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Lấy danh sách ngành nghề (Job Categories)",
-                "tags": [
-                    "Metadata"
-                ]
-            }
-        },
-        "/api/metadata/job-types": {
-            "get": {
-                "operationId": "JobTypesController_findAll",
-                "parameters": [],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/JobTypeMetadataEntity"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Lấy danh sách hình thức làm việc (Job Types)",
-                "tags": [
-                    "Metadata"
-                ]
-            }
-        },
-        "/api/metadata/job-levels": {
-            "get": {
-                "operationId": "JobLevelsController_findAll",
-                "parameters": [],
-                "responses": {
-                    "200": {
-                        "description": "Danh sách cấp bậc"
-                    }
-                },
-                "summary": "Lấy danh sách các cấp bậc công việc",
-                "tags": [
-                    "Metadata - Danh mục cấp bậc"
                 ]
             }
         },
@@ -5432,6 +5502,51 @@
                 ]
             }
         },
+        "/api/jobs/admin/{id}/close": {
+            "patch": {
+                "operationId": "AdminJobsController_closeJob",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectJobDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Đóng / ẩn tin vi phạm (Admin)",
+                "tags": [
+                    "Jobs - Quản trị Hệ thống"
+                ]
+            }
+        },
         "/api/jobs/candidate/recommended": {
             "get": {
                 "operationId": "CandidateJobsController_getRecommendedJobs",
@@ -5744,6 +5859,1307 @@
                     "Payments"
                 ]
             }
+        },
+        "/api/admin/stats/overview": {
+            "get": {
+                "operationId": "AdminStatsController_getOverview",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy tổng quan toàn bộ thống kê nền tảng",
+                "tags": [
+                    "Admin - Thống kê Nền tảng"
+                ]
+            }
+        },
+        "/api/admin/stats/revenue": {
+            "get": {
+                "operationId": "AdminStatsController_getRevenueChart",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "enum": [
+                                "daily",
+                                "weekly",
+                                "monthly"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "required": false,
+                        "in": "query",
+                        "description": "YYYY-MM-DD",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "required": false,
+                        "in": "query",
+                        "description": "YYYY-MM-DD",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Dữ liệu biểu đồ doanh thu theo thời gian",
+                "tags": [
+                    "Admin - Thống kê Nền tảng"
+                ]
+            }
+        },
+        "/api/admin/stats/user-growth": {
+            "get": {
+                "operationId": "AdminStatsController_getUserGrowthChart",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "enum": [
+                                "daily",
+                                "weekly",
+                                "monthly"
+                            ],
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Biểu đồ tăng trưởng người dùng",
+                "tags": [
+                    "Admin - Thống kê Nền tảng"
+                ]
+            }
+        },
+        "/api/admin/vip/subscriptions": {
+            "get": {
+                "operationId": "AdminVipController_getSubscriptions",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "packageId",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Danh sách company đang dùng VIP",
+                "tags": [
+                    "Admin - Quản lý VIP"
+                ]
+            }
+        },
+        "/api/admin/vip/subscriptions/expiring": {
+            "get": {
+                "operationId": "AdminVipController_getExpiring",
+                "parameters": [
+                    {
+                        "name": "days",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số ngày tới (mặc định: 7)",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CompanySubscriptionEntity"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Danh sách VIP sắp hết hạn",
+                "tags": [
+                    "Admin - Quản lý VIP"
+                ]
+            }
+        },
+        "/api/admin/vip/subscriptions/{id}/cancel": {
+            "post": {
+                "operationId": "AdminVipController_cancelSubscription",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Hủy subscription (Admin)",
+                "tags": [
+                    "Admin - Quản lý VIP"
+                ]
+            }
+        },
+        "/api/admin/vip/packages": {
+            "get": {
+                "operationId": "AdminVipController_getAllPackages",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SubscriptionPackageEntity"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Danh sách tất cả gói VIP",
+                "tags": [
+                    "Admin - Quản lý VIP"
+                ]
+            }
+        },
+        "/api/admin/vip/packages/{id}": {
+            "get": {
+                "operationId": "AdminVipController_getPackageById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriptionPackageEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Chi tiết gói VIP",
+                "tags": [
+                    "Admin - Quản lý VIP"
+                ]
+            },
+            "patch": {
+                "operationId": "AdminVipController_updatePackage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateSubscriptionPackageDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriptionPackageEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật cấu hình gói VIP (giá, thời hạn, quyền lợi)",
+                "tags": [
+                    "Admin - Quản lý VIP"
+                ]
+            }
+        },
+        "/api/admin/credits/packages": {
+            "get": {
+                "operationId": "AdminCreditsController_getAllPackages",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CreditPackageEntity"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Danh sách tất cả gói nạp credit",
+                "tags": [
+                    "Admin - Quản lý Gói Credit"
+                ]
+            },
+            "post": {
+                "operationId": "AdminCreditsController_createPackage",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateCreditPackageDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreditPackageEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Tạo gói nạp credit mới",
+                "tags": [
+                    "Admin - Quản lý Gói Credit"
+                ]
+            }
+        },
+        "/api/admin/credits/packages/{id}": {
+            "get": {
+                "operationId": "AdminCreditsController_getPackageById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreditPackageEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Chi tiết gói nạp credit",
+                "tags": [
+                    "Admin - Quản lý Gói Credit"
+                ]
+            },
+            "patch": {
+                "operationId": "AdminCreditsController_updatePackage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCreditPackageDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreditPackageEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Cập nhật gói nạp credit (giá, bonus, trạng thái)",
+                "tags": [
+                    "Admin - Quản lý Gói Credit"
+                ]
+            }
+        },
+        "/api/admin/companies": {
+            "get": {
+                "operationId": "AdminCompaniesController_getCompanies",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 20,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "idle",
+                                "pending",
+                                "approved",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "hasVip",
+                        "required": false,
+                        "in": "query",
+                        "description": "true = chỉ lấy company có VIP active",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "Tìm theo tên hoặc email",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "default": "createdAt",
+                            "type": "string",
+                            "enum": [
+                                "createdAt",
+                                "name",
+                                "verifiedAt"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "default": "DESC",
+                            "type": "string",
+                            "enum": [
+                                "ASC",
+                                "DESC"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Danh sách tất cả công ty (có filter & search)",
+                "tags": [
+                    "Admin - Quản lý Công ty"
+                ]
+            }
+        },
+        "/api/admin/companies/{id}": {
+            "get": {
+                "operationId": "AdminCompaniesController_getCompanyById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Chi tiết công ty",
+                "tags": [
+                    "Admin - Quản lý Công ty"
+                ]
+            }
+        },
+        "/api/admin/companies/{id}/subscription": {
+            "get": {
+                "operationId": "AdminCompaniesController_getCompanySubscription",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Trạng thái VIP hiện tại của công ty",
+                "tags": [
+                    "Admin - Quản lý Công ty"
+                ]
+            }
+        },
+        "/api/admin/companies/{id}/payment-history": {
+            "get": {
+                "operationId": "AdminCompaniesController_getPaymentHistory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lịch sử thanh toán của công ty",
+                "tags": [
+                    "Admin - Quản lý Công ty"
+                ]
+            }
+        },
+        "/api/admin/companies/{id}/credit-wallet": {
+            "get": {
+                "operationId": "AdminCompaniesController_getCreditWallet",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Ví credit của công ty + 10 giao dịch gần nhất",
+                "tags": [
+                    "Admin - Quản lý Công ty"
+                ]
+            }
+        },
+        "/api/admin/companies/{id}/jobs": {
+            "get": {
+                "operationId": "AdminCompaniesController_getCompanyJobs",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Tin tuyển dụng của công ty (Admin)",
+                "tags": [
+                    "Admin - Quản lý Công ty"
+                ]
+            }
+        },
+        "/api/admin/companies/{id}/credits/adjust": {
+            "post": {
+                "operationId": "AdminCompaniesController_adjustCredit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminAdjustCreditDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreditTransactionEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Admin điều chỉnh credit thủ công (bắt buộc ghi lý do)",
+                "tags": [
+                    "Admin - Quản lý Công ty"
+                ]
+            }
+        },
+        "/api/admin/users": {
+            "get": {
+                "operationId": "AdminUsersController_getUsers",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 20,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "admin",
+                                "employer",
+                                "candidate"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "locked"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "isEmailVerified",
+                        "required": false,
+                        "in": "query",
+                        "description": "true | false",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "Tìm theo email",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "default": "created_at",
+                            "type": "string",
+                            "enum": [
+                                "created_at"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "default": "DESC",
+                            "type": "string",
+                            "enum": [
+                                "ASC",
+                                "DESC"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Danh sách người dùng (filter theo role, status, email)",
+                "tags": [
+                    "Admin - Quản lý Người dùng"
+                ]
+            }
+        },
+        "/api/admin/users/{id}": {
+            "get": {
+                "operationId": "AdminUsersController_getUserById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Chi tiết người dùng",
+                "tags": [
+                    "Admin - Quản lý Người dùng"
+                ]
+            }
+        },
+        "/api/admin/users/{id}/lock": {
+            "patch": {
+                "operationId": "AdminUsersController_lockUser",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Khóa tài khoản người dùng",
+                "tags": [
+                    "Admin - Quản lý Người dùng"
+                ]
+            }
+        },
+        "/api/admin/users/{id}/unlock": {
+            "patch": {
+                "operationId": "AdminUsersController_unlockUser",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Mở khóa tài khoản người dùng",
+                "tags": [
+                    "Admin - Quản lý Người dùng"
+                ]
+            }
+        },
+        "/api/admin/users/{id}/verify-email": {
+            "patch": {
+                "operationId": "AdminUsersController_verifyEmail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Admin xác thực email thủ công cho người dùng",
+                "tags": [
+                    "Admin - Quản lý Người dùng"
+                ]
+            }
+        },
+        "/api/admin/audit-logs": {
+            "get": {
+                "operationId": "AdminAuditLogsController_getLogs",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 9007199254740991,
+                            "default": 1,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 20,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "action",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "UPDATE_CREDIT",
+                                "LOCK_USER",
+                                "UNLOCK_USER",
+                                "VERIFY_EMAIL",
+                                "APPROVE_JOB",
+                                "REJECT_JOB",
+                                "CLOSE_JOB",
+                                "UPDATE_VIP_CONFIG",
+                                "UPDATE_CREDIT_CONFIG",
+                                "CANCEL_VIP"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "adminId",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "resource",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "resourceId",
+                        "required": false,
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Lấy danh sách Audit Logs",
+                "tags": [
+                    "Admin - Lịch sử Thao tác (Audit Logs)"
+                ]
+            }
         }
     },
     "info": {
@@ -5763,6 +7179,49 @@
             }
         },
         "schemas": {
+            "JobCategoryMetadataEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug",
+                    "createdAt"
+                ]
+            },
+            "JobTypeMetadataEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug"
+                ]
+            },
             "RegisterDto": {
                 "type": "object",
                 "properties": {
@@ -6447,25 +7906,6 @@
                     "categoryId"
                 ]
             },
-            "JobTypeMetadataEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "slug": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "name",
-                    "slug"
-                ]
-            },
             "JobLevelMetadataEntity": {
                 "type": "object",
                 "properties": {
@@ -6510,30 +7950,6 @@
                     "name",
                     "cerImgUrl",
                     "candidate"
-                ]
-            },
-            "JobCategoryMetadataEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "slug": {
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "name",
-                    "slug",
-                    "createdAt"
                 ]
             },
             "CandidateJobCategoryEntity": {
@@ -7902,6 +9318,11 @@
                         "type": "number"
                     },
                     "status": {
+                        "enum": [
+                            "active",
+                            "expired",
+                            "cancelled"
+                        ],
                         "type": "string"
                     },
                     "startDate": {
@@ -8692,6 +10113,275 @@
                 },
                 "required": [
                     "packSlug"
+                ]
+            },
+            "UpdateSubscriptionPackageDto": {
+                "type": "object",
+                "properties": {
+                    "displayName": {
+                        "type": "string",
+                        "description": "Tên hiển thị của gói"
+                    },
+                    "price": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Giá (VNĐ)"
+                    },
+                    "durationDays": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Số ngày hiệu lực (30 | 90 | ...)"
+                    },
+                    "maxActiveJobs": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "-1 = unlimited"
+                    },
+                    "jobDurationDays": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                    },
+                    "maxProfileViewsPerJob": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "-1 = unlimited"
+                    },
+                    "dailyApplicationProcessLimit": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "-1 = unlimited"
+                    },
+                    "bumpPostQuota": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "maxScreeningQuestions": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "monthlyHeadhuntProfileViews": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "-1 = unlimited"
+                    },
+                    "monthlyFreeProceeds": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                    },
+                    "canHeadhuntSaveAndInvite": {
+                        "type": "boolean"
+                    },
+                    "canHideSalary": {
+                        "type": "boolean"
+                    },
+                    "canRequireCv": {
+                        "type": "boolean"
+                    },
+                    "hasVipBadge": {
+                        "type": "boolean"
+                    },
+                    "freeContactUnlock": {
+                        "type": "boolean"
+                    },
+                    "freeAiScoring": {
+                        "type": "boolean"
+                    },
+                    "canUsePremiumFilters": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "CreateCreditPackageDto": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Slug định danh duy nhất (ví dụ: pack_500)"
+                    },
+                    "displayName": {
+                        "type": "string",
+                        "description": "Tên hiển thị gói nạp"
+                    },
+                    "creditBase": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 9007199254740991,
+                        "description": "Số credit cơ bản (ví dụ: 500)"
+                    },
+                    "bonus": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Credit bonus thêm khi mua gói này"
+                    },
+                    "priceVnd": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Giá VNĐ"
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "description": "false = ẩn khỏi trang mua của nhà tuyển dụng"
+                    }
+                }
+            },
+            "UpdateCreditPackageDto": {
+                "type": "object",
+                "properties": {
+                    "displayName": {
+                        "type": "string",
+                        "description": "Tên hiển thị gói nạp"
+                    },
+                    "creditBase": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 9007199254740991,
+                        "description": "Số credit cơ bản (ví dụ: 500)"
+                    },
+                    "bonus": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Credit bonus thêm khi mua gói này"
+                    },
+                    "priceVnd": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Giá VNĐ"
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "description": "false = ẩn khỏi trang mua của nhà tuyển dụng"
+                    }
+                }
+            },
+            "AdminAdjustCreditDto": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "type": "number",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Số credit điều chỉnh. Số dương = thêm, số âm = trừ",
+                        "example": 100
+                    },
+                    "reason": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Lý do điều chỉnh (bắt buộc, hiển thị trong lịch sử giao dịch)",
+                        "example": "Hoàn tiền do lỗi hệ thống"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "reason"
+                ]
+            },
+            "CreditWalletEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "companyId": {
+                        "type": "number"
+                    },
+                    "balance": {
+                        "type": "number"
+                    },
+                    "totalEarned": {
+                        "type": "number"
+                    },
+                    "totalSpent": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "company": {
+                        "$ref": "#/components/schemas/CompanyEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "companyId",
+                    "balance",
+                    "totalEarned",
+                    "totalSpent",
+                    "createdAt",
+                    "updatedAt",
+                    "company"
+                ]
+            },
+            "CreditTransactionEntity": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "walletId": {
+                        "type": "number"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "number"
+                    },
+                    "balanceAfter": {
+                        "type": "number"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "referenceType": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "referenceId": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "createdBy": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "wallet": {
+                        "$ref": "#/components/schemas/CreditWalletEntity"
+                    }
+                },
+                "required": [
+                    "id",
+                    "walletId",
+                    "type",
+                    "amount",
+                    "balanceAfter",
+                    "description",
+                    "referenceType",
+                    "referenceId",
+                    "createdBy",
+                    "createdAt",
+                    "wallet"
                 ]
             }
         }

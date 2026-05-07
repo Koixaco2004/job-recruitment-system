@@ -136,7 +136,26 @@ class SavedJobCard extends StatelessWidget {
                     ),
                   ),
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      if (savedJob.job != null && savedJob.job!.status != 'published')
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.red[50],
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.red[200]!),
+                          ),
+                          child: Text(
+                            savedJob.job!.status == 'closed' ? 'Đã đóng' : 'Hết hạn/Gỡ',
+                            style: TextStyle(
+                              color: Colors.red[700],
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       IconButton(
                         icon: const Icon(Icons.favorite, color: Colors.red),
                         onPressed: onUnsave,
