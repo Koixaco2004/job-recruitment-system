@@ -14,9 +14,9 @@ class JobDetailedStatsModel extends Equatable {
 
   factory JobDetailedStatsModel.fromJson(Map<String, dynamic> json) {
     return JobDetailedStatsModel(
-      job: JobInfo.fromJson(json['job']),
-      applications: ApplicationStatsSummary.fromJson(json['applications']),
-      invitations: InvitationStatsSummary.fromJson(json['invitations']),
+      job: JobInfo.fromJson(json['job'] ?? {}),
+      applications: ApplicationStatsSummary.fromJson(json['applications'] ?? {}),
+      invitations: InvitationStatsSummary.fromJson(json['invitations'] ?? {}),
     );
   }
 
@@ -41,11 +41,11 @@ class JobInfo extends Equatable {
 
   factory JobInfo.fromJson(Map<String, dynamic> json) {
     return JobInfo(
-      id: json['id'],
-      title: json['title'],
-      status: json['status'],
-      deadline: json['deadline'],
-      slots: json['slots'],
+      id: json['id'] as int? ?? 0,
+      title: json['title'] as String? ?? '',
+      status: json['status'] as String? ?? '',
+      deadline: json['deadline'] as String? ?? '',
+      slots: json['slots'] as int? ?? 0,
     );
   }
 
@@ -68,10 +68,10 @@ class InvitationStatsSummary extends Equatable {
 
   factory InvitationStatsSummary.fromJson(Map<String, dynamic> json) {
     return InvitationStatsSummary(
-      sent: json['sent'],
-      accepted: json['accepted'],
-      declined: json['declined'],
-      pending: json['pending'],
+      sent: json['sent'] as int? ?? 0,
+      accepted: json['accepted'] as int? ?? 0,
+      declined: json['declined'] as int? ?? 0,
+      pending: json['pending'] as int? ?? 0,
     );
   }
 

@@ -62,27 +62,6 @@ class JobRepositoryImpl implements JobRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedResponse<JobPostEntity>>> getRecommendedJobs({
-    int page = 1,
-    int limit = 20,
-  }) async {
-    try {
-      final result = await remoteDataSource.getRecommendedJobs(
-        page: page,
-        limit: limit,
-      );
-      return Right(PaginatedResponse<JobPostEntity>(
-        data: result.data,
-        total: result.total,
-        page: result.page,
-        lastPage: result.lastPage,
-      ));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
   Future<Either<Failure, JobPostEntity>> getJobById(int jobId) async {
     try {
       final remoteJob = await remoteDataSource.getJobById(jobId);

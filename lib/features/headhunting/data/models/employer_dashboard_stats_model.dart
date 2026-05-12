@@ -15,10 +15,10 @@ class EmployerDashboardStatsModel extends Equatable {
 
   factory EmployerDashboardStatsModel.fromJson(Map<String, dynamic> json) {
     return EmployerDashboardStatsModel(
-      jobs: JobStatsSummary.fromJson(json['jobs']),
-      applications: ApplicationStatsSummary.fromJson(json['applications']),
-      headhunting: HeadhuntingStatsSummary.fromJson(json['headhunting']),
-      topJobs: (json['topJobs'] as List).map((i) => TopJobModel.fromJson(i)).toList(),
+      jobs: JobStatsSummary.fromJson(json['jobs'] ?? {}),
+      applications: ApplicationStatsSummary.fromJson(json['applications'] ?? {}),
+      headhunting: HeadhuntingStatsSummary.fromJson(json['headhunting'] ?? {}),
+      topJobs: (json['topJobs'] as List?)?.map((i) => TopJobModel.fromJson(i)).toList() ?? [],
     );
   }
 
@@ -39,9 +39,9 @@ class JobStatsSummary extends Equatable {
 
   factory JobStatsSummary.fromJson(Map<String, dynamic> json) {
     return JobStatsSummary(
-      total: json['total'],
-      byStatus: Map<String, int>.from(json['byStatus']),
-      expiringSoon: ExpiringSoonSummary.fromJson(json['expiringSoon']),
+      total: json['total'] as int? ?? 0,
+      byStatus: json['byStatus'] != null ? Map<String, int>.from(json['byStatus']) : {},
+      expiringSoon: ExpiringSoonSummary.fromJson(json['expiringSoon'] ?? {}),
     );
   }
 
@@ -60,8 +60,8 @@ class ExpiringSoonSummary extends Equatable {
 
   factory ExpiringSoonSummary.fromJson(Map<String, dynamic> json) {
     return ExpiringSoonSummary(
-      count: json['count'],
-      days: json['days'],
+      count: json['count'] as int? ?? 0,
+      days: json['days'] as int? ?? 0,
     );
   }
 
@@ -84,10 +84,10 @@ class ApplicationStatsSummary extends Equatable {
 
   factory ApplicationStatsSummary.fromJson(Map<String, dynamic> json) {
     return ApplicationStatsSummary(
-      total: json['total'],
-      byStatus: Map<String, int>.from(json['byStatus']),
-      conversionRate: ConversionRateSummary.fromJson(json['conversionRate']),
-      trend: TrendSummary.fromJson(json['trend']),
+      total: json['total'] as int? ?? 0,
+      byStatus: json['byStatus'] != null ? Map<String, int>.from(json['byStatus']) : {},
+      conversionRate: ConversionRateSummary.fromJson(json['conversionRate'] ?? {}),
+      trend: TrendSummary.fromJson(json['trend'] ?? {}),
     );
   }
 
@@ -125,7 +125,7 @@ class TrendSummary extends Equatable {
 
   factory TrendSummary.fromJson(Map<String, dynamic> json) {
     return TrendSummary(
-      last7Days: (json['last7Days'] as List).map((i) => TrendDataPoint.fromJson(i)).toList(),
+      last7Days: (json['last7Days'] as List?)?.map((i) => TrendDataPoint.fromJson(i)).toList() ?? [],
     );
   }
 
@@ -141,8 +141,8 @@ class TrendDataPoint extends Equatable {
 
   factory TrendDataPoint.fromJson(Map<String, dynamic> json) {
     return TrendDataPoint(
-      date: json['date'],
-      count: json['count'],
+      date: json['date'] as String? ?? '',
+      count: json['count'] as int? ?? 0,
     );
   }
 
@@ -167,11 +167,11 @@ class HeadhuntingStatsSummary extends Equatable {
 
   factory HeadhuntingStatsSummary.fromJson(Map<String, dynamic> json) {
     return HeadhuntingStatsSummary(
-      invitationsSent: json['invitationsSent'],
-      accepted: json['accepted'],
-      declined: json['declined'],
-      pending: json['pending'],
-      savedCandidates: json['savedCandidates'],
+      invitationsSent: json['invitationsSent'] as int? ?? 0,
+      accepted: json['accepted'] as int? ?? 0,
+      declined: json['declined'] as int? ?? 0,
+      pending: json['pending'] as int? ?? 0,
+      savedCandidates: json['savedCandidates'] as int? ?? 0,
     );
   }
 
@@ -194,10 +194,10 @@ class TopJobModel extends Equatable {
 
   factory TopJobModel.fromJson(Map<String, dynamic> json) {
     return TopJobModel(
-      jobId: json['jobId'],
-      title: json['title'],
-      status: json['status'],
-      applicationCount: json['applicationCount'],
+      jobId: json['jobId'] as int? ?? 0,
+      title: json['title'] as String? ?? '',
+      status: json['status'] as String? ?? '',
+      applicationCount: json['applicationCount'] as int? ?? 0,
     );
   }
 

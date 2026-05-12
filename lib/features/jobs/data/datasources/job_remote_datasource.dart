@@ -27,12 +27,6 @@ abstract class JobRemoteDataSource {
     String? sortOrder,
   });
 
-  /// Lấy danh sách việc làm gợi ý cho ứng viên
-  Future<PaginatedResponse<JobPostModel>> getRecommendedJobs({
-    int page = 1,
-    int limit = 20,
-  });
-
   /// Lấy job theo ID
   Future<JobPostModel> getJobById(int jobId);
 
@@ -142,34 +136,6 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
       throw const ServerException('Lấy danh sách công việc thất bại');
     } on DioException catch (e) {
       if (e.error is EmailVerificationException) rethrow;
-      throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
-
-  @override
-  Future<PaginatedResponse<JobPostModel>> getRecommendedJobs({
-    int page = 1,
-    int limit = 20,
-  }) async {
-    try {
-      final response = await apiClient.dio.get(
-        '/api/jobs/candidate/recommended',
-        queryParameters: {
-          'page': page,
-          'limit': limit,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        return PaginatedResponse.fromJson(
-          response.data,
-          (json) => JobPostModel.fromJson(json as Map<String, dynamic>),
-        );
-      }
-      throw const ServerException('Lấy danh sách việc làm gợi ý thất bại');
-    } on DioException catch (e) {
       throw ServerException(e.response?.data?['message']?.toString() ?? e.toString());
     } catch (e) {
       throw ServerException(e.toString());

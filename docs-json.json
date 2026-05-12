@@ -2886,6 +2886,67 @@
                             "default": 7,
                             "type": "number"
                         }
+                    },
+                    {
+                        "name": "year",
+                        "required": false,
+                        "in": "query",
+                        "description": "Năm (2020-2030)",
+                        "schema": {
+                            "minimum": 2020,
+                            "maximum": 2030,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "granularity",
+                        "required": false,
+                        "in": "query",
+                        "description": "Độ chi tiết",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "day",
+                                "month",
+                                "quarter"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "required": false,
+                        "in": "query",
+                        "description": "Ngày cụ thể (YYYY-MM-DD) cho DAY",
+                        "schema": {
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "required": false,
+                        "in": "query",
+                        "description": "Tháng (1-12) cho MONTH",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 12,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "quarter",
+                        "required": false,
+                        "in": "query",
+                        "description": "Quý (Q1-Q4) cho QUARTER",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Q1",
+                                "Q2",
+                                "Q3",
+                                "Q4"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -2912,7 +2973,7 @@
         },
         "/api/employers/dashboard/jobs/{jobId}/stats": {
             "get": {
-                "description": "Trả về application pipeline, conversion rate, trend 7 ngày và invitation stats cho 1 job cụ thể.",
+                "description": "Trả về application pipeline, conversion rate, trend và invitation stats cho 1 job cụ thể. Mặc định hiển thị stats tháng hiện tại.",
                 "operationId": "EmployerDashboardController_getJobStats",
                 "parameters": [
                     {
@@ -2922,6 +2983,79 @@
                         "description": "ID tin tuyển dụng",
                         "schema": {
                             "type": "number"
+                        }
+                    },
+                    {
+                        "name": "expiringSoonDays",
+                        "required": false,
+                        "in": "query",
+                        "description": "Số ngày tới để xác định job \"sắp hết hạn\" (1–30, mặc định 7)",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 30,
+                            "default": 7,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "required": false,
+                        "in": "query",
+                        "description": "Năm (2020-2030)",
+                        "schema": {
+                            "minimum": 2020,
+                            "maximum": 2030,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "granularity",
+                        "required": false,
+                        "in": "query",
+                        "description": "Độ chi tiết",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "day",
+                                "month",
+                                "quarter"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "required": false,
+                        "in": "query",
+                        "description": "Ngày cụ thể (YYYY-MM-DD) cho DAY",
+                        "schema": {
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "required": false,
+                        "in": "query",
+                        "description": "Tháng (1-12) cho MONTH",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 12,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "quarter",
+                        "required": false,
+                        "in": "query",
+                        "description": "Quý (Q1-Q4) cho QUARTER",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Q1",
+                                "Q2",
+                                "Q3",
+                                "Q4"
+                            ]
                         }
                     }
                 ],
@@ -5587,185 +5721,6 @@
                 ]
             }
         },
-        "/api/jobs/{jobId}/screening": {
-            "get": {
-                "operationId": "ScreeningController_getQuestionsEmployer",
-                "parameters": [
-                    {
-                        "name": "jobId",
-                        "required": true,
-                        "in": "path",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/ScreeningQuestionEntity"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "[Employer] Xem câu hỏi sàng lọc của tin",
-                "tags": [
-                    "Screening Questions"
-                ]
-            },
-            "post": {
-                "description": "Gửi toàn bộ danh sách câu hỏi. Phương thức này sẽ **xoá hết** câu hỏi cũ và lưu lại danh sách mới. Chỉ áp dụng cho gói VIP (`maxScreeningQuestions > 0`).",
-                "operationId": "ScreeningController_upsertQuestions",
-                "parameters": [
-                    {
-                        "name": "jobId",
-                        "required": true,
-                        "in": "path",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpsertScreeningQuestionsDto"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/ScreeningQuestionEntity"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "[Employer] Tạo / cập nhật câu hỏi sàng lọc (upsert toàn bộ)",
-                "tags": [
-                    "Screening Questions"
-                ]
-            }
-        },
-        "/api/jobs/{jobId}/screening/public": {
-            "get": {
-                "operationId": "ScreeningController_getQuestionsPublic",
-                "parameters": [
-                    {
-                        "name": "jobId",
-                        "required": true,
-                        "in": "path",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/ScreeningQuestionEntity"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "[Candidate] Xem câu hỏi sàng lọc trước khi ứng tuyển",
-                "tags": [
-                    "Screening Questions"
-                ]
-            }
-        },
-        "/api/jobs/applications/{applicationId}/screening/answers": {
-            "post": {
-                "description": "Candidate gửi câu trả lời sau khi apply. Kết quả `screeningPassed` sẽ được cập nhật vào đơn ứng tuyển ngay lập tức nếu có `preferredAnswer`.",
-                "operationId": "ScreeningController_submitAnswers",
-                "parameters": [
-                    {
-                        "name": "applicationId",
-                        "required": true,
-                        "in": "path",
-                        "schema": {
-                            "type": "number"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SubmitScreeningAnswersDto"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": ""
-                    },
-                    "401": {
-                        "description": "Chưa đăng nhập"
-                    },
-                    "403": {
-                        "description": "Không có quyền truy cập (Sai Role)"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer": []
-                    }
-                ],
-                "summary": "[Candidate] Nộp câu trả lời sàng lọc cho đơn ứng tuyển",
-                "tags": [
-                    "Screening Questions"
-                ]
-            }
-        },
         "/api/payments/vip/create-order": {
             "post": {
                 "operationId": "PaymentsController_createVipOrder",
@@ -5862,8 +5817,71 @@
         },
         "/api/admin/stats/overview": {
             "get": {
+                "description": "Mặc định hiển thị stats của tháng hiện tại. Có thể filter theo năm/tháng/quý/ngày cụ thể.",
                 "operationId": "AdminStatsController_getOverview",
-                "parameters": [],
+                "parameters": [
+                    {
+                        "name": "year",
+                        "required": false,
+                        "in": "query",
+                        "description": "Năm (2020-2030)",
+                        "schema": {
+                            "minimum": 2020,
+                            "maximum": 2030,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "granularity",
+                        "required": false,
+                        "in": "query",
+                        "description": "Độ chi tiết: day, month, quarter",
+                        "schema": {
+                            "enum": [
+                                "day",
+                                "month",
+                                "quarter"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "required": false,
+                        "in": "query",
+                        "description": "Ngày cụ thể YYYY-MM-DD (dùng khi granularity=day)",
+                        "schema": {
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "required": false,
+                        "in": "query",
+                        "description": "Tháng 1-12 (dùng khi granularity=month)",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 12,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "quarter",
+                        "required": false,
+                        "in": "query",
+                        "description": "Quý Q1-Q4 (dùng khi granularity=quarter)",
+                        "schema": {
+                            "enum": [
+                                "Q1",
+                                "Q2",
+                                "Q3",
+                                "Q4"
+                            ],
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": ""
@@ -5880,7 +5898,7 @@
                         "bearer": []
                     }
                 ],
-                "summary": "Lấy tổng quan toàn bộ thống kê nền tảng",
+                "summary": "Lấy tổng quan toàn bộ thống kê nền tảng với time filter",
                 "tags": [
                     "Admin - Thống kê Nền tảng"
                 ]
@@ -5888,36 +5906,67 @@
         },
         "/api/admin/stats/revenue": {
             "get": {
+                "description": "Mặc định hiển thị doanh thu tháng hiện tại. Có thể filter theo năm/tháng/quý/ngày.",
                 "operationId": "AdminStatsController_getRevenueChart",
                 "parameters": [
                     {
-                        "name": "period",
+                        "name": "year",
                         "required": false,
                         "in": "query",
+                        "description": "Năm (2020-2030)",
+                        "schema": {
+                            "minimum": 2020,
+                            "maximum": 2030,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "granularity",
+                        "required": false,
+                        "in": "query",
+                        "description": "Độ chi tiết",
                         "schema": {
                             "enum": [
-                                "daily",
-                                "weekly",
-                                "monthly"
+                                "day",
+                                "month",
+                                "quarter"
                             ],
                             "type": "string"
                         }
                     },
                     {
-                        "name": "from",
+                        "name": "date",
                         "required": false,
                         "in": "query",
-                        "description": "YYYY-MM-DD",
+                        "description": "Ngày cụ thể (YYYY-MM-DD) cho DAY",
                         "schema": {
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
                             "type": "string"
                         }
                     },
                     {
-                        "name": "to",
+                        "name": "month",
                         "required": false,
                         "in": "query",
-                        "description": "YYYY-MM-DD",
+                        "description": "Tháng (1-12) cho MONTH",
                         "schema": {
+                            "minimum": 1,
+                            "maximum": 12,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "quarter",
+                        "required": false,
+                        "in": "query",
+                        "description": "Quý (Q1-Q4) cho QUARTER",
+                        "schema": {
+                            "enum": [
+                                "Q1",
+                                "Q2",
+                                "Q3",
+                                "Q4"
+                            ],
                             "type": "string"
                         }
                     }
@@ -5946,17 +5995,66 @@
         },
         "/api/admin/stats/user-growth": {
             "get": {
+                "description": "Mặc định hiển thị user growth tháng hiện tại. Có thể filter theo năm/tháng/quý/ngày.",
                 "operationId": "AdminStatsController_getUserGrowthChart",
                 "parameters": [
                     {
-                        "name": "period",
+                        "name": "year",
                         "required": false,
                         "in": "query",
+                        "description": "Năm (2020-2030)",
+                        "schema": {
+                            "minimum": 2020,
+                            "maximum": 2030,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "granularity",
+                        "required": false,
+                        "in": "query",
+                        "description": "Độ chi tiết",
                         "schema": {
                             "enum": [
-                                "daily",
-                                "weekly",
-                                "monthly"
+                                "day",
+                                "month",
+                                "quarter"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "required": false,
+                        "in": "query",
+                        "description": "Ngày cụ thể (YYYY-MM-DD) cho DAY",
+                        "schema": {
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "required": false,
+                        "in": "query",
+                        "description": "Tháng (1-12) cho MONTH",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 12,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "quarter",
+                        "required": false,
+                        "in": "query",
+                        "description": "Quý (Q1-Q4) cho QUARTER",
+                        "schema": {
+                            "enum": [
+                                "Q1",
+                                "Q2",
+                                "Q3",
+                                "Q4"
                             ],
                             "type": "string"
                         }
@@ -5964,7 +6062,17 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "description": "Chưa đăng nhập"
@@ -6158,6 +6266,37 @@
                 "tags": [
                     "Admin - Quản lý VIP"
                 ]
+            },
+            "post": {
+                "operationId": "AdminVipController_createPackage",
+                "parameters": [],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriptionPackageEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Tạo gói VIP mới",
+                "tags": [
+                    "Admin - Quản lý VIP"
+                ]
             }
         },
         "/api/admin/vip/packages/{id}": {
@@ -6247,6 +6386,46 @@
                     }
                 ],
                 "summary": "Cập nhật cấu hình gói VIP (giá, thời hạn, quyền lợi)",
+                "tags": [
+                    "Admin - Quản lý VIP"
+                ]
+            },
+            "delete": {
+                "operationId": "AdminVipController_deletePackage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriptionPackageEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa gói VIP",
                 "tags": [
                     "Admin - Quản lý VIP"
                 ]
@@ -6416,6 +6595,46 @@
                     }
                 ],
                 "summary": "Cập nhật gói nạp credit (giá, bonus, trạng thái)",
+                "tags": [
+                    "Admin - Quản lý Gói Credit"
+                ]
+            },
+            "delete": {
+                "operationId": "AdminCreditsController_deletePackage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreditPackageEntity"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Chưa đăng nhập"
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập (Sai Role)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Xóa gói nạp credit",
                 "tags": [
                     "Admin - Quản lý Gói Credit"
                 ]
@@ -9234,9 +9453,6 @@
                     "bumpPostQuota": {
                         "type": "number"
                     },
-                    "maxScreeningQuestions": {
-                        "type": "number"
-                    },
                     "monthlyHeadhuntProfileViews": {
                         "type": "number"
                     },
@@ -9259,9 +9475,6 @@
                         "type": "boolean"
                     },
                     "freeAiScoring": {
-                        "type": "boolean"
-                    },
-                    "canUsePremiumFilters": {
                         "type": "boolean"
                     },
                     "createdAt": {
@@ -9290,7 +9503,6 @@
                     "maxProfileViewsPerJob",
                     "dailyApplicationProcessLimit",
                     "bumpPostQuota",
-                    "maxScreeningQuestions",
                     "monthlyHeadhuntProfileViews",
                     "monthlyFreeProceeds",
                     "canHeadhuntSaveAndInvite",
@@ -9299,7 +9511,6 @@
                     "hasVipBadge",
                     "freeContactUnlock",
                     "freeAiScoring",
-                    "canUsePremiumFilters",
                     "createdAt",
                     "updatedAt",
                     "subscriptions"
@@ -10001,107 +10212,6 @@
                     }
                 }
             },
-            "ScreeningQuestionEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "jobId": {
-                        "type": "number"
-                    },
-                    "questionText": {
-                        "type": "string"
-                    },
-                    "questionType": {
-                        "type": "string"
-                    },
-                    "options": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "preferredAnswer": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "isRequired": {
-                        "type": "boolean"
-                    },
-                    "sortOrder": {
-                        "type": "number"
-                    },
-                    "createdAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "job": {
-                        "$ref": "#/components/schemas/JobEntity"
-                    },
-                    "answers": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/ScreeningAnswerEntity"
-                        }
-                    }
-                },
-                "required": [
-                    "id",
-                    "jobId",
-                    "questionText",
-                    "questionType",
-                    "options",
-                    "preferredAnswer",
-                    "isRequired",
-                    "sortOrder",
-                    "createdAt",
-                    "job",
-                    "answers"
-                ]
-            },
-            "ScreeningAnswerEntity": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "number"
-                    },
-                    "applicationId": {
-                        "type": "number"
-                    },
-                    "questionId": {
-                        "type": "number"
-                    },
-                    "answerText": {
-                        "type": "string"
-                    },
-                    "createdAt": {
-                        "format": "date-time",
-                        "type": "string"
-                    },
-                    "application": {
-                        "$ref": "#/components/schemas/JobApplicationEntity"
-                    },
-                    "question": {
-                        "$ref": "#/components/schemas/ScreeningQuestionEntity"
-                    }
-                },
-                "required": [
-                    "id",
-                    "applicationId",
-                    "questionId",
-                    "answerText",
-                    "createdAt",
-                    "application",
-                    "question"
-                ]
-            },
-            "UpsertScreeningQuestionsDto": {
-                "type": "object",
-                "properties": {}
-            },
-            "SubmitScreeningAnswersDto": {
-                "type": "object",
-                "properties": {}
-            },
             "CreateCreditTopupDto": {
                 "type": "object",
                 "properties": {
@@ -10161,11 +10271,6 @@
                         "minimum": 0,
                         "maximum": 9007199254740991
                     },
-                    "maxScreeningQuestions": {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 9007199254740991
-                    },
                     "monthlyHeadhuntProfileViews": {
                         "type": "number",
                         "minimum": -9007199254740991,
@@ -10193,9 +10298,6 @@
                         "type": "boolean"
                     },
                     "freeAiScoring": {
-                        "type": "boolean"
-                    },
-                    "canUsePremiumFilters": {
                         "type": "boolean"
                     }
                 }
