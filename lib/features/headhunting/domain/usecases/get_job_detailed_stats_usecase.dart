@@ -8,7 +8,23 @@ class GetJobDetailedStatsUseCase {
 
   GetJobDetailedStatsUseCase(this.repository);
 
-  Future<Either<Failure, JobDetailedStatsModel>> call(int jobId) async {
-    return await repository.getJobDetailedStats(jobId);
+  Future<Either<Failure, JobDetailedStatsModel>> call(
+    int jobId, {
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  }) async {
+    return await repository.getJobDetailedStats(
+      jobId,
+      expiringSoonDays: expiringSoonDays,
+      year: year,
+      granularity: granularity,
+      date: date,
+      month: month,
+      quarter: quarter,
+    );
   }
 }

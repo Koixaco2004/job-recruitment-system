@@ -50,9 +50,24 @@ abstract class HeadhuntingRemoteDataSource {
   Future<bool> unsaveCandidate(int candidateId);
   Future<List<SavedCandidateModel>> getSavedCandidates();
 
-  Future<EmployerDashboardStatsModel> getDashboardStats({int expiringSoonDays = 7});
+  Future<EmployerDashboardStatsModel> getDashboardStats({
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  });
 
-  Future<JobDetailedStatsModel> getJobDetailedStats(int jobId);
+  Future<JobDetailedStatsModel> getJobDetailedStats(
+    int jobId, {
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  });
 
   Future<HeadhuntingQuotaModel> getHeadhuntingQuota();
   Future<CandidateDetailModel> unlockCandidateContact(int candidateId);
@@ -232,11 +247,25 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
   }
 
   @override
-  Future<EmployerDashboardStatsModel> getDashboardStats({int expiringSoonDays = 7}) async {
+  Future<EmployerDashboardStatsModel> getDashboardStats({
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  }) async {
     try {
       final response = await apiClient.dio.get(
         '/api/employers/dashboard/stats',
-        queryParameters: {'expiringSoonDays': expiringSoonDays},
+        queryParameters: {
+          'expiringSoonDays': expiringSoonDays,
+          if (year != null) 'year': year,
+          if (granularity != null) 'granularity': granularity,
+          if (date != null) 'date': date,
+          if (month != null) 'month': month,
+          if (quarter != null) 'quarter': quarter,
+        },
       );
       return EmployerDashboardStatsModel.fromJson(response.data);
     } catch (e) {
@@ -245,9 +274,27 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
   }
 
   @override
-  Future<JobDetailedStatsModel> getJobDetailedStats(int jobId) async {
+  Future<JobDetailedStatsModel> getJobDetailedStats(
+    int jobId, {
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  }) async {
     try {
-      final response = await apiClient.dio.get('/api/employers/dashboard/jobs/$jobId/stats');
+      final response = await apiClient.dio.get(
+        '/api/employers/dashboard/jobs/$jobId/stats',
+        queryParameters: {
+          'expiringSoonDays': expiringSoonDays,
+          if (year != null) 'year': year,
+          if (granularity != null) 'granularity': granularity,
+          if (date != null) 'date': date,
+          if (month != null) 'month': month,
+          if (quarter != null) 'quarter': quarter,
+        },
+      );
       return JobDetailedStatsModel.fromJson(response.data);
     } catch (e) {
       rethrow;

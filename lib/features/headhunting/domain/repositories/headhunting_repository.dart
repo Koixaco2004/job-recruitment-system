@@ -49,8 +49,24 @@ abstract class HeadhuntingRepository {
   Future<Either<Failure, bool>> unsaveCandidate(int candidateId);
   Future<Either<Failure, List<SavedCandidateEntity>>> getSavedCandidates();
 
-  Future<Either<Failure, EmployerDashboardStatsModel>> getDashboardStats({int expiringSoonDays = 7});
-  Future<Either<Failure, JobDetailedStatsModel>> getJobDetailedStats(int jobId);
+  Future<Either<Failure, EmployerDashboardStatsModel>> getDashboardStats({
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  });
+
+  Future<Either<Failure, JobDetailedStatsModel>> getJobDetailedStats(
+    int jobId, {
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  });
 
   Future<Either<Failure, HeadhuntingQuotaEntity>> getHeadhuntingQuota();
   Future<Either<Failure, CandidateDetailEntity>> unlockCandidateContact(int candidateId);

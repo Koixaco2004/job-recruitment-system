@@ -25,12 +25,44 @@ class EmployerDashboardProvider extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  // Filter State
+  int _currentYear = DateTime.now().year;
+  int get currentYear => _currentYear;
+
+  String _currentGranularity = 'month'; // 'day', 'month', 'quarter'
+  String get currentGranularity => _currentGranularity;
+
+  int _currentMonth = DateTime.now().month;
+  int get currentMonth => _currentMonth;
+
+  String _currentQuarter = 'Q1';
+  String get currentQuarter => _currentQuarter;
+
+  void setFilters({
+    int? year,
+    String? granularity,
+    int? month,
+    String? quarter,
+  }) {
+    if (year != null) _currentYear = year;
+    if (granularity != null) _currentGranularity = granularity;
+    if (month != null) _currentMonth = month;
+    if (quarter != null) _currentQuarter = quarter;
+    notifyListeners();
+  }
+
   Future<void> fetchDashboardStats({int expiringSoonDays = 7}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
-    final result = await getDashboardStatsUseCase(expiringSoonDays: expiringSoonDays);
+    final result = await getDashboardStatsUseCase(
+      expiringSoonDays: expiringSoonDays,
+      year: _currentYear,
+      granularity: _currentGranularity,
+      month: _currentGranularity == 'month' ? _currentMonth : null,
+      quarter: _currentGranularity == 'quarter' ? _currentQuarter : null,
+    );
 
     result.fold(
       (failure) {
@@ -51,7 +83,13 @@ class EmployerDashboardProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final result = await getJobDetailedStatsUseCase(jobId);
+    final result = await getJobDetailedStatsUseCase(
+      jobId,
+      year: _currentYear,
+      granularity: _currentGranularity,
+      month: _currentGranularity == 'month' ? _currentMonth : null,
+      quarter: _currentGranularity == 'quarter' ? _currentQuarter : null,
+    );
 
     result.fold(
       (failure) {

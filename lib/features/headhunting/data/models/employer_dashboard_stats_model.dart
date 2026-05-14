@@ -119,18 +119,20 @@ class ConversionRateSummary extends Equatable {
 }
 
 class TrendSummary extends Equatable {
-  final List<TrendDataPoint> last7Days;
+  final List<TrendDataPoint> data;
 
-  const TrendSummary({required this.last7Days});
+  const TrendSummary({required this.data});
 
   factory TrendSummary.fromJson(Map<String, dynamic> json) {
+    // Backend might return 'data' or 'last7Days'
+    final List<dynamic>? list = (json['data'] ?? json['last7Days']) as List<dynamic>?;
     return TrendSummary(
-      last7Days: (json['last7Days'] as List?)?.map((i) => TrendDataPoint.fromJson(i)).toList() ?? [],
+      data: list?.map((i) => TrendDataPoint.fromJson(i as Map<String, dynamic>)).toList() ?? [],
     );
   }
 
   @override
-  List<Object?> get props => [last7Days];
+  List<Object?> get props => [data];
 }
 
 class TrendDataPoint extends Equatable {

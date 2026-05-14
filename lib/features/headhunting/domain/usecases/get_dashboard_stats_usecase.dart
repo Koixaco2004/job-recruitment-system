@@ -8,7 +8,21 @@ class GetDashboardStatsUseCase {
 
   GetDashboardStatsUseCase(this.repository);
 
-  Future<Either<Failure, EmployerDashboardStatsModel>> call({int expiringSoonDays = 7}) async {
-    return await repository.getDashboardStats(expiringSoonDays: expiringSoonDays);
+  Future<Either<Failure, EmployerDashboardStatsModel>> call({
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  }) async {
+    return await repository.getDashboardStats(
+      expiringSoonDays: expiringSoonDays,
+      year: year,
+      granularity: granularity,
+      date: date,
+      month: month,
+      quarter: quarter,
+    );
   }
 }

@@ -75,6 +75,8 @@ class _JobDetailedStatsPageState extends State<JobDetailedStatsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildFilterBar(context, provider),
+                const SizedBox(height: 16),
                 _buildJobInfoCard(stats.job),
                 const SizedBox(height: 24),
                 _buildApplicationSummary(stats.applications),
@@ -294,7 +296,7 @@ class _JobDetailedStatsPageState extends State<JobDetailedStatsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Xu hướng nộp đơn', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const Text('7 NGÀY QUA', style: TextStyle(fontSize: 10, color: Colors.grey)),
+          const Text('DỮ LIỆU THEO THỜI GIAN ĐÃ CHỌN', style: TextStyle(fontSize: 10, color: Colors.grey)),
           const SizedBox(height: 30),
           SizedBox(
             height: 150,
@@ -307,12 +309,20 @@ class _JobDetailedStatsPageState extends State<JobDetailedStatsPage> {
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
                         int index = value.toInt();
-                        if (index < 0 || index >= trend.last7Days.length) return const SizedBox.shrink();
-                        final dateStr = trend.last7Days[index].date;
-                        return Text(
-                          DateFormat('dd').format(DateTime.parse(dateStr)),
-                          style: const TextStyle(fontSize: 10, color: Colors.grey),
-                        );
+                        if (index < 0 || index >= trend.data.length) return const SizedBox.shrink();
+                        final dateStr = trend.data[index].date;
+                        try {
+                           final date = DateTime.parse(dateStr);
+                           return Text(
+                             DateFormat('dd').format(date),
+                             style: const TextStyle(fontSize: 10, color: Colors.grey),
+                           );
+                        } catch (e) {
+                           return Text(
+                             dateStr.substring(dateStr.length - 2),
+                             style: const TextStyle(fontSize: 10, color: Colors.grey),
+                           );
+                        }
                       },
                     ),
                   ),
@@ -321,7 +331,7 @@ class _JobDetailedStatsPageState extends State<JobDetailedStatsPage> {
                   rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: false),
-                barGroups: trend.last7Days.asMap().entries.map((e) {
+                barGroups: trend.data.asMap().entries.map((e) {
                   return BarChartGroupData(
                     x: e.key,
                     barRods: [
@@ -343,5 +353,173 @@ class _JobDetailedStatsPageState extends State<JobDetailedStatsPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildFilterBar(BuildContext context, EmployerDashboardProvider provider) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF311B92),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calendar_month, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              const Text('Thời gian thống kê', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              const Spacer(),
+              _buildYearDropdown(provider),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildGranularitySegmentedControl(provider),
+              const SizedBox(width: 12),
+              Expanded(child: _buildDetailDropdown(provider)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildYearDropdown(EmployerDashboardProvider provider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: provider.currentYear,
+          dropdownColor: const Color(0xFF311B92),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          items: List.generate(5, (index) => 2023 + index).map((year) {
+            return DropdownMenuItem(
+              value: year,
+              child: Text('$year'),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              provider.setFilters(year: value);
+              provider.fetchJobDetailedStats(widget.jobId);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGranularitySegmentedControl(EmployerDashboardProvider provider) {
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildGranularityOption(provider, 'month', 'Tháng'),
+          _buildGranularityOption(provider, 'quarter', 'Quý'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGranularityOption(EmployerDashboardProvider provider, String value, String label) {
+    final isSelected = provider.currentGranularity == value;
+    return GestureDetector(
+      onTap: () {
+        provider.setFilters(granularity: value);
+        provider.fetchJobDetailedStats(widget.jobId);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? const Color(0xFF311B92) : Colors.white70,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailDropdown(EmployerDashboardProvider provider) {
+    if (provider.currentGranularity == 'month') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<int>(
+            value: provider.currentMonth,
+            dropdownColor: const Color(0xFF311B92),
+            isExpanded: true,
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            items: List.generate(12, (index) => index + 1).map((month) {
+              return DropdownMenuItem(
+                value: month,
+                child: Text('Tháng $month'),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                provider.setFilters(month: value);
+                provider.fetchJobDetailedStats(widget.jobId);
+              }
+            },
+          ),
+        ),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: provider.currentQuarter,
+            dropdownColor: const Color(0xFF311B92),
+            isExpanded: true,
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            items: ['Q1', 'Q2', 'Q3', 'Q4'].map((q) {
+              return DropdownMenuItem(
+                value: q,
+                child: Text('Quý $q'),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                provider.setFilters(quarter: value);
+                provider.fetchJobDetailedStats(widget.jobId);
+              }
+            },
+          ),
+        ),
+      );
+    }
   }
 }

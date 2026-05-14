@@ -167,9 +167,23 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
   }
 
   @override
-  Future<Either<Failure, EmployerDashboardStatsModel>> getDashboardStats({int expiringSoonDays = 7}) async {
+  Future<Either<Failure, EmployerDashboardStatsModel>> getDashboardStats({
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  }) async {
     try {
-      final stats = await remoteDataSource.getDashboardStats(expiringSoonDays: expiringSoonDays);
+      final stats = await remoteDataSource.getDashboardStats(
+        expiringSoonDays: expiringSoonDays,
+        year: year,
+        granularity: granularity,
+        date: date,
+        month: month,
+        quarter: quarter,
+      );
       return Right(stats);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -177,9 +191,25 @@ class HeadhuntingRepositoryImpl implements HeadhuntingRepository {
   }
 
   @override
-  Future<Either<Failure, JobDetailedStatsModel>> getJobDetailedStats(int jobId) async {
+  Future<Either<Failure, JobDetailedStatsModel>> getJobDetailedStats(
+    int jobId, {
+    int expiringSoonDays = 7,
+    int? year,
+    String? granularity,
+    String? date,
+    int? month,
+    String? quarter,
+  }) async {
     try {
-      final stats = await remoteDataSource.getJobDetailedStats(jobId);
+      final stats = await remoteDataSource.getJobDetailedStats(
+        jobId,
+        expiringSoonDays: expiringSoonDays,
+        year: year,
+        granularity: granularity,
+        date: date,
+        month: month,
+        quarter: quarter,
+      );
       return Right(stats);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

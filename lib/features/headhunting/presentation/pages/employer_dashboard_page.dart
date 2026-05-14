@@ -73,7 +73,7 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
                       const SizedBox(height: 16),
                       _buildSummaryCards(stats),
                       const SizedBox(height: 24),
-                      _buildGrowthChart(stats.applications.trend),
+                      _buildGrowthChart(stats.applications.trend, provider),
                       const SizedBox(height: 24),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,6 +145,8 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
               ],
             ),
             const SizedBox(height: 20),
+            _buildFilterBar(context, provider),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -161,6 +163,177 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildFilterBar(BuildContext context, EmployerDashboardProvider provider) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.filter_list, color: Colors.white70, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Bộ lọc thời gian',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              _buildYearDropdown(provider),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildGranularitySegmentedControl(provider),
+              const SizedBox(width: 12),
+              Expanded(child: _buildDetailDropdown(provider)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildYearDropdown(EmployerDashboardProvider provider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: provider.currentYear,
+          dropdownColor: const Color(0xFF311B92),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          items: List.generate(5, (index) => 2023 + index).map((year) {
+            return DropdownMenuItem(
+              value: year,
+              child: Text('$year'),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              provider.setFilters(year: value);
+              provider.fetchDashboardStats();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGranularitySegmentedControl(EmployerDashboardProvider provider) {
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildGranularityOption(provider, 'month', 'Tháng'),
+          _buildGranularityOption(provider, 'quarter', 'Quý'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGranularityOption(EmployerDashboardProvider provider, String value, String label) {
+    final isSelected = provider.currentGranularity == value;
+    return GestureDetector(
+      onTap: () {
+        provider.setFilters(granularity: value);
+        provider.fetchDashboardStats();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? const Color(0xFF311B92) : Colors.white70,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailDropdown(EmployerDashboardProvider provider) {
+    if (provider.currentGranularity == 'month') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<int>(
+            value: provider.currentMonth,
+            dropdownColor: const Color(0xFF311B92),
+            isExpanded: true,
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            items: List.generate(12, (index) => index + 1).map((month) {
+              return DropdownMenuItem(
+                value: month,
+                child: Text('Tháng $month'),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                provider.setFilters(month: value);
+                provider.fetchDashboardStats();
+              }
+            },
+          ),
+        ),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: provider.currentQuarter,
+            dropdownColor: const Color(0xFF311B92),
+            isExpanded: true,
+            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            items: ['Q1', 'Q2', 'Q3', 'Q4'].map((q) {
+              return DropdownMenuItem(
+                value: q,
+                child: Text('Quý $q'),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                provider.setFilters(quarter: value);
+                provider.fetchDashboardStats();
+              }
+            },
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildVerificationStatusCard(BuildContext context) {
@@ -420,7 +593,7 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
     );
   }
 
-  Widget _buildGrowthChart(TrendSummary trend) {
+  Widget _buildGrowthChart(TrendSummary trend, EmployerDashboardProvider provider) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -436,7 +609,7 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -444,8 +617,10 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                   ),
                   Text(
-                    'LƯỢNG ĐƠN NỘP TRONG 7 NGÀY QUA',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey),
+                    provider.currentGranularity == 'month' 
+                      ? 'LƯỢNG ĐƠN NỘP TRONG THÁNG ${provider.currentMonth}' 
+                      : 'LƯỢNG ĐƠN NỘP TRONG QUÝ ${provider.currentQuarter}',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey),
                   ),
                 ],
               ),
@@ -472,8 +647,8 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
                       getTitlesWidget: (value, meta) {
                         if (value % 2 != 0) return const SizedBox.shrink();
                         int index = value.toInt();
-                        if (index < 0 || index >= trend.last7Days.length) return const SizedBox.shrink();
-                        final dateStr = trend.last7Days[index].date;
+                        if (index < 0 || index >= trend.data.length) return const SizedBox.shrink();
+                        final dateStr = trend.data[index].date;
                         final date = DateTime.parse(dateStr);
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0),
@@ -492,7 +667,7 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: trend.last7Days.asMap().entries.map((e) {
+                    spots: trend.data.asMap().entries.map((e) {
                       return FlSpot(e.key.toDouble(), e.value.count.toDouble());
                     }).toList(),
                     isCurved: true,
