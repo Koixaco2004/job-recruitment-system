@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/employer_application_provider.dart';
 import '../widgets/application_detail_drawer.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
@@ -80,6 +81,19 @@ class _JobKanbanPageState extends State<JobKanbanPage> {
   void _openDetail(int applicationId) {
     context.read<EmployerApplicationProvider>().fetchApplicationDetail(applicationId);
     _scaffoldKey.currentState?.openEndDrawer();
+  }
+
+  Future<void> _openCv(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể mở CV. Vui lòng thử lại sau.')),
+        );
+      }
+    }
   }
 
   @override
@@ -266,8 +280,21 @@ class _JobKanbanPageState extends State<JobKanbanPage> {
                                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                               ),
                             ),
-                            trailing: item.matchScore != null 
-                                ? Container(
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (item.cvUrlSnapshot != null && item.cvUrlSnapshot!.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.description_outlined, size: 20, color: Colors.blue),
+                                    onPressed: () => _openCv(context, item.cvUrlSnapshot!),
+                                    tooltip: 'Xem CV Gốc',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
+                                if (item.cvUrlSnapshot != null && item.cvUrlSnapshot!.isNotEmpty)
+                                  const SizedBox(width: 8),
+                                if (item.matchScore != null)
+                                  Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
                                       color: (item.matchScore! >= 70 ? Colors.green : (item.matchScore! >= 40 ? Colors.orange : Colors.red)).withValues(alpha: 0.1),
@@ -298,8 +325,9 @@ class _JobKanbanPageState extends State<JobKanbanPage> {
                                         ),
                                       ],
                                     ),
-                                  )
-                                : null,
+                                  ),
+                              ],
+                            ),
                           ),
                         );
                       },
@@ -341,7 +369,18 @@ class _JobKanbanPageState extends State<JobKanbanPage> {
                 ),
                 title: Text(app.candidate?.fullName ?? 'Ứng viên #${app.id}'),
                 subtitle: Text('Trạng thái: ${app.status} • Ngày nộp: ${app.appliedAt.day}/${app.appliedAt.month}'),
-                trailing: const Icon(Icons.chevron_right),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (app.cvUrlSnapshot != null && app.cvUrlSnapshot!.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.description_outlined, color: Colors.blue),
+                        onPressed: () => _openCv(context, app.cvUrlSnapshot!),
+                        tooltip: 'Xem CV Gốc',
+                      ),
+                    const Icon(Icons.chevron_right),
+                  ],
+                ),
               ),
             );
           },

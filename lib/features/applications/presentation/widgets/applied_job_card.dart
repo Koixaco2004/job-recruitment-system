@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/application_entity.dart';
 import '../pages/application_detail_page.dart';
 
@@ -101,13 +102,30 @@ class AppliedJobCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const Text(
-                    'Xem chi tiết',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
+                  Row(
+                    children: [
+                      if (application.cvUrlSnapshot != null && application.cvUrlSnapshot!.isNotEmpty)
+                        TextButton.icon(
+                          onPressed: () => _openCv(context, application.cvUrlSnapshot!),
+                          icon: const Icon(Icons.description_outlined, size: 14),
+                          label: const Text('Xem CV', style: TextStyle(fontSize: 12)),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      if (application.cvUrlSnapshot != null && application.cvUrlSnapshot!.isNotEmpty)
+                        const SizedBox(width: 8),
+                      const Text(
+                        'Xem chi tiết',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -143,6 +161,19 @@ class AppliedJobCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openCv(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể mở CV. Vui lòng thử lại sau.')),
+        );
+      }
+    }
   }
 
   Color _getStatusColor(String status) {

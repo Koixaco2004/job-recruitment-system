@@ -1,0 +1,93 @@
+# Hướng dẫn cập nhật cơ chế CV Snapshot cho Team Mobile
+
+Tài liệu này mô tả các thay đổi về API và logic hiển thị CV mà team Mobile cần cập nhật trong các màn hình Quản lý ứng viên (Kanban) và Chi tiết đơn ứng tuyển (Application Detail) dành cho nhà tuyển dụng (Employer).
+
+> [!WARNING]
+> Backend đã chính thức ẩn thuộc tính `candidate.cvUrl` khỏi các response API liên quan đến đơn ứng tuyển (Job Application). Nếu Mobile vẫn đang map dữ liệu từ biến này, ứng dụng sẽ bị lỗi hoặc báo "Không tìm thấy CV".
+
+---
+
+## 1. Bản chất của thay đổi
+
+Trước đây, khi nhà tuyển dụng xem đơn ứng tuyển, hệ thống trả về `candidate.cvUrl` (CV hiện tại của ứng viên). Tuy nhiên, điều này gây ra lỗi nghiệp vụ: Nếu ứng viên cập nhật hoặc xóa CV hiện tại trên hệ thống, nhà tuyển dụng sẽ không thể xem lại CV gốc lúc ứng viên nộp đơn.
+
+**Cơ chế mới:**
+- Backend đã triển khai `cvUrlSnapshot` trong thực thể `job_application`. Biến này lưu cứng đường link CV tại thời điểm ứng viên bấm nút "Nộp đơn".
+- Trong các API liên quan đến xem đơn ứng tuyển, backend sẽ **ẩn hoàn toàn `candidate.cvUrl`** và chỉ cung cấp `cvUrlSnapshot`.
+
+---
+
+## 2. Các API bị ảnh hưởng
+
+Các API sau đây dành cho Employer đã thay đổi payload trả về:
+
+1. **Lấy danh sách Kanban (Get Kanban Board)**
+   - `GET /applications/employer/jobs/:jobId/kanban`
+2. **Lấy chi tiết ứng tuyển (Get Application Detail)**
+   - `GET /applications/employer/:applicationId`
+
+### Thay đổi trong Response Data
+
+**Trước đây (CŨ):**
+```json
+{
+  "id": 123,
+  "status": "applied",
+  "cvUrlSnapshot": "https://supabase.com/cv_snapshot.pdf",
+  "candidate": {
+    "id": 456,
+    "fullName": "Nguyễn Văn A",
+    "cvUrl": "https://supabase.com/cv_hientai.pdf" // ĐÃ BỊ XÓA
+  }
+}
+```
+
+**Bây giờ (MỚI):**
+```json
+{
+  "id": 123,
+  "status": "applied",
+  "cvUrlSnapshot": "https://supabase.com/cv_snapshot.pdf", // BẮT BUỘC DÙNG FIELD NÀY
+  "candidate": {
+    "id": 456,
+    "fullName": "Nguyễn Văn A",
+    // cvUrl không còn tồn tại
+  }
+}
+```
+
+---
+
+## 3. Hành động yêu cầu đối với Team Mobile
+
+> [!IMPORTANT]
+> Chỉ áp dụng thay đổi này cho các luồng nghiệp vụ liên quan đến **Đơn ứng tuyển (Job Application)**. Các luồng nghiệp vụ Headhunt/Tìm kiếm ứng viên tự do vẫn sử dụng `candidate.cvUrl` bình thường.
+
+### 3.1. Cập nhật Model/Entity
+Xóa hoặc đánh dấu optional (`?`) cho thuộc tính `cvUrl` bên trong object `Candidate` của các model dùng để parse dữ liệu Kanban và Application Detail.
+
+### 3.2. Cập nhật UI/UX hiển thị CV
+Tại màn hình chi tiết ứng viên (hoặc Drawer/Modal xem PDF), hãy thay đổi logic bind dữ liệu cho iFrame/PDF Viewer và nút tải xuống.
+
+**Logic cũ:**
+```dart
+// Ví dụ Dart/Flutter code
+String get displayCvUrl => application.candidate.cvUrl ?? application.cvUrlSnapshot ?? '';
+```
+
+**Logic mới (Chỉ dùng Snapshot):**
+```dart
+// Dùng trực tiếp cvUrlSnapshot ở root object
+String get displayCvUrl => application.cvUrlSnapshot ?? '';
+```
+
+### 3.3. Xử lý trường hợp không có CV
+Mặc dù mọi đơn ứng tuyển thường yêu cầu CV, nhưng hãy luôn kiểm tra null cho `cvUrlSnapshot`. Nếu `cvUrlSnapshot` là null hoặc rỗng, hãy hiển thị state trống (Ví dụ: *"Chưa có CV để hiển thị"*). 
+
+---
+
+## 4. Tóm tắt
+
+- **Bỏ dùng**: `application.candidate.cvUrl`
+- **Chỉ dùng**: `application.cvUrlSnapshot`
+- **Phạm vi**: Ứng dụng/Màn hình của Nhà tuyển dụng (Recruiter) khi xử lý danh sách nộp đơn và chi tiết ứng tuyển.

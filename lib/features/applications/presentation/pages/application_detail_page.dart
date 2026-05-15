@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/application_entity.dart';
 import '../providers/application_provider.dart';
 import '../../../jobs/presentation/pages/job_detail_page.dart';
@@ -92,6 +93,12 @@ class _ApplicationDetailPageState extends State<ApplicationDetailPage> {
                   _buildHistoryCard(app.statusHistory!),
 
                 const SizedBox(height: 32),
+
+                // === CV Snapshot Card ===
+                if (app.cvUrlSnapshot != null && app.cvUrlSnapshot!.isNotEmpty)
+                  _buildCvSnapshotCard(context, app.cvUrlSnapshot!),
+
+                const SizedBox(height: 16),
 
                 // === Withdraw Button ===
                 if (app.status != 'withdrawn' && app.status != 'rejected')
@@ -529,6 +536,56 @@ class _ApplicationDetailPageState extends State<ApplicationDetailPage> {
       case 'rejected': return 'Từ chối';
       case 'withdrawn': return 'Đã rút đơn';
       default: return status;
+    }
+  }
+
+  Widget _buildCvSnapshotCard(BuildContext context, String url) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Hồ sơ đã nộp',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _openCv(context, url),
+                icon: const Icon(Icons.description_outlined),
+                label: const Text('Xem lại CV đã nộp'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[700],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '* Đây là bản CV bạn đã sử dụng tại thời điểm ứng tuyển.',
+              style: TextStyle(fontSize: 11, color: Colors.grey, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openCv(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể mở CV. Vui lòng thử lại sau.')),
+        );
+      }
     }
   }
 

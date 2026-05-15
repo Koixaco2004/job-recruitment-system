@@ -3888,6 +3888,14 @@
                         "schema": {
                             "type": "number"
                         }
+                    },
+                    {
+                        "name": "type",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
