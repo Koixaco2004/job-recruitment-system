@@ -13,12 +13,12 @@ class TopupPackModel extends TopupPackEntity {
 
   factory TopupPackModel.fromJson(Map<String, dynamic> json) {
     return TopupPackModel(
-      id: json['id'] as int? ?? 0,
-      slug: json['slug'] as String? ?? '',
-      displayName: json['displayName'] as String? ?? '',
-      creditBase: json['creditBase'] as int? ?? 0,
-      bonus: json['bonus'] as int? ?? 0,
-      priceVnd: double.tryParse(json['priceVnd'].toString()) ?? 0.0,
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      slug: json['slug']?.toString() ?? '',
+      displayName: json['displayName']?.toString() ?? '',
+      creditBase: (json['creditBase'] as num?)?.toInt() ?? 0,
+      bonus: (json['bonus'] as num?)?.toInt() ?? 0,
+      priceVnd: double.tryParse(json['priceVnd']?.toString() ?? '0') ?? 0.0,
       isActive: json['isActive'] as bool? ?? true,
     );
   }

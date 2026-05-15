@@ -88,7 +88,10 @@ class MonetizationRemoteDataSourceImpl implements MonetizationRemoteDataSource {
   @override
   Future<int> getCreditBalance() async {
     final response = await apiClient.dio.get('/api/credits/balance');
-    return response.data['balance'] as int? ?? 0;
+    final balance = response.data['balance'];
+    if (balance is num) return balance.toInt();
+    if (balance is String) return int.tryParse(balance) ?? 0;
+    return 0;
   }
 
   @override
@@ -98,14 +101,23 @@ class MonetizationRemoteDataSourceImpl implements MonetizationRemoteDataSource {
       queryParameters: {'page': page, 'limit': limit},
     );
     
-    final List<dynamic> list = response.data['data'];
+    final dynamic responseData = response.data;
+    
+    // Support multiple common response structures
+    List<dynamic> list = [];
+    if (responseData is List) {
+      list = responseData;
+    } else if (responseData is Map) {
+      list = responseData['data'] ?? responseData['transactions'] ?? responseData['items'] ?? [];
+    }
+    
     final transactions = list.map((json) => CreditTransactionModel.fromJson(json)).toList();
     
     return {
       'transactions': transactions,
-      'total': response.data['total'],
-      'page': response.data['page'],
-      'lastPage': response.data['lastPage'],
+      'total': (responseData['total'] as num?)?.toInt() ?? (list.length),
+      'page': (responseData['page'] as num?)?.toInt() ?? page,
+      'lastPage': (responseData['lastPage'] as num?)?.toInt() ?? 1,
     };
   }
 

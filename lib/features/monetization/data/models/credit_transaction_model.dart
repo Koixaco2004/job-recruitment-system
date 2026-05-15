@@ -15,15 +15,17 @@ class CreditTransactionModel extends CreditTransactionEntity {
 
   factory CreditTransactionModel.fromJson(Map<String, dynamic> json) {
     return CreditTransactionModel(
-      id: json['id'],
-      walletId: json['walletId'],
-      type: _parseType(json['type']),
-      amount: json['amount'],
-      balanceAfter: json['balanceAfter'],
-      description: json['description'] ?? '',
-      referenceType: json['referenceType'] ?? '',
-      referenceId: json['referenceId'] ?? 0,
-      createdAt: DateTime.parse(json['createdAt']),
+      id: json['id'] as int? ?? 0,
+      walletId: json['walletId'] as int? ?? 0,
+      type: _parseType(json['type']?.toString() ?? ''),
+      amount: (json['amount'] is num) ? (json['amount'] as num).toInt() : int.tryParse(json['amount']?.toString() ?? '0') ?? 0,
+      balanceAfter: (json['balanceAfter'] is num) ? (json['balanceAfter'] as num).toInt() : int.tryParse(json['balanceAfter']?.toString() ?? '0') ?? 0,
+      description: json['description']?.toString() ?? '',
+      referenceType: json['referenceType']?.toString() ?? '',
+      referenceId: json['referenceId'] as int? ?? 0,
+      createdAt: json['createdAt'] != null 
+          ? DateTime.parse(json['createdAt'].toString()) 
+          : DateTime.now(),
     );
   }
 

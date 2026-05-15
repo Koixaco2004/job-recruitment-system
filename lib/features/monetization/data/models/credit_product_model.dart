@@ -23,14 +23,14 @@ class CreditProductModel extends CreditProductEntity {
 
   factory CreditProductModel.fromJson(Map<String, dynamic> json) {
     return CreditProductModel(
-      id: json['id'],
-      slug: json['slug'],
-      displayName: json['displayName'],
-      description: json['description'],
-      creditCost: json['creditCost'],
-      durationDays: json['durationDays'],
-      isActive: json['isActive'],
-      scope: json['scope'],
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      slug: json['slug']?.toString() ?? '',
+      displayName: json['displayName']?.toString() ?? '',
+      description: json['description']?.toString(),
+      creditCost: (json['creditCost'] as num?)?.toInt() ?? 0,
+      durationDays: (json['durationDays'] as num?)?.toInt(),
+      isActive: json['isActive'] as bool? ?? true,
+      scope: json['scope']?.toString() ?? 'global',
     );
   }
 

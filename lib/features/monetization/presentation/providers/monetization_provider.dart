@@ -134,8 +134,8 @@ class MonetizationProvider extends ChangeNotifier {
         } else {
           _transactions.addAll(newTransactions);
         }
-        _transactionPage = data['page'];
-        _transactionLastPage = data['lastPage'];
+        _transactionPage = int.tryParse(data['page'].toString()) ?? 1;
+        _transactionLastPage = int.tryParse(data['lastPage'].toString()) ?? 1;
       },
     );
 

@@ -28,30 +28,32 @@ class SubscriptionModel extends SubscriptionEntity {
     final subData = json.containsKey('subscription') ? json['subscription'] : json;
     
     return SubscriptionModel(
-      id: subData['id'],
-      companyId: subData['companyId'],
-      packageId: subData['packageId'],
-      status: subData['status'],
-      startDate: DateTime.parse(subData['startDate']),
-      endDate: subData['endDate'] != null ? DateTime.parse(subData['endDate']) : null,
-      usedBumpPostQuota: subData['usedBumpPostQuota'] ?? 0,
-      dailyProcessedCount: subData['dailyProcessedCount'] ?? 0,
+      id: (subData['id'] as num?)?.toInt() ?? 0,
+      companyId: (subData['companyId'] as num?)?.toInt() ?? 0,
+      packageId: (subData['packageId'] as num?)?.toInt() ?? 0,
+      status: subData['status']?.toString() ?? 'inactive',
+      startDate: subData['startDate'] != null 
+          ? DateTime.parse(subData['startDate'].toString()) 
+          : DateTime.now(),
+      endDate: subData['endDate'] != null ? DateTime.parse(subData['endDate'].toString()) : null,
+      usedBumpPostQuota: (subData['usedBumpPostQuota'] as num?)?.toInt() ?? 0,
+      dailyProcessedCount: (subData['dailyProcessedCount'] as num?)?.toInt() ?? 0,
       dailyProcessedDate: subData['dailyProcessedDate'] != null 
-          ? DateTime.parse(subData['dailyProcessedDate']) 
+          ? DateTime.parse(subData['dailyProcessedDate'].toString()) 
           : null,
       lastJobPublishedAt: subData['lastJobPublishedAt'] != null 
-          ? DateTime.parse(subData['lastJobPublishedAt']) 
+          ? DateTime.parse(subData['lastJobPublishedAt'].toString()) 
           : null,
-      headhuntingViewsUsed: subData['headhuntingViewsUsed'] ?? 0,
+      headhuntingViewsUsed: (subData['headhuntingViewsUsed'] as num?)?.toInt() ?? 0,
       headhuntingViewsResetAt: subData['headhuntingViewsResetAt'] != null 
-          ? DateTime.parse(subData['headhuntingViewsResetAt']) 
+          ? DateTime.parse(subData['headhuntingViewsResetAt'].toString()) 
           : null,
-      usedFreeProceeds: subData['usedFreeProceeds'] ?? 0,
+      usedFreeProceeds: (subData['usedFreeProceeds'] as num?)?.toInt() ?? 0,
       proceedsResetAt: subData['proceedsResetAt'] != null 
-          ? DateTime.parse(subData['proceedsResetAt']) 
+          ? DateTime.parse(subData['proceedsResetAt'].toString()) 
           : null,
-      extraSlots: json['extraSlots'] ?? subData['extraSlots'] ?? 0,
-      effectiveMaxJobs: json['effectiveMaxJobs'] ?? subData['effectiveMaxJobs'] ?? 0,
+      extraSlots: ((json['extraSlots'] ?? subData['extraSlots'] ?? 0) as num).toInt(),
+      effectiveMaxJobs: ((json['effectiveMaxJobs'] ?? subData['effectiveMaxJobs'] ?? 0) as num).toInt(),
       package: subData['package'] != null 
           ? SubscriptionPackageModel.fromJson(subData['package']) 
           : null,
