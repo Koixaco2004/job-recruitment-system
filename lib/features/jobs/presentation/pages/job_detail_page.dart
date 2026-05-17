@@ -589,19 +589,8 @@ class _JobDetailPageState extends State<JobDetailPage> {
                         vertical: 12,
                       ),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildStat(
-                            Icons.visibility,
-                            '${job.viewCount}',
-                            'Lượt xem',
-                          ),
-                          Container(width: 1, height: 30, color: Colors.grey[300]),
-                          _buildStat(
-                            Icons.people,
-                            '${job.applicationCount}',
-                            'Đã ứng tuyển',
-                          ),
-                          Container(width: 1, height: 30, color: Colors.grey[300]),
                           _buildStat(
                             Icons.schedule,
                             '${_daysRemaining(job.deadline)}',

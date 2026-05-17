@@ -1,0 +1,71 @@
+# Hướng dẫn Cập nhật Employer Dashboard cho Mobile Team
+
+Tài liệu này mô tả các thay đổi mới nhất về API và logic UI của màn hình Employer Dashboard (Thống kê Tổng quan Công ty) để Mobile Team có thể implement đồng bộ với bản Web.
+
+> [!NOTE]
+> Các thay đổi này tập trung vào Dashboard Tổng quan toàn công ty (`/api/employers/dashboard/stats`), không ảnh hưởng đến Dashboard của từng tin tuyển dụng.
+
+---
+
+## 1. Thay đổi về Bộ lọc thời gian (Time Filter)
+
+Bộ lọc thời gian hiện tại chỉ hỗ trợ 2 mốc `granularity` (độ phân giải dữ liệu):
+- **Theo Tháng (month)**: Chọn 1 tháng cụ thể trong năm.
+- **Theo Quý (quarter)**: Chọn 1 quý cụ thể trong năm.
+- **[DEPRECATED]** Tính năng lọc theo "Ngày" đã bị loại bỏ vì dữ liệu thống kê theo một ngày đơn lẻ thường không có nhiều ý nghĩa cho Dashboard.
+
+### Tham số API cập nhật:
+Khi gọi API `/api/employers/dashboard/stats`, bạn cần truyền thêm tham số `granularity`:
+- **Tháng**: `?granularity=month&month=5&year=2026`
+- **Quý**: `?granularity=quarter&quarter=2&year=2026`
+
+---
+
+## 2. Thay đổi về Chỉ số Thống kê
+
+Chỉ số "Tổng số tin tuyển dụng" trong kỳ nay được thay thế bằng **"Tin đã đăng tuyển trong kỳ"**.
+Lý do: Nếu dùng tổng số tin hiện có, con số này không đại diện cho hoạt động của tháng/quý đó (ví dụ tin đã đóng thì không nên tính vào hoạt động của tháng hiện tại).
+
+### Dữ liệu trả về từ API:
+- `jobs.publishedInPeriod`: Số lượng tin được **bắt đầu đăng tuyển (published_at)** trong khoảng thời gian đã chọn.
+- `jobs.publishedJobsList`: Danh sách chi tiết các tin đã đăng này (được dùng cho tính năng Click-to-view bên dưới).
+
+---
+
+## 3. Tính năng Xem chi tiết (Drill-down Modals)
+
+Người dùng giờ đây có thể **nhấn vào các thẻ chỉ số (metric cards)** để xem chi tiết danh sách tạo nên chỉ số đó. Thay vì chỉ hiển thị con số khô khan, khi nhấn vào card, hãy mở ra một Modal hoặc Bottom Sheet hiển thị danh sách.
+
+API `/api/employers/dashboard/stats` đã trả về sẵn các mảng dữ liệu chi tiết này trong payload, bạn không cần gọi API phụ!
+
+### Các mảng dữ liệu chi tiết có sẵn:
+
+| Tên Chỉ số (UI) | Đường dẫn trong JSON Response | Dữ liệu bao gồm |
+|---|---|---|
+| **Tin đã đăng tuyển** | `jobs.publishedJobsList` | `id`, `title`, `status`, `publishedAt` |
+| **Lượt ứng tuyển** | `applications.applicationsList` | `id`, `candidateName`, `jobTitle`, `status`, `appliedAt` |
+| **Lời mời phỏng vấn** | `headhunting.invitationsList` | `id`, `candidateName`, `jobTitle`, `status`, `sentAt` |
+
+> [!TIP]
+> **Gợi ý UI/UX:** Khi người dùng nhấn vào thẻ "Lượt ứng tuyển", hãy mở Modal liệt kê danh sách ứng viên đã nộp CV (hiển thị Tên ứng viên, Vị trí ứng tuyển, Trạng thái đơn, và Ngày nộp). Việc này giúp HR theo dõi ngay lập tức biến động hồ sơ mà không cần qua màn hình Quản lý Đơn.
+
+---
+
+## 4. Xử lý Biểu đồ Xu hướng (Trend Chart) & Timezone
+
+Biểu đồ "Xu hướng ứng tuyển" đã được fix các lỗi liên quan đến Timezone (trước đây tính theo UTC gây ra việc bị lệch/thiếu ngày). Backend nay trả về dữ liệu chuẩn theo timezone `Asia/Ho_Chi_Minh`.
+
+### Hiển thị trục X của biểu đồ theo Granularity:
+Backend sẽ tự động group dữ liệu biểu đồ và trả về mảng `applications.trend.data`.
+Mỗi phần tử có dạng `{ date: "...", count: "..." }`.
+
+Tùy vào bộ lọc hiện tại, format hiển thị ở ứng dụng cần điều chỉnh:
+1. **Nếu đang chọn xem theo Tháng (`granularity=month`):**
+   - Backend trả về mảng từng ngày trong tháng đó (vd: `2026-05-01`, `2026-05-02`, ...).
+   - **Xử lý UI**: Format `date` thành `DD/MM` (vd: `01/05`) cho gọn.
+2. **Nếu đang chọn xem theo Quý (`granularity=quarter`):**
+   - Backend sẽ tự động *cộng gộp* dữ liệu theo từng tháng thay vì hiển thị toàn bộ 90 ngày. Mảng trả về sẽ chỉ có 3 mốc (vd: `2026-04`, `2026-05`, `2026-06`).
+   - **Xử lý UI**: Format `date` thành dạng `Tháng X` (vd: `Tháng 4`, `Tháng 5`, `Tháng 6`).
+
+> [!IMPORTANT]
+> Backend đã tự động sinh đủ các mốc thời gian (zero-filled). Tức là ngày/tháng nào không có lượt ứng tuyển, backend sẽ trả về `count: 0`. Mobile team không cần phải viết hàm map/điền số 0 thủ công nữa, chỉ việc ném dữ liệu thẳng vào thư viện biểu đồ!

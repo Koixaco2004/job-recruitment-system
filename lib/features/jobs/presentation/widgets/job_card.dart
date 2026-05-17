@@ -257,21 +257,8 @@ class JobCard extends StatelessWidget {
               const SizedBox(height: 12),
               // Footer: Stats
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Icon(Icons.visibility, size: 14, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${job.viewCount}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(Icons.people, size: 14, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${job.applicationCount} ứng tuyển',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                  const Spacer(),
                   Text(
                     'Hạn: ${DateFormat('dd/MM').format(job.deadline)}',
                     style: TextStyle(

@@ -630,7 +630,12 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text('7 ngày', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                child: Text(
+                  provider.currentGranularity == 'month' 
+                      ? 'Tháng' 
+                      : (provider.currentGranularity == 'quarter' ? 'Quý' : '7 ngày'), 
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)
+                ),
               ),
             ],
           ),
@@ -644,16 +649,33 @@ class _EmployerDashboardPageState extends State<EmployerDashboardPage> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
+                      reservedSize: 32,
+                      interval: 1,
                       getTitlesWidget: (value, meta) {
-                        if (value % 2 != 0) return const SizedBox.shrink();
                         int index = value.toInt();
                         if (index < 0 || index >= trend.data.length) return const SizedBox.shrink();
+                        
+                        if (trend.data.length > 5 && value % 2 != 0) return const SizedBox.shrink();
+
                         final dateStr = trend.data[index].date;
-                        final date = DateTime.parse(dateStr);
+                        
+                        String displayDate = dateStr;
+                        try {
+                          if (dateStr.length == 7 && dateStr.contains('-')) {
+                            // Format is YYYY-MM
+                            displayDate = 'T${dateStr.split('-')[1]}';
+                          } else {
+                            final date = DateTime.parse(dateStr);
+                            displayDate = DateFormat('dd/MM').format(date);
+                          }
+                        } catch (_) {
+                          displayDate = dateStr;
+                        }
+                        
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Text(
-                            DateFormat('MM-dd').format(date),
+                            displayDate,
                             style: TextStyle(color: Colors.grey[400], fontSize: 10),
                           ),
                         );
