@@ -744,19 +744,18 @@ class _MyJobsPageState extends State<MyJobsPage>
                   ),
                 ],
               ),
-              if (isVip)
-                TextButton.icon(
-                  onPressed: () => _handleBuyExtraSlot(context),
-                  icon: const Icon(Icons.add_circle_outline, size: 16),
-                  label: const Text('Mua Slot', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    foregroundColor: Colors.amber[900],
-                    backgroundColor: Colors.amber[100],
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
+              TextButton.icon(
+                onPressed: () => _handleBuyExtraSlot(context),
+                icon: const Icon(Icons.add_circle_outline, size: 16),
+                label: const Text('Mua Slot', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  foregroundColor: isVip ? Colors.amber[900] : Colors.blue[900],
+                  backgroundColor: isVip ? Colors.amber[100] : Colors.blue[100],
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -800,7 +799,7 @@ class _MyJobsPageState extends State<MyJobsPage>
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: activeCount / maxJobs,
+              value: maxJobs > 0 ? (activeCount / maxJobs) : 0,
               backgroundColor: Colors.white,
               valueColor: AlwaysStoppedAnimation<Color>(
                 isFull ? Colors.red : (isVip ? Colors.amber[700] : Colors.blue[700])!,
@@ -808,6 +807,22 @@ class _MyJobsPageState extends State<MyJobsPage>
               minHeight: 8,
             ),
           ),
+          
+          // Slot Details Section
+          if (subscription.slotLock != null && subscription.slotLock!.slotDetails.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              'Danh sách chi tiết Slot:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...subscription.slotLock!.slotDetails.map((slot) => _buildSlotItem(context, slot)),
+          ],
+
           if (unlockDate != null) ...[
             const SizedBox(height: 12),
             Container(
@@ -837,6 +852,158 @@ class _MyJobsPageState extends State<MyJobsPage>
               style: TextStyle(fontSize: 12, color: Colors.blue[800], fontStyle: FontStyle.italic),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSlotItem(BuildContext context, SlotDetailEntity slot) {
+    Color? badgeColor;
+    Color? bgColor;
+    IconData icon = Icons.check_circle_outline;
+
+    switch (slot.slotKind) {
+      case 'free':
+        badgeColor = Colors.grey[600];
+        bgColor = Colors.grey[100];
+        break;
+      case 'vip':
+        badgeColor = Colors.amber[700];
+        bgColor = Colors.amber[50];
+        icon = Icons.workspace_premium;
+        break;
+      case 'credit':
+        badgeColor = Colors.green[700];
+        bgColor = Colors.green[50];
+        icon = Icons.monetization_on_outlined;
+        break;
+      default:
+        badgeColor = Colors.blue[700];
+        bgColor = Colors.blue[50];
+    }
+
+    Widget stateWidget;
+    if (slot.type == 'occupied') {
+      stateWidget = Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              slot.jobTitle ?? 'Tin đang hiển thị',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 4),
+                const Text('Đang sử dụng', style: TextStyle(fontSize: 11, color: Colors.grey)),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else if (slot.type == 'locked') {
+      final formatTime = slot.unlocksAt != null
+          ? '${slot.unlocksAt!.day}/${slot.unlocksAt!.month} ${slot.unlocksAt!.hour}:${slot.unlocksAt!.minute.toString().padLeft(2, '0')}'
+          : 'đang bị khóa';
+      stateWidget = Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.lock_clock, size: 14, color: Colors.red),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'Bị khóa (mở: $formatTime)',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Colors.red[800]),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Tin cũ: ${slot.jobTitle ?? ""}',
+              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      );
+    } else {
+      stateWidget = Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Slot trống',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey[700]),
+            ),
+            const SizedBox(height: 2),
+            const Text('Có thể đăng tin mới', style: TextStyle(fontSize: 11, color: Colors.grey)),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: (slot.type == 'locked'
+              ? Colors.red[100]
+              : (slot.type == 'available' ? Colors.grey[200] : badgeColor?.withOpacity(0.3)))!,
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: bgColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              slot.type == 'locked' ? Icons.lock_outline : (slot.type == 'available' ? Icons.add : icon),
+              color: slot.type == 'locked' ? Colors.red : badgeColor,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          stateWidget,
+          const SizedBox(width: 8),
+          if (slot.slotKind == 'credit' && slot.creditSlotExpiresAt != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.green[100],
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'Hạn: ${slot.creditSlotExpiresAt!.day}/${slot.creditSlotExpiresAt!.month}/${slot.creditSlotExpiresAt!.year}',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.green[800],
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -979,6 +1146,34 @@ class _MyJobsPageState extends State<MyJobsPage>
     final package = subscription.package;
     if (package == null) return null;
 
+    // Sử dụng slotLock từ Backend nếu có để đồng bộ logic chính xác
+    if (subscription.slotLock != null) {
+      final slotLock = subscription.slotLock!;
+      if (!slotLock.canPost) {
+        if (slotLock.blockReason == 'time_lock' && slotLock.unlocksAt != null) {
+          final diff = slotLock.unlocksAt!.difference(DateTime.now());
+          final days = diff.inDays;
+          final hours = diff.inHours % 24;
+          final mins = diff.inMinutes % 60;
+          return 'COOLDOWN:Bạn đang trong thời gian giãn cách. Vui lòng đợi thêm $days ngày $hours giờ $mins phút (Mở khóa vào: ${slotLock.unlocksAt!.day}/${slotLock.unlocksAt!.month}/${slotLock.unlocksAt!.year} ${slotLock.unlocksAt!.hour}:${slotLock.unlocksAt!.minute.toString().padLeft(2, '0')}).';
+        }
+        
+        if (slotLock.blockReason == 'has_published') {
+          return 'LIMIT:Gói miễn phí chỉ được đăng tối đa 1 tin hiển thị cùng lúc. Bạn cần đóng tin đang đăng hoặc mua thêm slot để đăng tiếp.';
+        }
+        
+        if (slotLock.blockReason == 'has_pending') {
+          return 'LIMIT:Bạn đang có 1 tin tuyển dụng đang chờ duyệt. Vui lòng đợi tin được duyệt xong hoặc đóng tin để đăng tin mới.';
+        }
+
+        final maxJobs = slotLock.maxActiveJobs;
+        final currentActive = slotLock.currentActiveJobs;
+        return 'LIMIT:Bạn đã dùng hết hạn mức tin đăng cho gói ${package.displayName} ($currentActive/$maxJobs). Vui lòng đóng bớt tin cũ hoặc mua thêm slot tin tuyển dụng để tiếp tục.';
+      }
+      return null;
+    }
+
+    // Fallback sang logic cũ nếu không có slotLock từ BE
     // 1. Kiểm tra Cooldown Lock (Thứ tự ưu tiên 1)
     if (!package.isVip && subscription.lastJobPublishedAt != null) {
       final lastPublish = subscription.lastJobPublishedAt!;
@@ -1019,20 +1214,19 @@ class _MyJobsPageState extends State<MyJobsPage>
               color: Colors.red,
             ),
             const SizedBox(width: 8),
-            Text(type == 'COOLDOWN' ? 'Thời gian giãn cách' : 'Hết hạn mức đăng tin'),
+            Text(type == 'COOLDOWN' ? 'Thời gian giãn cách' : 'Hạn mức đăng tin'),
           ],
         ),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('ĐÓNG'),
+            child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
+              Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const PricingPage()),
               );
             },
@@ -1048,8 +1242,7 @@ class _MyJobsPageState extends State<MyJobsPage>
     final monetizationProvider = context.read<MonetizationProvider>();
     final subscription = monetizationProvider.currentSubscription;
     
-    if (subscription == null || !subscription.isVip) {
-      _showVipOnlyDialog(context);
+    if (subscription == null) {
       return;
     }
 
@@ -1105,56 +1298,32 @@ class _MyJobsPageState extends State<MyJobsPage>
     }
   }
 
-  void _showVipOnlyDialog(BuildContext context) {
+  void _showInsufficientCreditsDialog(BuildContext context, int cost) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.stars, color: Colors.amber),
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
             SizedBox(width: 8),
-            Text('Tính năng VIP'),
+            Text('Không đủ Credit'),
           ],
         ),
-        content: const Text('Tính năng mua thêm Slot đăng tin chỉ dành cho tài khoản VIP. Vui lòng nâng cấp gói cước để sử dụng.'),
+        content: Text('Bạn cần $cost Credit để thực hiện giao dịch này. Vui lòng nạp thêm Credit.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ĐỂ SAU'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('ĐÓNG'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const PricingPage()),
               );
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
-            child: const Text('NÂNG CẤP NGAY'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showInsufficientCreditsDialog(BuildContext context, int cost) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Không đủ Credit'),
-        content: Text('Số dư Credit của bạn không đủ để thực hiện thao tác này (Cần $cost Credit). Vui lòng nạp thêm Credit để tiếp tục.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const PricingPage()));
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-            child: const Text('Nạp ngay'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+            child: const Text('NẠP CREDIT'),
           ),
         ],
       ),

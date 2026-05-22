@@ -20,6 +20,7 @@ class SubscriptionModel extends SubscriptionEntity {
     super.extraSlots,
     super.effectiveMaxJobs,
     super.package,
+    super.slotLock,
   });
 
   factory SubscriptionModel.fromJson(Map<String, dynamic> json) {
@@ -57,6 +58,63 @@ class SubscriptionModel extends SubscriptionEntity {
       package: subData['package'] != null 
           ? SubscriptionPackageModel.fromJson(subData['package']) 
           : null,
+      slotLock: json['slotLock'] != null ? SlotLockModel.fromJson(json['slotLock']) : null,
     );
   }
 }
+
+class SlotLockModel extends SlotLockEntity {
+  SlotLockModel({
+    required super.canPost,
+    super.unlocksAt,
+    super.blockReason,
+    required super.currentActiveJobs,
+    required super.currentLockedJobs,
+    required super.maxActiveJobs,
+    required super.slotDetails,
+  });
+
+  factory SlotLockModel.fromJson(Map<String, dynamic> json) {
+    var detailsList = json['slotDetails'] as List? ?? [];
+    List<SlotDetailModel> details = detailsList
+        .map((e) => SlotDetailModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    return SlotLockModel(
+      canPost: json['canPost'] as bool? ?? false,
+      unlocksAt: json['unlocksAt'] != null ? DateTime.parse(json['unlocksAt'].toString()) : null,
+      blockReason: json['blockReason']?.toString(),
+      currentActiveJobs: (json['currentActiveJobs'] as num?)?.toInt() ?? 0,
+      currentLockedJobs: (json['currentLockedJobs'] as num?)?.toInt() ?? 0,
+      maxActiveJobs: (json['maxActiveJobs'] as num?)?.toInt() ?? 0,
+      slotDetails: details,
+    );
+  }
+}
+
+class SlotDetailModel extends SlotDetailEntity {
+  SlotDetailModel({
+    required super.type,
+    required super.slotKind,
+    super.jobId,
+    super.jobTitle,
+    super.unlocksAt,
+    super.creditSlotExpiresAt,
+    super.creditSlotId,
+  });
+
+  factory SlotDetailModel.fromJson(Map<String, dynamic> json) {
+    return SlotDetailModel(
+      type: json['type']?.toString() ?? 'available',
+      slotKind: json['slotKind']?.toString() ?? 'free',
+      jobId: (json['jobId'] as num?)?.toInt(),
+      jobTitle: json['jobTitle']?.toString(),
+      unlocksAt: json['unlocksAt'] != null ? DateTime.parse(json['unlocksAt'].toString()) : null,
+      creditSlotExpiresAt: json['creditSlotExpiresAt'] != null 
+          ? DateTime.parse(json['creditSlotExpiresAt'].toString()) 
+          : null,
+      creditSlotId: (json['creditSlotId'] as num?)?.toInt(),
+    );
+  }
+}
+

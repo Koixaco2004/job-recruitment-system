@@ -240,23 +240,49 @@ class _EmployerJobEditPageState extends State<EmployerJobEditPage> {
       if (subscription != null && subscription.package != null) {
         final package = subscription.package!;
         
-        // 1. Kiểm tra Cooldown Lock (Ưu tiên 1)
-        if (!package.isVip && subscription.lastJobPublishedAt != null) {
-          final cooldownDate = subscription.lastJobPublishedAt!.add(Duration(days: package.jobDurationDays));
-          if (DateTime.now().isBefore(cooldownDate)) {
-            _showQuotaErrorDialog('Bạn đang trong thời gian giãn cách. Vui lòng đợi đến ngày ${cooldownDate.day}/${cooldownDate.month} để đăng tin tiếp theo.');
+        if (subscription.slotLock != null) {
+          final slotLock = subscription.slotLock!;
+          if (!slotLock.canPost) {
+            if (slotLock.blockReason == 'time_lock' && slotLock.unlocksAt != null) {
+              _showQuotaErrorDialog('Bạn đang trong thời gian giãn cách. Vui lòng đợi đến ngày ${slotLock.unlocksAt!.day}/${slotLock.unlocksAt!.month} để đăng tin tiếp theo.');
+              return;
+            }
+            
+            if (slotLock.blockReason == 'has_published') {
+              _showQuotaErrorDialog('Gói miễn phí chỉ được đăng tối đa 1 tin hiển thị cùng lúc. Bạn cần đóng tin đang đăng hoặc mua thêm slot để đăng tiếp.');
+              return;
+            }
+            
+            if (slotLock.blockReason == 'has_pending') {
+              _showQuotaErrorDialog('Bạn đang có 1 tin tuyển dụng đang chờ duyệt. Vui lòng đợi tin được duyệt xong hoặc đóng tin để đăng tin mới.');
+              return;
+            }
+
+            final maxJobs = slotLock.maxActiveJobs;
+            final currentActive = slotLock.currentActiveJobs;
+            _showQuotaErrorDialog('Bạn đã dùng hết hạn mức tin đăng ($currentActive/$maxJobs). Vui lòng đóng bớt tin cũ hoặc mua thêm slot tin tuyển dụng để tiếp tục.');
             return;
           }
-        }
-        
-        // 2. Kiểm tra Concurrency Limit (Ưu tiên 2)
-        final maxJobs = subscription.effectiveMaxJobs > 0 
-            ? subscription.effectiveMaxJobs 
-            : package.maxActiveJobs;
+        } else {
+          // Fallback sang logic cũ nếu không có slotLock từ BE
+          // 1. Kiểm tra Cooldown Lock (Ưu tiên 1)
+          if (!package.isVip && subscription.lastJobPublishedAt != null) {
+            final cooldownDate = subscription.lastJobPublishedAt!.add(Duration(days: package.jobDurationDays));
+            if (DateTime.now().isBefore(cooldownDate)) {
+              _showQuotaErrorDialog('Bạn đang trong thời gian giãn cách. Vui lòng đợi đến ngày ${cooldownDate.day}/${cooldownDate.month} để đăng tin tiếp theo.');
+              return;
+            }
+          }
+          
+          // 2. Kiểm tra Concurrency Limit (Ưu tiên 2)
+          final maxJobs = subscription.effectiveMaxJobs > 0 
+              ? subscription.effectiveMaxJobs 
+              : package.maxActiveJobs;
 
-        if (activeCount >= maxJobs) {
-          _showQuotaErrorDialog('Bạn đã dùng hết hạn mức tin đăng (${activeCount}/${maxJobs}). Vui lòng đóng bớt tin cũ hoặc nâng cấp VIP.');
-          return;
+          if (activeCount >= maxJobs) {
+            _showQuotaErrorDialog('Bạn đã dùng hết hạn mức tin đăng (${activeCount}/${maxJobs}). Vui lòng đóng bớt tin cũ hoặc nâng cấp VIP.');
+            return;
+          }
         }
       }
     }
