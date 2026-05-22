@@ -265,6 +265,7 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
           if (date != null) 'date': date,
           if (month != null) 'month': month,
           if (quarter != null) 'quarter': quarter,
+          '_t': DateTime.now().millisecondsSinceEpoch,
         },
       );
       return EmployerDashboardStatsModel.fromJson(response.data);
@@ -293,6 +294,7 @@ class HeadhuntingRemoteDataSourceImpl implements HeadhuntingRemoteDataSource {
           if (date != null) 'date': date,
           if (month != null) 'month': month,
           if (quarter != null) 'quarter': quarter,
+          '_t': DateTime.now().millisecondsSinceEpoch,
         },
       );
       return JobDetailedStatsModel.fromJson(response.data);

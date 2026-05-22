@@ -317,6 +317,7 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
         'page': page,
         'limit': limit,
         if (status != null) 'status': status,
+        '_t': DateTime.now().millisecondsSinceEpoch,
       };
       
       final response = await apiClient.dio.get('/api/jobs/employer', queryParameters: queryParams);
@@ -339,7 +340,10 @@ class JobRemoteDataSourceImpl implements JobRemoteDataSource {
   @override
   Future<List<JobStatusHistoryModel>> getJobHistory(int jobId) async {
     try {
-      final response = await apiClient.dio.get('/api/jobs/employer/$jobId/history');
+      final response = await apiClient.dio.get(
+        '/api/jobs/employer/$jobId/history',
+        queryParameters: {'_t': DateTime.now().millisecondsSinceEpoch},
+      );
       if (response.statusCode == 200) {
         final dynamic rawData = response.data;
         List data;
